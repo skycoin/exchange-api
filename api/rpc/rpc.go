@@ -3,6 +3,8 @@ package rpc
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/uberfurrer/tradebot/logger"
 )
 
 // JSONRPC version
@@ -28,6 +30,7 @@ func (r *Response) setBody(v interface{}) {
 	body, err := json.Marshal(v)
 	if err != nil {
 		r.Result = nil
+		logger.Warningf("could not marshal response %s", err)
 		r.Error = makeError(InternalError, internalErrorMsg, err)
 		return
 	}

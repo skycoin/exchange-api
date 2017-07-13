@@ -1,7 +1,6 @@
 package c2cx
 
 import (
-	"log"
 	"time"
 
 	"strings"
@@ -9,7 +8,8 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
-	exchange "github.com/uberfurrer/tradebot/exchange"
+	"github.com/uberfurrer/tradebot/exchange"
+	"github.com/uberfurrer/tradebot/logger"
 )
 
 // Client implements exchange.Client interface
@@ -175,48 +175,38 @@ func (c *Client) checkUpdate() {
 	}
 	if c.Tracker != nil {
 		var wg sync.WaitGroup
-		wg.Add(len(allowed))
-		for _, symbol := range allowed {
-			// runs goroutine for each market
-			go func(w *sync.WaitGroup, sym string) {
-				defer w.Done()
-				//var shift = int(time.Now().Sub(c.prevUpdate).Seconds())
-				orders, err := GetOrderByStatus(c.Key, c.Secret, sym, -1, -1)
-				if err != nil {
-					log.Printf("c2cx: update order statusees error %s", err)
-					return
-				}
-				for _, v := range orders {
-					var status string
-					for k, st := range Statusees {
-						if st == v.Status {
-							status = k
-							break
+		wg.Add(len(allowed) * len(Statusees))
+		for _, sym := range allowed {
+			for s := range Statusees {
+				go func(symbol, status string, w *sync.WaitGroup) {
+					defer w.Done()
+					orders, err := GetOrderByStatus(c.Key, c.Secret, symbol, status, -1)
+					if err != nil {
+						logger.Warningf("c2cx: update order info failed %s", err)
+						return
+					}
+					for _, order := range orders {
+						var accepted = unixToTime(order.CreateDate)
+						switch status {
+						case exchange.StatusOpened, exchange.StatusPartial:
+							c.Tracker.UpdateOrderDetails(order.OrderID, symbol, &accepted)
+						case exchange.StatusCancelled:
+							c.Tracker.Cancel(order.OrderID)
+						case exchange.StatusCompleted:
+							c.Tracker.Complete(order.OrderID, time.Now())
 						}
 					}
-					t := unixToTime(int(v.CreateDate))
-					switch v.Status {
-					case Statusees[exchange.StatusOpened], Statusees[exchange.StatusPartial]:
-						c.Tracker.UpdateOrderDetails(v.OrderID, status, &t)
-					case Statusees[exchange.StatusCancelled]:
-						c.Tracker.Cancel(v.OrderID)
-					case Statusees[exchange.StatusCompleted]:
-						c.Tracker.Complete(v.OrderID, time.Now())
-					default:
-						log.Printf("c2cx: update order status error: unknown order status %d", v.Status)
-					}
-				}
-				return
-			}(&wg, symbol)
+				}(sym, s, &wg)
+			}
 		}
 		wg.Wait()
-
 	}
 }
 
 // Update run updates synchronously
 func (c *Client) Update() {
-	t := time.NewTicker(c.RefreshInterval)
+	c.sem = make(chan struct{}, 1)
+	t := time.NewTicker(c.RefreshInterval * time.Millisecond)
 	for {
 		select {
 		case <-t.C:

@@ -400,3 +400,17 @@ func TestSubmitTrasnfer(t *testing.T) {
 		httpmock.DeactivateAndReset()
 	}
 }
+
+func TestRequestSignature(t *testing.T) {
+	var (
+		key    = "23a69c51c746446e819b213ef3841920"
+		secret = "poPwm3OQGOb85L0Zf3DL4TtgLPc2OpxZg9n8G7Sv2po="
+		nonce  = "3"
+		requrl = apiroot
+	)
+	requrl.Path += "getbalance"
+	var want = "amx 23a69c51c746446e819b213ef3841920:VTUkpXJ8Cl2VfoRXH6qaPK887Ejy58UC2mPEwB80w2M=:3"
+	if expected := header(key, secret, nonce, requrl, []byte("{}")); want != expected {
+		t.Fatal("invalid request signature")
+	}
+}

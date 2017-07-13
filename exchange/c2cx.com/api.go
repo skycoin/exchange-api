@@ -3,7 +3,6 @@ package c2cx
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -11,7 +10,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	exchange "github.com/uberfurrer/tradebot/exchange"
+	"github.com/uberfurrer/tradebot/exchange"
+	"github.com/uberfurrer/tradebot/logger"
 )
 
 type response struct {
@@ -35,7 +35,7 @@ func requestGet(method string, params url.Values) (*response, error) {
 	reqURL.RawQuery = params.Encode()
 	resp, err := httpclient.Get(reqURL.String())
 	if err != nil {
-		log.Println("c2cx: requestGet http error, ", err)
+		logger.Error("c2cx: requestGet http error, ", err)
 		return nil, err
 	}
 	return readResponse(resp.Body)
@@ -53,7 +53,7 @@ func requestPost(method, key, secret string, params url.Values) (*response, erro
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := httpclient.Do(req)
 	if err != nil {
-		log.Println("c2cx: requestPost http error, ", err)
+		logger.Error("c2cx: requestPost http error, ", err)
 		return nil, err
 	}
 	return readResponse(resp.Body)
@@ -65,7 +65,7 @@ func GetOrderBook(symbol string) (*Orderbook, error) {
 	var params = url.Values{}
 	var err error
 	if symbol, err = normalize(symbol); err != nil {
-		log.Println("c2cx: invalid market,", err)
+		logger.Error("c2cx: invalid market,", err)
 		return nil, err
 	}
 	params.Add("symbol", symbol)
@@ -111,13 +111,13 @@ func CreateOrder(key, secret, symbol, orderType string, priceTypeID int, trigger
 		params = url.Values{}
 	)
 	if symbol, err = normalize(symbol); err != nil {
-		log.Println("c2cx: invalid market", err)
+		logger.Error("c2cx: invalid market", err)
 		return 0, err
 	}
 	params.Add("symbol", symbol)
 	params.Add("orderType", orderType)
 	if priceTypeID != 1 && priceTypeID != 2 {
-		log.Println("priceTypeId must be 1 - limit or 2 - market")
+		logger.Error("priceTypeId must be 1 - limit or 2 - market")
 		return 0, errors.New("Wrong priceTypeID")
 	}
 	params.Add("priceTypeId", strconv.Itoa(priceTypeID))
@@ -202,34 +202,28 @@ var Statusees = map[string]int{
 	exchange.StatusPartial:   3,
 	exchange.StatusCompleted: 4,
 	exchange.StatusCancelled: 5,
-	"Expired":                11, //This api does not allow to create orders that might to receive this status
 }
 
-// GetOrderByStatus gets all orders by given status
-// statusIDs defined below, interval is a time before previous request in seconds, as I mean
-func GetOrderByStatus(key, secret, symbol string, statusID, interval int) (orders []OrderInfo, err error) {
+// GetOrderByStatus get all orders with given status
+// interval is time in seconds between now and start time, if interval == -1, then returns all orders
+// statusees defined below
+func GetOrderByStatus(key, secret, symbol, status string, interval int) (orders []OrderInfo, err error) {
 	var params = url.Values{}
 	if symbol, err = normalize(symbol); err != nil {
-		log.Println("c2cx: Invalid market, ", err)
-		return
+		return nil, err
 	}
-	params.Add("statusId", strconv.Itoa(statusID))
+	params.Add("symbol", symbol)
 	params.Add("interval", strconv.Itoa(interval))
-
+	params.Add("status", strconv.Itoa(Statusees[status]))
 	resp, err := requestPost("getorderbystatus", key, secret, params)
 	if err != nil {
 		return nil, err
 	}
 	if resp.Code != 200 {
-		return nil, errors.Errorf("GetOrderByStatus failed: %d %s", resp.Code, resp.Message)
+		return nil, errors.Errorf("c2cx: GetOrderByStatus failed, %d %s", resp.Code, resp.Message)
 	}
-	var tmp = make([]orderStatusInfo, 0)
-	err = json.Unmarshal(resp.Data, &tmp)
-	if err != nil {
+	if err = json.Unmarshal(resp.Data, &orders); err != nil {
 		return nil, err
-	}
-	for _, v := range tmp {
-		orders = append(orders, OrderInfo(v))
 	}
 	return orders, nil
 }

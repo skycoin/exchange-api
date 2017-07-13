@@ -37,8 +37,7 @@ func Test_orderbooktracker_UpdateSym(t *testing.T) {
 		db: redis.NewClient(&redis.Options{
 			Addr: "localhost:6379",
 		}),
-		hash:   "test",
-		buffer: make(map[string]exchange.Orderbook),
+		hash: "test",
 	}
 	var r = exchange.Orderbook{
 		Timestamp: time.Now(),

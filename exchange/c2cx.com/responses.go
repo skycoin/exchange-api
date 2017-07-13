@@ -15,13 +15,14 @@ type CreateOrderResponse struct {
 
 // OrderInfo is a single OrderInfo that returns by GetOrderInfo function
 type OrderInfo struct {
-	Amount     float64 `json:"amount"`
-	AvgPrice   float64 `json:"avgPrice"`
-	CreateDate int64   `json:"createDate"`
-	OrderID    int     `json:"orderId"`
-	Price      float64 `json:"price"`
-	Status     int     `json:"status"`
-	Type       string  `json:"type"`
+	Amount          float64 `json:"amount"`
+	AvgPrice        float64 `json:"avgPrice"`
+	CompletedAmount string  `json:"completedAmount"`
+	CreateDate      int64   `json:"createDate"`
+	OrderID         int     `json:"orderId"`
+	Price           float64 `json:"price"`
+	Status          int     `json:"status"`
+	Type            string  `json:"type"`
 }
 
 // Orderbook represents a response from GetOrderBook function
@@ -106,17 +107,4 @@ func (r *Balance) UnmarshalJSON(b []byte) error {
 	(*r)["sky"] = fmt.Sprintf("Availible %.8f, frozen %.8f", v.Balance.Sky, v.Frozen.Sky)
 	(*r)["cny"] = fmt.Sprintf("Availible %.8f, frozen %.8f", v.Balance.Cny, v.Frozen.Cny)
 	return nil
-}
-
-// orderStatusInfo represents a response from GetOrderByStatus
-// OrderInfo and orderStatusInfo are differ only in json tags
-// You may use directly conversion: OrderInfo(orderStatusInfo) and backward
-type orderStatusInfo struct {
-	Amount     float64 `json:"Amount"`
-	AvgPrice   float64 `json:"Avg_price"`
-	CreateDate int64   `json:"Create_date"`
-	OrderID    int     `json:"orderId"`
-	Price      float64 `json:"price"`
-	Status     int     `json:"status"`
-	Type       string  `json:"type"`
 }

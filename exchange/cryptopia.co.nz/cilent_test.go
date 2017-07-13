@@ -1,13 +1,12 @@
 package cryptopia
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/go-redis/redis"
-	db "github.com/uberfurrer/tradebot/db"
-	exchange "github.com/uberfurrer/tradebot/exchange"
+	"github.com/uberfurrer/tradebot/db"
+	"github.com/uberfurrer/tradebot/exchange"
 )
 
 var c = Client{
@@ -111,14 +110,17 @@ func TestClientUpdateOrderbook(t *testing.T) {
 		Orderbook: db.NewOrderbookTracker(&redis.Options{
 			Addr: "localhost:6379",
 		}, "cryptopia"),
+		TrackedBooks: []string{"LTC/BTC"},
 	}
+	var (
+		v   exchange.Orderbook
+		err error
+	)
 	c.checkUpdate()
-	time.Sleep(time.Second * 100)
+	if v, err = c.Orderbook.GetRecord("LTC/BTC"); err != nil {
+		t.Fatal(err)
+	}
+	if len(v.Bids) != 100 || len(v.Asks) != 100 {
+		t.Fatal("Do not use cryptocurrencies cause on the most popular tradepair less than 100 orders :)")
+	}
 }
-
-type booktracker struct{}
-
-func (t *booktracker) UpdateSym(symbol string, bids, asks []exchange.OrderbookEntry) {
-	fmt.Println(symbol)
-}
-func (t *booktracker) Flush(sym string) {}

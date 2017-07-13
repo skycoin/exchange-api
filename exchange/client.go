@@ -38,6 +38,11 @@ type OrderInfo struct {
 	Completed int64 `json:"Completed"`
 }
 
+//TODO: add string representatoin of order
+func (info OrderInfo) String() string {
+	return ""
+}
+
 // OrderTracker manages order statusees and track time
 type OrderTracker struct {
 	executed  map[int]*OrderInfo

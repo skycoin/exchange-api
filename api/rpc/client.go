@@ -38,6 +38,13 @@ func Do(addr, endpoint string, r Request) (*Response, error) {
 		return nil, err
 	}
 	var rpcResp Response
-	return &rpcResp, json.Unmarshal(respdata, &rpcResp)
+	err = json.Unmarshal(respdata, &rpcResp)
+	if err != nil {
+		return nil, err
+	}
+	if rpcResp.Error != nil {
+		return nil, rpcResp.Error
+	}
+	return &rpcResp, nil
 
 }

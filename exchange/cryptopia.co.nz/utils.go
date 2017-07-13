@@ -17,12 +17,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+/*
 // init caches
 func init() {
 	_, _ = getCurrencyID("BTC")
 	_, _ = getMarketID("LTC/BTC")
 }
-
+*/
 var currencyCache map[string]CurrencyInfo
 var marketCache map[string]int
 
@@ -91,30 +92,25 @@ func encodeValues(vals map[string]interface{}) []byte {
 }
 
 func sign(secret []byte, key, uri, nonce string, params []byte) []byte {
-
 	signer := hmac.New(sha256.New, secret)
 	data := prepare(key, uri, nonce, params)
 	signer.Write(data[:])
-
 	return signer.Sum(nil)
 }
 func prepare(key, uri, nonce string, params []byte) []byte {
 	hash := md5.Sum(params)
 	encodedParams := base64.StdEncoding.EncodeToString(hash[:])
-
 	var signData []byte
 	signData = append(signData, key...)
 	signData = append(signData, "POST"...)
 	signData = append(signData, uri...)
 	signData = append(signData, nonce...)
 	signData = append(signData, encodedParams...)
-
 	return signData[:]
 }
 func header(key, secret, nonce string, uri url.URL, params []byte) string {
 	nuri := strings.ToLower(url.QueryEscape(uri.String()))
-
-	secretBytes, _ := base64.RawStdEncoding.DecodeString(secret)
+	secretBytes, _ := base64.StdEncoding.DecodeString(secret)
 	sign := sign(secretBytes, key, nuri, nonce, params)
 	token := base64.StdEncoding.EncodeToString(sign)
 	return "amx " + key + ":" + token + ":" + nonce

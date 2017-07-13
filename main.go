@@ -11,6 +11,7 @@ import (
 	"github.com/uberfurrer/tradebot/db"
 	c2cx "github.com/uberfurrer/tradebot/exchange/c2cx.com"
 	cryptopia "github.com/uberfurrer/tradebot/exchange/cryptopia.co.nz"
+	"github.com/uberfurrer/tradebot/logger"
 )
 
 var (
@@ -21,15 +22,15 @@ var (
 )
 
 func main() {
-	go func() { time.Sleep(time.Minute * 2); os.Exit(1) }() //watchdog for debugging
+	logger.SetLogLevel(logger.Errors, os.Stdout)
+
 	var c2cxClient = c2cx.Client{
-		Key:     c2cxKey,
-		Secret:  c2cxSecret,
-		Tracker: nil,
+		Key:    c2cxKey,
+		Secret: c2cxSecret,
 		OrderBookTracker: db.NewOrderbookTracker(&redis.Options{
 			Addr: "localhost:6379",
 		}, "c2cx"),
-		RefreshInterval: 5000,
+		RefreshInterval: 1000,
 	}
 	go c2cxClient.Update()
 	var c2cxRPC = rpc.PackageHandler{
@@ -42,13 +43,13 @@ func main() {
 	}
 
 	var cryptopiaClient = cryptopia.Client{
-		Key:     cryptopiaKey,
-		Secret:  cryptopiaSecret,
-		Tracker: nil,
-		//Orderbook: db.NewOrderbookTracker(&redis.Options{
-		//	Addr: "localhost:6379",
-		//}, "cryptopia"),
-		RefreshInterval: 10000,
+		Key:    cryptopiaKey,
+		Secret: cryptopiaSecret,
+		Orderbook: db.NewOrderbookTracker(&redis.Options{
+			Addr: "localhost:6379",
+		}, "cryptopia"),
+		RefreshInterval: 1000,
+		TrackedBooks:    []string{"LTC/BTC", "SKY/DOGE"},
 	}
 	go cryptopiaClient.Update()
 	var cryptopiaRPC = rpc.PackageHandler{
@@ -59,14 +60,16 @@ func main() {
 			"secret": cryptopiaSecret,
 		},
 	}
-
 	var srv = rpc.Server{
 		Handlers: map[string]rpc.PackageHandler{
 			"c2cx":      c2cxRPC,
 			"cryptopia": cryptopiaRPC,
 		},
 	}
-	srv.Start()
+	var stop = make(chan struct{})
+	srv.Start("localhost:12345", stop)
+
+	//close stop for exit
 }
 
 // Additional functions, that does not wrapped by exchange.Client interface

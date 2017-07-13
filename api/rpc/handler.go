@@ -1,10 +1,8 @@
 package rpc
 
 import (
-	"encoding/json"
-	"log"
-
 	exchange "github.com/uberfurrer/tradebot/exchange"
+	"github.com/uberfurrer/tradebot/logger"
 )
 
 // PackageHandler handles one exchange, resolve methods and returns json formatted responses
@@ -23,8 +21,8 @@ type PackageFunc func(r Request, env map[string]string) Response
 
 // defaultHandlers contain functions that will executed, if called functionality, handled by exchange.Client interface
 var defaultHandlers = map[string]func(Request, exchange.Client) Response{
-	// GetBalance params: {"currency": string}
-	"GetBalance": func(r Request, c exchange.Client) Response {
+	// balance params: {"currency": string}
+	"balance": func(r Request, c exchange.Client) Response {
 		resp, err := validateRequest(r)
 		if err != nil {
 			return resp
@@ -50,8 +48,8 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		}
 		return resp
 	},
-	// Cancel params: {"orderid": int}
-	"Cancel": func(r Request, c exchange.Client) Response {
+	// cancel_trade params: {"orderid": int}
+	"cancel_trade": func(r Request, c exchange.Client) Response {
 		resp, err := validateRequest(r)
 		if err != nil {
 			return resp
@@ -77,8 +75,8 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		}
 		return resp
 	},
-	// CancelAll params should be omitted, empty or null
-	"CancelAll": func(r Request, c exchange.Client) Response {
+	// cancel_all params should be omitted, empty or null
+	"cancel_all": func(r Request, c exchange.Client) Response {
 		resp, err := validateRequest(r)
 		if err != nil {
 			return resp
@@ -99,8 +97,8 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		}
 		return resp
 	},
-	// CancelMarket params: {"symbol": string}
-	"CancelMarket": func(r Request, c exchange.Client) Response {
+	// cancel_market params: {"symbol": string}
+	"cancel_market": func(r Request, c exchange.Client) Response {
 		resp, err := validateRequest(r)
 		if err != nil {
 			return resp
@@ -126,8 +124,8 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		}
 		return resp
 	},
-	// Buy params: {"symbol": string; "rate": float64, "amount": float64}
-	"Buy": func(r Request, c exchange.Client) Response {
+	// buy params: {"symbol": string; "rate": float64, "amount": float64}
+	"buy": func(r Request, c exchange.Client) Response {
 		resp, err := validateRequest(r)
 		if err != nil {
 			return resp
@@ -164,8 +162,8 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 
 		return resp
 	},
-	// Sell params: {"symbol": string, "rate": float64, "amount": float64}
-	"Sell": func(r Request, c exchange.Client) Response {
+	// sell params: {"symbol": string, "rate": float64, "amount": float64}
+	"sell": func(r Request, c exchange.Client) Response {
 		resp, err := validateRequest(r)
 		if err != nil {
 			return resp
@@ -202,8 +200,8 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 
 		return resp
 	},
-	// OrderDetails params: {"orderid": int}
-	"OrderDetails": func(r Request, c exchange.Client) Response {
+	// order_info params: {"orderid": int}
+	"order_info": func(r Request, c exchange.Client) Response {
 		resp, err := validateRequest(r)
 		if err != nil {
 			return resp
@@ -228,8 +226,8 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		}
 		return resp
 	},
-	// OrderStatus params: {"orderid": int}
-	"OrderStatus": func(r Request, c exchange.Client) Response {
+	// order_status params: {"orderid": int}
+	"order_status": func(r Request, c exchange.Client) Response {
 		resp, err := validateRequest(r)
 		if err != nil {
 			return resp
@@ -254,8 +252,8 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		}
 		return resp
 	},
-	// Completed params should be omitted, empty or null
-	"Completed": func(r Request, c exchange.Client) Response {
+	// completed params should be omitted, empty or null
+	"completed": func(r Request, c exchange.Client) Response {
 		resp, err := validateRequest(r)
 		if err != nil {
 			return resp
@@ -265,12 +263,11 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 			resp.Error = makeError(ParseError, parseErrorMsg, err)
 			return resp
 		}
-		orders := c.Completed()
-		resp.setBody(orders)
+		resp.setBody(c.Completed())
 		return resp
 	},
-	// Executed params should be omitted, empty or null
-	"Executed": func(r Request, c exchange.Client) Response {
+	// executed params should be omitted, empty or null
+	"executed": func(r Request, c exchange.Client) Response {
 		resp, err := validateRequest(r)
 		if err != nil {
 			return resp
@@ -280,12 +277,11 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 			resp.Error = makeError(ParseError, parseErrorMsg, err)
 			return resp
 		}
-		orders := c.Executed()
-		resp.setBody(orders)
+		resp.setBody(c.Executed())
 		return resp
 	},
-	//OrderBook params: {"market": string}
-	"OrderBook": func(r Request, c exchange.Client) Response {
+	//orderbook params: {"symbol": string}
+	"orderbook": func(r Request, c exchange.Client) Response {
 		resp, err := validateRequest(r)
 		if err != nil {
 			return resp
@@ -295,23 +291,16 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 			resp.Error = makeError(ParseError, parseErrorMsg, err)
 			return resp
 		}
-		market, err := GetStringParam(params, "market")
+		market, err := GetStringParam(params, "symbol")
 		if err != nil {
 			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 		}
-		orderbook := c.OrderBook()
-		book, err := orderbook.GetRecord(market)
+		book, err := c.OrderBook().GetRecord(market)
 		if err != nil {
 			resp.Error = makeError(InternalError, internalErrorMsg, err)
 			return resp
 		}
-		data, err := json.Marshal(book)
-		log.Println("Orderbook data:", data)
-		if err != nil {
-			resp.Error = makeError(InternalError, internalErrorMsg, err)
-			return resp
-		}
-		resp.setBody(data)
+		resp.setBody(book)
 		return resp
 	},
 }
@@ -332,23 +321,24 @@ func (h *PackageHandler) Setenv(key, value string) {
 	h.Env[key] = value
 }
 
-// Process execute request and return response
-func (h *PackageHandler) Process(r Request) Response {
-	log.Println(r, string(r.Params))
+// Process lookups given method and calls it
+func (h *PackageHandler) Process(r Request) *Response {
+	logger.Infof("processing request, method %s, params %s\n", r.Method, r.Params)
 	if f, ok := defaultHandlers[r.Method]; ok {
-		return f(r, h.Client)
+		resp := f(r, h.Client)
+		return &resp
 	}
 	if f, ok := h.Handlers[r.Method]; ok {
-		return f(r, h.Env)
+		resp := f(r, h.Env)
+		return &resp
 	}
 	if r.ID != nil {
-		return Response{
+		return &Response{
 			JSONRPC: JSONRPC,
 			ID:      *r.ID,
 			Error:   makeError(MethodNotFound, methodNotFoundMsg, nil),
 			Result:  nil,
 		}
 	}
-	return Response{}
-
+	return nil
 }

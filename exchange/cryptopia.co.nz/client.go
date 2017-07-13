@@ -1,14 +1,14 @@
 package cryptopia
 
 import (
-	"log"
 	"strconv"
 	"time"
 
 	"sync"
 
 	"github.com/pkg/errors"
-	exchange "github.com/uberfurrer/tradebot/exchange"
+	"github.com/uberfurrer/tradebot/exchange"
+	"github.com/uberfurrer/tradebot/logger"
 )
 
 // Client impletments an exchange.Client interface
@@ -18,6 +18,9 @@ type Client struct {
 
 	Tracker   *exchange.OrderTracker
 	Orderbook exchange.OrderBookTracker
+
+	// Cause cryptopia.co.nz supported greater than 1000 curencies, you may select markets, those will be tracked
+	TrackedBooks []string
 
 	Stop chan struct{}
 	// Add concurrecny for updating
@@ -163,13 +166,13 @@ func (c *Client) checkUpdate() {
 	if c.Orderbook != nil {
 		c.sem <- struct{}{}
 		var wg sync.WaitGroup
-		wg.Add(len(marketCache))
-		for k := range marketCache {
+		wg.Add(len(c.TrackedBooks))
+		for _, sym := range c.TrackedBooks {
 			go func(w *sync.WaitGroup, market string) {
 				defer w.Done()
 				book, err := GetMarketOrders(market, 100)
 				if err != nil {
-					log.Println("cryptopia: update error:", err)
+					logger.Warning("cryptopia: update error:", err)
 					return
 				}
 				var (
@@ -189,7 +192,7 @@ func (c *Client) checkUpdate() {
 					}
 				}
 				c.Orderbook.UpdateSym(market, bids, asks)
-			}(&wg, k)
+			}(&wg, sym)
 		}
 		wg.Wait()
 		<-c.sem
@@ -200,7 +203,7 @@ func (c *Client) checkUpdate() {
 		for {
 			orders, err := GetOpenOrders(c.Key, c.Key, c.nonce(), AllMarkets, openedCount)
 			if err != nil {
-				log.Println("cryptopia: update error", err)
+				logger.Warning("cryptopia: update error", err)
 				break
 			}
 			for _, v := range orders {
@@ -228,7 +231,7 @@ func (c *Client) checkUpdate() {
 			// means that GetTradeHistory return time of completion
 			orders, err := GetTradeHistory(c.Key, c.Key, c.nonce(), AllMarkets, openedCount)
 			if err != nil {
-				log.Println("cryptopia: update error", err)
+				logger.Warning("cryptopia: update error", err)
 				break
 			}
 			for _, v := range orders {

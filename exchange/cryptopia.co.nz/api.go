@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/uberfurrer/tradebot/logger"
 )
 
 type response struct {
@@ -23,7 +24,7 @@ var (
 	apiroot    = url.URL{
 		Scheme: "https",
 		Host:   "www.cryptopia.co.nz",
-		Path:   "/api/",
+		Path:   "api/",
 	}
 )
 
@@ -35,7 +36,7 @@ func requestGet(endpoint string, params string) (*response, error) {
 	}
 	resp, err := httpclient.Get(reqURL.String())
 	if err != nil {
-		log.Println("cryptopia: http error:", err)
+		logger.Error("cryptopia: http error:", err)
 		return nil, err
 	}
 	return readResponse(resp.Body)
@@ -44,13 +45,14 @@ func requestPost(endpoint, key, secret, nonce string, params map[string]interfac
 	reqURL := apiroot
 	reqURL.Path += endpoint
 	reqData := encodeValues(params)
+	log.Println(string(reqData), reqURL.String())
 	req, _ := http.NewRequest("POST", reqURL.String(), bytes.NewReader(reqData))
-	req.Header.Add("Content-Type", "application/json;charset=utf-8")
+	req.Header.Add("Content-Type", "application/json; charset=utf-8")
 	req.Header.Add("Authorization", header(key, secret, nonce, reqURL, reqData))
 	resp, err := httpclient.Do(req)
 
 	if err != nil {
-		log.Println("cryptopia: http error:", err)
+		logger.Error("cryptopia: http error:", err)
 		return nil, err
 	}
 	return readResponse(resp.Body)

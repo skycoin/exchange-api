@@ -2,12 +2,11 @@ package rpc
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/go-redis/redis"
 	"github.com/uberfurrer/tradebot/db"
-	exchange "github.com/uberfurrer/tradebot/exchange"
+	"github.com/uberfurrer/tradebot/exchange"
 )
 
 var client = new(mockExchange)
@@ -20,7 +19,12 @@ func Test_defaultHandler_GetBalance(t *testing.T) {
 		JSONRPC: JSONRPC,
 	}
 	resp := defaultHandlers["GetBalance"](req, client)
-	fmt.Printf("%s\n", resp.Result)
+	if resp.Error != nil {
+		t.Error(resp.Error)
+	}
+	if string(resp.Result) != "\"You has 21 * 10e9 BTC\"" {
+		t.Fatalf("want: %s, expected: %s", "\"You has 21 * 10e9 BTC\"", resp.Result)
+	}
 }
 func Test_defaulthandler_Cancel(t *testing.T) {
 	var req = Request{
@@ -30,7 +34,13 @@ func Test_defaulthandler_Cancel(t *testing.T) {
 		JSONRPC: JSONRPC,
 	}
 	resp := defaultHandlers["Cancel"](req, client)
-	fmt.Printf("%s\n", resp.Result)
+	if resp.Error != nil {
+		t.Error(resp.Error)
+	}
+	var want = "{\"TradePair\":\"BTC/LTC\",\"Type\":\"buy\",\"Status\":\"Completed\",\"OrderID\":1,\"Price\":1,\"Volume\":1,\"Submitted\":0,\"Accepted\":0,\"Completed\":0}"
+	if string(resp.Result) != want {
+		t.Fatalf("want: %s, expected: %s", want, resp.Result)
+	}
 }
 func Test_defaulthandler_CancelAll(t *testing.T) {
 	var req = Request{
@@ -39,10 +49,15 @@ func Test_defaulthandler_CancelAll(t *testing.T) {
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 	}
+	var want = "[{\"TradePair\":\"BTC/LTC\",\"Type\":\"buy\",\"Status\":\"Completed\",\"OrderID\":1,\"Price\":1,\"Volume\":1,\"Submitted\":0,\"Accepted\":0,\"Completed\":0}]"
 	resp := defaultHandlers["CancelAll"](req, client)
-	fmt.Printf("%s\n", resp.Result)
+	if resp.Error != nil {
+		t.Error(resp.Error)
+	}
+	if string(resp.Result) != want {
+		t.Fatalf("want: %s, expected: %s", want, resp.Result)
+	}
 }
-
 func Test_defaulthandler_CancelMarket(t *testing.T) {
 	var req = Request{
 		Params:  json.RawMessage("{\"symbol\":\"BTC/LTC\"}"),
@@ -51,7 +66,13 @@ func Test_defaulthandler_CancelMarket(t *testing.T) {
 		JSONRPC: JSONRPC,
 	}
 	resp := defaultHandlers["CancelMarket"](req, client)
-	fmt.Printf("%s\n", resp.Result)
+	if resp.Error != nil {
+		t.Error(resp.Error)
+	}
+	var want = "[{\"TradePair\":\"BTC/LTC\",\"Type\":\"buy\",\"Status\":\"Completed\",\"OrderID\":1,\"Price\":1,\"Volume\":1,\"Submitted\":0,\"Accepted\":0,\"Completed\":0}]"
+	if string(resp.Result) != want {
+		t.Fatalf("want: %s, expected: %s", want, resp.Result)
+	}
 }
 func Test_defaulthandler_Buy(t *testing.T) {
 	var req = Request{
@@ -61,7 +82,12 @@ func Test_defaulthandler_Buy(t *testing.T) {
 		JSONRPC: JSONRPC,
 	}
 	resp := defaultHandlers["Buy"](req, client)
-	fmt.Printf("%s\n", resp.Result)
+	if resp.Error != nil {
+		t.Error(resp.Error)
+	}
+	if string(resp.Result) != "1" {
+		t.Fatalf("want: 1, exepected: %s", resp.Result)
+	}
 }
 func Test_defaulthandler_Sell(t *testing.T) {
 	var req = Request{
@@ -71,7 +97,12 @@ func Test_defaulthandler_Sell(t *testing.T) {
 		JSONRPC: JSONRPC,
 	}
 	resp := defaultHandlers["Sell"](req, client)
-	fmt.Printf("%s\n", resp.Result)
+	if resp.Error != nil {
+		t.Error(resp.Error)
+	}
+	if string(resp.Result) != "1" {
+		t.Fatalf("want: 1, exepected: %s", resp.Result)
+	}
 }
 func Test_defaulthandler_OrderDetails(t *testing.T) {
 	var req = Request{
@@ -81,7 +112,13 @@ func Test_defaulthandler_OrderDetails(t *testing.T) {
 		JSONRPC: JSONRPC,
 	}
 	resp := defaultHandlers["OrderDetails"](req, client)
-	fmt.Printf("%s\n", resp.Result)
+	var want = "{\"TradePair\":\"BTC/LTC\",\"Type\":\"buy\",\"Status\":\"Completed\",\"OrderID\":1,\"Price\":1,\"Volume\":1,\"Submitted\":0,\"Accepted\":0,\"Completed\":0}"
+	if resp.Error != nil {
+		t.Error(resp.Error)
+	}
+	if string(resp.Result) != want {
+		t.Fatalf("want: %s, expected: %s", want, resp.Result)
+	}
 }
 func Test_defaulthandler_OrderStatus(t *testing.T) {
 	var req = Request{
@@ -91,7 +128,12 @@ func Test_defaulthandler_OrderStatus(t *testing.T) {
 		JSONRPC: JSONRPC,
 	}
 	resp := defaultHandlers["OrderStatus"](req, client)
-	fmt.Printf("%s\n", resp.Result)
+	if resp.Error != nil {
+		t.Error(resp.Error)
+	}
+	if string(resp.Result) != "\"Completed\"" {
+		t.Fatalf("want: \"Completed\", expected: %s", resp.Result)
+	}
 }
 func Test_defaulthandler_Completed(t *testing.T) {
 	var req = Request{
@@ -100,8 +142,14 @@ func Test_defaulthandler_Completed(t *testing.T) {
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 	}
+	var want = "[{\"TradePair\":\"BTC/LTC\",\"Type\":\"buy\",\"Status\":\"Completed\",\"OrderID\":1,\"Price\":1,\"Volume\":1,\"Submitted\":0,\"Accepted\":0,\"Completed\":0}]"
 	resp := defaultHandlers["Completed"](req, client)
-	fmt.Printf("%s\n", resp.Result)
+	if resp.Error != nil {
+		t.Error(resp.Error)
+	}
+	if string(resp.Result) != want {
+		t.Fatalf("want %s, expected: %s", want, resp.Result)
+	}
 }
 func Test_defaulthandler_Executed(t *testing.T) {
 	var req = Request{
@@ -110,8 +158,14 @@ func Test_defaulthandler_Executed(t *testing.T) {
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 	}
+	var want = "[{\"TradePair\":\"BTC/LTC\",\"Type\":\"sell\",\"Status\":\"Opened\",\"OrderID\":2,\"Price\":1,\"Volume\":1,\"Submitted\":0,\"Accepted\":0,\"Completed\":0}]"
 	resp := defaultHandlers["Executed"](req, client)
-	fmt.Printf("%s\n", resp.Result)
+	if resp.Error != nil {
+		t.Error(resp.Error)
+	}
+	if string(resp.Result) != want {
+		t.Fatalf("want: %s, expected: %s", want, resp.Result)
+	}
 }
 
 type mockExchange int

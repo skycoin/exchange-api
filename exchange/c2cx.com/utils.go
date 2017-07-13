@@ -84,9 +84,9 @@ func normalize(sym string) (string, error) {
 
 var allowed = []string{"CNY_BTC", "CNY_ETH", "CNY_ETC", "CNY_SKY"}
 
-func unixToTime(unix int) time.Time {
-	var secs = int64(unix / 10e3)
-	var nanos = int64((unix % 10e3) * 10e6)
+func unixToTime(unix int64) time.Time {
+	var secs = int64(unix / 10e2)
+	var nanos = int64((unix % 10e2) * 10e5)
 	return time.Unix(secs, nanos)
 }
 
@@ -96,7 +96,6 @@ func readResponse(r io.ReadCloser) (*response, error) {
 	if err != nil {
 		return nil, err
 	}
-	//log.Println(string(b))
 	defer r.Close()
 	return resp, json.Unmarshal(b, resp)
 }
