@@ -15,10 +15,10 @@ import (
 )
 
 var (
-	c2cxKey         = "2A4C851A-1B86-4E08-863B-14582094CE0F"
-	c2cxSecret      = "83262169-B473-4BF2-9288-5E5AC898F4B0"
-	cryptopiaKey    = "23a69c51c746446e819b213ef3841920"
-	cryptopiaSecret = "poPwm3OQGOb85L0Zf3DL4TtgLPc2OpxZg9n8G7Sv2po="
+	c2cxKey         = "censored"
+	c2cxSecret      = "this too"
+	cryptopiaKey    = "and this"
+	cryptopiaSecret = ":)"
 )
 
 func main() {
