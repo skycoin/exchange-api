@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	exchange "github.com/uberfurrer/tradebot/exchange"
 )
 
 func sign(secret string, params url.Values) string {
@@ -55,6 +56,9 @@ func abcdsort(params url.Values) string {
 					goto next
 				}
 			}
+			if len(sortedKeys[i]) < len(sortedKeys[j]) {
+				sortedKeys[i], sortedKeys[j] = sortedKeys[j], sortedKeys[i]
+			}
 		next:
 		}
 	}
@@ -74,15 +78,13 @@ func abcdsort(params url.Values) string {
 // normalize() canoncialize tradepair symbol
 func normalize(sym string) (string, error) {
 	sym = strings.ToUpper(strings.Replace(sym, "/", "_", -1))
-	for _, v := range allowed {
+	for _, v := range markets {
 		if v == sym {
 			return sym, nil
 		}
 	}
 	return "", errors.Errorf("Market pair %s does not exists", sym)
 }
-
-var allowed = []string{"CNY_BTC", "CNY_ETH", "CNY_ETC", "CNY_SKY"}
 
 func unixToTime(unix int64) time.Time {
 	var secs = int64(unix / 10e2)
@@ -91,11 +93,60 @@ func unixToTime(unix int64) time.Time {
 }
 
 func readResponse(r io.ReadCloser) (*response, error) {
-	var resp = &response{}
+	var (
+		tmp struct {
+			Fail    json.RawMessage `json:"fail,omitempty"`
+			Success json.RawMessage `json:"success,omitempty"`
+		}
+		resp response
+	)
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
 	defer r.Close()
-	return resp, json.Unmarshal(b, resp)
+	if tmp.Fail != nil {
+		return nil, errors.New(string(tmp.Fail))
+	}
+	if tmp.Success != nil {
+		err := json.Unmarshal(tmp.Success, &resp)
+		return &resp, err
+	}
+	return &resp, json.Unmarshal(b, &resp)
+}
+
+func convert(order Order) exchange.Order {
+	var (
+		status    = lookupStatus(order.Status)
+		accepted  time.Time
+		completed time.Time
+	)
+	accepted = unixToTime(order.CreateDate)
+	if order.CompleteDate != 0 {
+		completed = unixToTime(order.CompleteDate)
+	}
+
+	return exchange.Order{
+		OrderID: order.OrderID,
+		Status:  status,
+		Type:    order.Type,
+
+		CompletedAmount: order.CompletedAmount,
+		Fee:             order.Fee,
+
+		Price:  order.Price,
+		Amount: order.Amount,
+
+		Accepted:  accepted,
+		Completed: completed,
+	}
+}
+
+func lookupStatus(statusID int) string {
+	for k, v := range statuses {
+		if v == statusID {
+			return k
+		}
+	}
+	return "unknown"
 }

@@ -5,8 +5,6 @@ import (
 
 	"strings"
 
-	"sync"
-
 	"github.com/pkg/errors"
 	"github.com/uberfurrer/tradebot/exchange"
 	"github.com/uberfurrer/tradebot/logger"
@@ -17,129 +15,186 @@ import (
 type Client struct {
 	// Key and Secret needs for creating and accessing orders, update them
 	// You may use Client without it for tracking OrderBook
-	Key, Secret     string
-	RefreshInterval time.Duration
+	Key, Secret              string
+	OrderRefreshInterval     time.Duration
+	OrderbookRefreshInterval time.Duration
 
 	// Tracker provides provides functionality for tracking orders
-	// if Tracker == nil then orders does not tracked and Client will be update only OrderBook directly
-	// If Key and Secret are right, all functions will work correctly
-	Tracker *exchange.OrderTracker
+	// if Tracker == nil then orders does not tracked and Client will be update only Orderbook
+	// For properly work it requires that GetOrderByStatus with given key and secret executes without error
+	Orders exchange.Orders
 
 	// OrderBookTracker provides functionality for tracking OrderBook
 	// It use RefreshRate in milliseconds for updating
 	// OrderBookTracker should be free for concurrent use
-	OrderBookTracker exchange.OrderBookTracker
+	Orderbooks exchange.Orderbooks
 
 	// Stop stops updating
 	// After sending to this, you need to restart Client.Update()
 	Stop chan struct{}
 
 	prevUpdate time.Time
-	sem        chan struct{}
 }
 
 // Cancel cancels order with given orderID
-func (c *Client) Cancel(orderID int) (*exchange.OrderInfo, error) {
-	err := CancelOrder(c.Key, c.Secret, orderID)
+func (c *Client) Cancel(orderID int) (exchange.Order, error) {
+	err := cancelOrder(c.Key, c.Secret, orderID)
 	if err != nil {
-		return nil, err
+		return exchange.Order{}, err
 	}
-	c.Tracker.Cancel(orderID)
-	order, err := c.Tracker.Get(orderID)
-	return &order, err
+	order, err := c.Orders.GetOrderInfo(orderID)
+	if err != nil {
+		return exchange.Order{}, err
+	}
+	orders, err := getOrderinfo(c.Key, c.Secret, order.Market, order.OrderID, nil)
+	if err != nil {
+		return exchange.Order{}, err
+	}
+	if len(orders) != 1 {
+		return exchange.Order{}, errors.New("order does not found")
+	}
+	c.Orders.UpdateOrder(
+		exchange.Order{
+			OrderID:         orderID,
+			Status:          exchange.Cancelled,
+			Completed:       unixToTime(orders[0].CompleteDate),
+			Submitted:       unixToTime(orders[0].CreateDate),
+			Fee:             orders[0].Fee,
+			CompletedAmount: orders[0].CompletedAmount,
+		})
+	return c.Orders.GetOrderInfo(orderID)
+
 }
 
 // CancelAll cancels all executed orders, that was created using this cilent
-func (c *Client) CancelAll() ([]*exchange.OrderInfo, error) {
-	orders := c.Tracker.Executed()
-	var result = make([]*exchange.OrderInfo, 0, len(orders))
-	for _, v := range orders {
-		info, err := c.Cancel(v.OrderID)
+func (c *Client) CancelAll() ([]exchange.Order, error) {
+	var (
+		orderids = c.Orders.GetOpened()
+		orders   = make([]exchange.Order, 0, len(orderids))
+	)
+	for _, v := range orderids {
+		order, err := c.Cancel(v)
 		if err != nil {
-			return result, err
+			return orders, err
 		}
-		result = append(result, info)
+		orders = append(orders, order)
 	}
-	return result, nil
+	return orders, nil
+
 }
 
 // CancelMarket cancels all order with given symbol that was created using this client
-func (c *Client) CancelMarket(symbol string) ([]*exchange.OrderInfo, error) {
-	symbol, err := normalize(symbol)
-	if err != nil {
-		return nil, err
-	}
-	orders := c.Tracker.Executed()
-	var result = make([]*exchange.OrderInfo, 0, len(orders))
-	for _, v := range orders {
-		if v.TradePair == symbol {
-			info, err := c.Cancel(v.OrderID)
-			if err != nil {
-				return result, err
-			}
-			result = append(result, info)
+func (c *Client) CancelMarket(symbol string) ([]exchange.Order, error) {
+	var (
+		orderids []int
+		orders   []exchange.Order
+	)
+	for _, v := range c.Orders.GetOpened() {
+		order, err := c.Orders.GetOrderInfo(v)
+		if err != nil {
+			continue
+		}
+		if order.Market == symbol {
+			orderids = append(orderids, order.OrderID)
 		}
 	}
-	return result, nil
+	orders = make([]exchange.Order, 0, len(orderids))
+	var rejected []int
+	for _, v := range orderids {
+		order, err := c.Cancel(v)
+		if err != nil {
+			rejected = append(rejected, v)
+			continue
+		}
+		orders = append(orders, order)
+	}
+	if rejected != nil {
+		return orders, errors.Errorf("this orders not cancelled: %v", rejected)
+	}
+	return orders, nil
+
 }
 
 // Buy place buy order
 func (c *Client) Buy(symbol string, price, amount float64) (orderID int, err error) {
-	symbol, err = normalize(symbol)
+	var order = exchange.Order{
+		Submitted: time.Now(),
+		Market:    symbol,
+		Price:     price,
+		Amount:    amount,
+		Type:      exchange.Buy,
+		Status:    exchange.Submitted,
+	}
+	orderID, err = c.createOrder(symbol, price, amount, "buy")
 	if err != nil {
 		return
 	}
+	order.OrderID = orderID
+	err = c.Orders.Push(order)
 
-	orderID, err = CreateOrder(c.Key, c.Secret, symbol, "buy", PriceTypeMarket, amount, 1, price, nil, nil, nil)
-	if err != nil {
-		return
-	}
-	c.Tracker.NewOrder(symbol, exchange.ActionBuy, exchange.StatusSubmitted, orderID, amount, price)
 	return
 }
 
 // Sell place sell order
 func (c *Client) Sell(symbol string, price, amount float64) (orderID int, err error) {
-	symbol, err = normalize(symbol)
+	var order = exchange.Order{
+		Submitted: time.Now(),
+		Market:    symbol,
+		Price:     price,
+		Amount:    amount,
+		Type:      exchange.Sell,
+		Status:    exchange.Submitted,
+	}
+	orderID, err = c.createOrder(symbol, price, amount, "sell")
 	if err != nil {
 		return
 	}
+	order.OrderID = orderID
+	err = c.Orders.Push(order)
 
-	orderID, err = CreateOrder(c.Key, c.Secret, symbol, "sell", PriceTypeMarket, amount, 1, price, nil, nil, nil)
-	if err != nil {
-		return
-	}
-	c.Tracker.NewOrder(symbol, exchange.ActionSell, exchange.StatusSubmitted, orderID, amount, price)
 	return
+}
+
+func (c *Client) createOrder(symbol string, price, quantity float64, Type string) (int, error) {
+	var err error
+	if symbol, err = normalize(symbol); err != nil {
+		return 0, err
+	}
+	return createOrder(c.Key, c.Secret, symbol, price, quantity, Type, PriceTypeLimit, nil)
 }
 
 // OrderStatus returns string status of order with given orderID
 // Handles only orders that was created using this client
 func (c *Client) OrderStatus(orderID int) (string, error) {
-	return c.Tracker.Status(orderID)
+	return c.Orders.GetOrderStatus(orderID)
+
 }
 
 // OrderDetails returns all avalible info about order
 // Handles only orders that was created using this client
-func (c *Client) OrderDetails(orderID int) (exchange.OrderInfo, error) {
-	order, err := c.Tracker.Get(orderID)
-	return order, err
+func (c *Client) OrderDetails(orderID int) (exchange.Order, error) {
+	return c.Orders.GetOrderInfo(orderID)
+
 }
 
 // Executed wraps Tracker.Executed()
-func (c *Client) Executed() []*exchange.OrderInfo { return c.Tracker.Executed() }
+func (c *Client) Executed() []int {
+	return c.Orders.GetOpened()
+}
 
 // Completed wraps Tracker.Completed()
-func (c *Client) Completed() []*exchange.OrderInfo { return c.Tracker.Completed() }
+func (c *Client) Completed() []int {
+	return c.Orders.GetCompleted()
+}
 
-// OrderBook returns interface for managing Orderbook
-func (c *Client) OrderBook() exchange.OrderBookTracker {
-	return c.OrderBookTracker
+// Orderbook returns interface for managing Orderbook
+func (c *Client) Orderbook() exchange.Orderbooks {
+	return c.Orderbooks
 }
 
 // GetBalance gets balance information about given currency
 func (c *Client) GetBalance(currency string) (string, error) {
-	info, err := GetBalance(c.Key, c.Secret)
+	info, err := getBalance(c.Key, c.Secret)
 	if err != nil {
 		return "", err
 	}
@@ -148,71 +203,45 @@ func (c *Client) GetBalance(currency string) (string, error) {
 	}
 	return "", errors.Errorf("currency %s does not found", currency)
 }
-
-func (c *Client) checkUpdate() {
-	if c.OrderBookTracker != nil {
-		// runs goroutine for each market and wait them
-		go func() {
-			c.sem <- struct{}{}
-			var wg sync.WaitGroup
-			wg.Add(len(allowed))
-			for _, v := range allowed {
-				go func(sym string, w *sync.WaitGroup) {
-					defer w.Done()
-					orders, err := GetOrderBook(sym)
-					if err != nil {
-						//log.Printf("c2cx: update orderbook error: %s, %s", err.Error(), sym)
-						return
-					}
-					c.OrderBookTracker.UpdateSym(sym, orders.Bids, orders.Asks)
-					return
-				}(v, &wg)
-			}
-			wg.Wait()
-			<-c.sem
-		}()
-
+func (c *Client) updateOrderbook() {
+	for _, v := range markets {
+		orderbook, err := getOrderbook(v)
+		if err != nil {
+			logger.Warningf("c2cx: update orderbook error: %s", err)
+			continue
+		}
+		c.Orderbooks.Update(v, orderbook.Bids, orderbook.Asks)
 	}
-	if c.Tracker != nil {
-		var wg sync.WaitGroup
-		wg.Add(len(allowed) * len(Statusees))
-		for _, sym := range allowed {
-			for s := range Statusees {
-				go func(symbol, status string, w *sync.WaitGroup) {
-					defer w.Done()
-					orders, err := GetOrderByStatus(c.Key, c.Secret, symbol, status, -1)
-					if err != nil {
-						logger.Warningf("c2cx: update order info failed %s", err)
-						return
-					}
-					for _, order := range orders {
-						var accepted = unixToTime(order.CreateDate)
-						switch status {
-						case exchange.StatusOpened, exchange.StatusPartial:
-							c.Tracker.UpdateOrderDetails(order.OrderID, symbol, &accepted)
-						case exchange.StatusCancelled:
-							c.Tracker.Cancel(order.OrderID)
-						case exchange.StatusCompleted:
-							c.Tracker.Complete(order.OrderID, time.Now())
-						}
-					}
-				}(sym, s, &wg)
+}
+func (c *Client) updateOrders() {
+	for _, v := range markets {
+		orders, err := getOrderinfo(c.Key, c.Secret, v, -1, nil)
+		if err != nil {
+			logger.Warningf("c2cx: update orders error: %s", err)
+			continue
+		}
+		for _, v := range orders {
+			t := convert(v)
+			if err := c.Orders.UpdateOrder(t); err != nil {
+				logger.Warningf("c2cx: update order %d error: %s", t.OrderID, err)
 			}
 		}
-		wg.Wait()
 	}
 }
 
-// Update run updates synchronously
+// Update starts update cycle
 func (c *Client) Update() {
-	c.sem = make(chan struct{}, 1)
-	t := time.NewTicker(c.RefreshInterval * time.Millisecond)
+	bookt := time.NewTicker(c.OrderbookRefreshInterval)
+	t := time.NewTicker(c.OrderRefreshInterval)
 	for {
 		select {
+		case <-bookt.C:
+			c.updateOrderbook()
 		case <-t.C:
-			c.checkUpdate()
+			c.updateOrders()
 		case <-c.Stop:
 			t.Stop()
+			bookt.Stop()
 			return
 		}
 	}

@@ -9,7 +9,7 @@ import (
 	"fmt"
 
 	"github.com/uberfurrer/tradebot/api/rpc"
-	"github.com/uberfurrer/tradebot/exchange"
+	"github.com/uberfurrer/tradebot/exchange/tracker"
 	"github.com/urfave/cli"
 )
 
@@ -57,7 +57,7 @@ func infoCmd() cli.Command {
 				fmt.Printf("Error processing request %s", err)
 				return errRPC
 			}
-			var result exchange.OrderInfo
+			var result tracker.Order
 			if err = json.Unmarshal(resp.Result, &result); err != nil {
 				fmt.Printf("Error: invalid response, %s", err)
 				return errInvalidResponse
@@ -152,7 +152,7 @@ func completedCmd() cli.Command {
 					for _, v := range args {
 						v = strings.ToUpper(v)
 						for _, order := range orders {
-							if order.TradePair == v {
+							if order.Market == v {
 								b, _ := json.MarshalIndent(order, "", "    ")
 								fmt.Println(string(b))
 							}
@@ -234,7 +234,7 @@ func executedCmd() cli.Command {
 					for _, v := range args {
 						v = strings.ToUpper(v)
 						for _, order := range orders {
-							if order.TradePair == v {
+							if order.Market == v {
 								b, _ := json.MarshalIndent(order, "", "    ")
 								fmt.Println(string(b))
 							}
@@ -279,7 +279,7 @@ func executedCmd() cli.Command {
 	}
 }
 
-func getCompleted() ([]exchange.OrderInfo, error) {
+func getCompleted() ([]tracker.Order, error) {
 	var req = rpc.Request{
 		ID:      reqID(),
 		JSONRPC: rpc.JSONRPC,
@@ -291,7 +291,7 @@ func getCompleted() ([]exchange.OrderInfo, error) {
 		fmt.Printf("Error processing request %s", err)
 		return nil, errRPC
 	}
-	var result []exchange.OrderInfo
+	var result []tracker.Order
 	if err = json.Unmarshal(resp.Result, &result); err != nil {
 		fmt.Printf("Error: invalid response, %s", err)
 		return nil, errInvalidResponse
@@ -299,7 +299,7 @@ func getCompleted() ([]exchange.OrderInfo, error) {
 	return result, nil
 }
 
-func getExecuted() ([]exchange.OrderInfo, error) {
+func getExecuted() ([]tracker.Order, error) {
 	var req = rpc.Request{
 		ID:      reqID(),
 		JSONRPC: rpc.JSONRPC,
@@ -311,7 +311,7 @@ func getExecuted() ([]exchange.OrderInfo, error) {
 		fmt.Printf("Error processing request %s", err)
 		return nil, errRPC
 	}
-	var result []exchange.OrderInfo
+	var result []tracker.Order
 	if err = json.Unmarshal(resp.Result, &result); err != nil {
 		fmt.Printf("Error: invalid response, %s", err)
 		return nil, errInvalidResponse

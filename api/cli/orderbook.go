@@ -32,7 +32,7 @@ func orderbookCmd() cli.Command {
 				fmt.Printf("Error processing request %s\n", err)
 				return errRPC
 			}
-			var result exchange.Orderbook
+			var result exchange.MarketRecord
 			if err = json.Unmarshal(resp.Result, &result); err != nil {
 				fmt.Printf("Error: invalid request, %s\n", err)
 				return errInvalidResponse

@@ -5,33 +5,30 @@ import (
 	"time"
 )
 
-// OrderBookTracker provides functionality for managing OrderBook
-type OrderBookTracker interface {
-	// UpdateSym updates buffer for the given sym
-	// After updating all symbols you need to call OrderBookTracker.Flush()
-	UpdateSym(string, []OrderbookEntry, []OrderbookEntry)
+// Orderbooks provides functionality for managing OrderBook
+type Orderbooks interface {
+	// Update updates orderbook for given market
+	Update(string, []MarketOrder, []MarketOrder)
 	//Get gets orderbook for given tradepair symbol
-	// It is case-sensetive
-	// First returned value - bids, second - asks
-	GetRecord(string) (Orderbook, error)
+	Get(string) (MarketRecord, error)
 }
 
-// OrderbookEntry entry represnets a single order in orderbook
-type OrderbookEntry struct {
+// MarketOrder is a one order in stock
+type MarketOrder struct {
 	Price  float64 `json:"price"`
 	Volume float64 `json:"volume"`
 }
 
-// Orderbook represents orderbook for one market
-type Orderbook struct {
-	Timestamp time.Time        `json:"timestamp"`
-	Symbol    string           `json:"symbol"`
-	Bids      []OrderbookEntry `json:"bids"`
-	Asks      []OrderbookEntry `json:"asks"`
+// MarketRecord represents orderbook for one market
+type MarketRecord struct {
+	Timestamp time.Time     `json:"timestamp"`
+	Symbol    string        `json:"symbol"`
+	Bids      []MarketOrder `json:"bids"`
+	Asks      []MarketOrder `json:"asks"`
 }
 
 // MarshalJSON implements json.Marshaler interface
-func (r Orderbook) MarshalJSON() ([]byte, error) {
+func (r MarketRecord) MarshalJSON() ([]byte, error) {
 	type rec struct {
 		Time   int64           `json:"timestamp"`
 		Symbol string          `json:"symbol"`
@@ -58,7 +55,7 @@ func (r Orderbook) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler interface
-func (r *Orderbook) UnmarshalJSON(b []byte) error {
+func (r *MarketRecord) UnmarshalJSON(b []byte) error {
 
 	type rec struct {
 		Time   int64           `json:"timestamp"`
@@ -73,8 +70,8 @@ func (r *Orderbook) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	var (
-		bids []OrderbookEntry
-		asks []OrderbookEntry
+		bids []MarketOrder
+		asks []MarketOrder
 	)
 	if err = json.Unmarshal(tmp.Bids, &bids); err != nil {
 		return err

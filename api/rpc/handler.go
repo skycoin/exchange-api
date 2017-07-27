@@ -295,7 +295,7 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		if err != nil {
 			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 		}
-		book, err := c.OrderBook().GetRecord(market)
+		book, err := c.Orderbook().Get(market)
 		if err != nil {
 			resp.Error = makeError(InternalError, internalErrorMsg, err)
 			return resp

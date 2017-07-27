@@ -45,7 +45,6 @@ func requestPost(endpoint, key, secret, nonce string, params map[string]interfac
 	reqURL := apiroot
 	reqURL.Path += endpoint
 	reqData := encodeValues(params)
-	log.Println(string(reqData), reqURL.String())
 	req, _ := http.NewRequest("POST", reqURL.String(), bytes.NewReader(reqData))
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
 	req.Header.Add("Authorization", header(key, secret, nonce, reqURL, reqData))
@@ -60,8 +59,8 @@ func requestPost(endpoint, key, secret, nonce string, params map[string]interfac
 
 //Public API functions
 
-// GetCurrencies gets all currencies
-func GetCurrencies() ([]CurrencyInfo, error) {
+// getCurrencies gets all currencies
+func getCurrencies() ([]CurrencyInfo, error) {
 	resp, err := requestGet("getcurrencies", "")
 	if err != nil {
 		return nil, err
@@ -74,8 +73,8 @@ func GetCurrencies() ([]CurrencyInfo, error) {
 	return result, json.Unmarshal(resp.Data, &result)
 }
 
-// GetTradePairs gets all TradePairs on exchange
-func GetTradePairs() ([]TradepairInfo, error) {
+// getTradePairs gets all TradePairs on exchange
+func getTradePairs() ([]TradepairInfo, error) {
 	resp, err := requestGet("gettradepairs", "")
 	if err != nil {
 		return nil, err
@@ -88,10 +87,10 @@ func GetTradePairs() ([]TradepairInfo, error) {
 	return result, json.Unmarshal(resp.Data, &result)
 }
 
-// GetMarkets return all Market info by given baseMarket
-// if baseMarket is empty or "all" GetMarkets return all markets
+// getMarkets return all Market info by given baseMarket
+// if baseMarket is empty or "all" getMarkets return all markets
 // if hours < 1 it will be omitted, default value is 24
-func GetMarkets(baseMarket string, hours int) ([]MarketInfo, error) {
+func getMarkets(baseMarket string, hours int) ([]MarketInfo, error) {
 	var (
 		requestParams string
 		err           error
@@ -110,24 +109,27 @@ func GetMarkets(baseMarket string, hours int) ([]MarketInfo, error) {
 		return nil, err
 	}
 	if !resp.Success {
+		log.Println(resp)
 		return nil, errors.Errorf("GetMarkets failed: %s",
 			resp.Message)
+
 	}
 	var result []MarketInfo
 	return result, json.Unmarshal(resp.Data, &result)
 }
 
-// GetMarket return market with given label
+// getMarket return market with given label
 // if hours < 1, it will be omitted, default value is 24
-func GetMarket(market string, hours int) (*MarketInfo, error) {
+func getMarket(market string, hours int) (MarketInfo, error) {
 	var (
 		requestParams string
 		marketID      int
 		err           error
+		result        MarketInfo
 	)
 
 	if marketID, err = getMarketID(market); err != nil {
-		return nil, err
+		return result, err
 	}
 	requestParams += strconv.Itoa(marketID)
 	if hours > 0 {
@@ -135,19 +137,18 @@ func GetMarket(market string, hours int) (*MarketInfo, error) {
 	}
 	resp, err := requestGet("getmarket", requestParams)
 	if err != nil {
-		return nil, err
+		return result, err
 	}
 	if !resp.Success {
-		return nil, errors.Errorf("GetMarket failed: %s, Market: %s",
+		return result, errors.Errorf("GetMarket failed: %s, Market: %s",
 			resp.Message, market)
 	}
-	var result = &MarketInfo{}
-	return result, json.Unmarshal(resp.Data, result)
+	return result, json.Unmarshal(resp.Data, &result)
 }
 
-// GetMarketHistory return market history with given label
+// getMarketHistory return market history with given label
 // if hours < 1, it will be omitted, default value is 24
-func GetMarketHistory(market string, hours int) ([]MarketHistoryResponse, error) {
+func getMarketHistory(market string, hours int) ([]MarketHistory, error) {
 	var (
 		requestParams string
 		err           error
@@ -168,20 +169,21 @@ func GetMarketHistory(market string, hours int) ([]MarketHistoryResponse, error)
 		return nil, errors.Errorf("GetMarketHistory failed: %s, Market: %s",
 			resp.Message, market)
 	}
-	var result []MarketHistoryResponse
+	var result []MarketHistory
 	return result, json.Unmarshal(resp.Data, &result)
 }
 
-// GetMarketOrders returns count orders from market with given label
+// getMarketOrders returns count orders from market with given label
 // if count < 1, its will be omitted, default value is 100
-func GetMarketOrders(market string, count int) (*OrderBook, error) {
+func getMarketOrders(market string, count int) (MarketOrders, error) {
 	var (
 		requestParams string
 		err           error
 		marketID      int
+		result        MarketOrders
 	)
 	if marketID, err = getMarketID(market); err != nil {
-		return nil, err
+		return result, err
 	}
 	requestParams += strconv.Itoa(marketID)
 	if count > 0 {
@@ -189,19 +191,19 @@ func GetMarketOrders(market string, count int) (*OrderBook, error) {
 	}
 	resp, err := requestGet("getmarketorders", requestParams)
 	if err != nil {
-		return nil, err
+		return result, err
 	}
 	if !resp.Success {
-		return nil, errors.Errorf("GetMarketHistory failed: %s, Market: %s",
+		return result, errors.Errorf("GetMarketOrders failed: %s, Market: %s",
 			resp.Message, market)
 	}
-	var result = &OrderBook{}
+
 	return result, json.Unmarshal(resp.Data, &result)
 }
 
-// GetMarketOrderGroups returns count Orders to each market
+// getMarketOrderGroups returns count Orders to each market
 // If count < 1, it will be omitted
-func GetMarketOrderGroups(count int, markets ...string) ([]OrderBookLabeled, error) {
+func getMarketOrderGroups(count int, markets ...string) ([]MarketOrdersWithLabel, error) {
 	var (
 		requestParams string
 		err           error
@@ -219,20 +221,20 @@ func GetMarketOrderGroups(count int, markets ...string) ([]OrderBookLabeled, err
 	}
 	resp, err := requestGet("getmarketordergroups", requestParams)
 	if err != nil {
-		return nil, errors.Wrapf(err, "GetMarketOrderGroups failed: %s, Market: %s")
+		return nil, errors.Wrapf(err, "GetMarketOrderGroups failed, markets: %s", strings.Join(markets, " "))
 	}
 	if !resp.Success {
 		return nil, errors.Errorf("GetMarketOrderGroups failed: %s, Market: %s",
-			resp.Message, markets)
+			resp.Message, strings.Join(markets, " "))
 	}
-	var result []OrderBookLabeled
+	var result []MarketOrdersWithLabel
 	return result, json.Unmarshal(resp.Data, &result)
 }
 
 // Private API functions
 
-//GetBalance return a string representation of balance by given currency
-func GetBalance(key, secret, nonce, currency string) (string, error) {
+//getBalance return a string representation of balance by given currency
+func getBalance(key, secret, nonce, currency string) (string, error) {
 	resp, err := requestPost("getbalance", key, secret, nonce, nil)
 	if err != nil {
 		return "", err
@@ -241,7 +243,7 @@ func GetBalance(key, secret, nonce, currency string) (string, error) {
 		return "", errors.Errorf("GetBalance failed: %s, Currency %s Rawdata %s",
 			resp.Message, currency, string(resp.Data))
 	}
-	var result Balance
+	var result balance
 	err = json.Unmarshal(resp.Data, &result)
 	if err != nil {
 		return "", err
@@ -252,47 +254,42 @@ func GetBalance(key, secret, nonce, currency string) (string, error) {
 	return "", errors.New("currency does not found")
 }
 
-// GetDepositAddress returns a deposit address of given currency
-func GetDepositAddress(key, secret, nonce, currency string) (*DepositAddress, error) {
+// getDepositAddress returns a deposit address of given currency
+func getDepositAddress(key, secret, nonce, currency string) (DepositAddress, error) {
+	var result DepositAddress
 	var params = make(map[string]interface{})
 	cID, err := getCurrencyID(currency)
 	if err != nil {
-		return nil, errors.Errorf("Currency %s does not found", currency)
+		return result, errors.Errorf("Currency %s does not found", currency)
 	}
 	params["CurrencyId"] = cID
 	resp, err := requestPost("getdepositaddress", key, secret, nonce, params)
 	if err != nil {
-		return nil, err
+		return result, err
 	}
 	if !resp.Success {
-		return nil, errors.Errorf("GetDepositAddress failed: %s, Currency %s",
+		return result, errors.Errorf("GetDepositAddress failed: %s, Currency %s",
 			resp.Message, currency)
 	}
-	var result DepositAddress
-	return &result, json.Unmarshal(resp.Data, &result)
+
+	return result, json.Unmarshal(resp.Data, &result)
 }
 
-// AllMarkets for GetTradeHistory and GetOpenOrders
-const (
-	AllMarkets = "ALL"
-)
-
-// GetOpenOrders return a list of opened orders by specific market
-// if count < 1, it will be omitted
-func GetOpenOrders(key, secret, nonce, market string, count int) ([]OpenedOrder, error) {
+// getOpenOrders return a list of opened orders by specific market or all markets
+func getOpenOrders(key, secret, nonce string, market *string, count *int) ([]Order, error) {
 	var (
 		params = make(map[string]interface{})
 		mID    int
 		err    error
 	)
-	if market != AllMarkets {
-		if mID, err = getMarketID(market); err != nil {
+	if market != nil {
+		if mID, err = getMarketID(*market); err != nil {
 			return nil, err
 		}
 		params["TradePairId"] = mID
 	}
-	if count > 0 {
-		params["Count"] = count
+	if count != nil {
+		params["Count"] = *count
 	}
 	resp, err := requestPost("getopenorders", key, secret, nonce, params)
 	if err != nil {
@@ -300,27 +297,26 @@ func GetOpenOrders(key, secret, nonce, market string, count int) ([]OpenedOrder,
 	}
 	if !resp.Success {
 		return nil, errors.Errorf("GetOpenOrders failed: %s Market %s Count %d",
-			resp.Message, market, count)
+			resp.Message, *market, count)
 	}
-	var result []OpenedOrder
+	var result []Order
 	return result, json.Unmarshal(resp.Data, &result)
 }
 
-// GetTradeHistory return a list of all executed orders by specific market
-// if count < 1, it will be omitted
-func GetTradeHistory(key, secret, nonce, market string, count int) ([]ClosedOrder, error) {
+// getTradeHistory return a list of all executed orders by specific market or all markets
+func getTradeHistory(key, secret, nonce string, market *string, count *int) ([]Order, error) {
 	var (
 		params = make(map[string]interface{})
 		err    error
 		mID    int
 	)
-	if market != AllMarkets {
-		if mID, err = getMarketID(market); err != nil {
+	if market != nil {
+		if mID, err = getMarketID(*market); err != nil {
 			return nil, err
 		}
 		params["TradePairId"] = mID
 	}
-	if count > 0 {
+	if count != nil {
 		params["Count"] = count
 	}
 	resp, err := requestPost("gettradehistory", key, secret, nonce, params)
@@ -329,21 +325,15 @@ func GetTradeHistory(key, secret, nonce, market string, count int) ([]ClosedOrde
 	}
 	if !resp.Success {
 		return nil, errors.Errorf("GetTradeHistory failed: %s Market %s Count %d",
-			resp.Message, market, count)
+			resp.Message, *market, count)
 	}
-	var result []ClosedOrder
+	var result []Order
 	return result, json.Unmarshal(resp.Data, &result)
 }
 
-//Possible types of transaction
-const (
-	TxTypeWithdraw = "Withdraw"
-	TxTypeDeposit  = "Deposit"
-)
-
-// GetTransactions returns a list of transactions by given type
+// getTransactions returns a list of transactions by given type
 // if count < 1, it will be omitted
-func GetTransactions(key, secret, nonce, Type string, count int) ([]Transaction, error) {
+func getTransactions(key, secret, nonce, Type string, count int) ([]Transaction, error) {
 	var params = make(map[string]interface{})
 	if Type = strings.Title(Type); Type != TxTypeDeposit && Type != TxTypeWithdraw {
 		return nil, errors.Errorf("Icorrect trasnaction type %s; avalible types: %s %s",
@@ -372,19 +362,19 @@ const (
 	OfTypeSell = "Sell"
 )
 
-// SubmitTrade submits a new trade offer
-func SubmitTrade(key, secret, nonce, market, Type string, rate, amount float64) (*NewTradeInfo, error) {
+// submitTrade submits a new trade offer
+func submitTrade(key, secret, nonce, market, Type string, rate, amount float64) (int, error) {
 	var (
 		params = make(map[string]interface{})
 		err    error
 		mID    int
 	)
 	if Type = strings.Title(Type); Type != OfTypeBuy && Type != OfTypeSell {
-		return nil, errors.Errorf("Incorrect offer type %s; avalible types: %s %s",
+		return 0, errors.Errorf("Incorrect offer type %s; avalible types: %s %s",
 			Type, OfTypeBuy, OfTypeSell)
 	}
 	if mID, err = getMarketID(market); err != nil {
-		return nil, err
+		return 0, err
 	}
 	params["TradePairId"] = mID
 	params["Type"] = Type
@@ -392,61 +382,65 @@ func SubmitTrade(key, secret, nonce, market, Type string, rate, amount float64) 
 	params["Amount"] = amount
 	resp, err := requestPost("submittrade", key, secret, nonce, params)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	if !resp.Success {
-		return nil, errors.Errorf("SubmitTrade failed: %s, Type %s Market %s Rate %f Amount %f",
+		return 0, errors.Errorf("SubmitTrade failed: %s, Type %s Market %s Rate %f Amount %f",
 			resp.Message, Type, market, rate, amount)
 	}
-	var result NewTradeInfo
-	return &result, json.Unmarshal(resp.Data, &result)
+	var result newOrder
+	err = json.Unmarshal(resp.Data, &result)
+	if err != nil {
+		return 0, err
+	}
+	if result.OrderID != nil {
+		return *result.OrderID, nil
+	}
+	return 0, ErrInstant
 }
 
-// Possible types of cancellation
-const (
-	CancelOne       = "Trade"
-	CancelTradePair = "TradePair"
-	CancelAll       = "All"
-)
+// ErrInstant willbe returned if order instantly executed and hasn't OrderID
+var ErrInstant = errors.New("Order instantly executed")
 
 // CancelTrade cancel trades by given orderid, market or add active
 // depends of type argument
-func CancelTrade(key, secret, nonce, Type string, orderID int, market string) (CancelledOrders, error) {
-	var params = make(map[string]interface{})
-	Type = strings.Title(Type)
-	switch Type {
-	case CancelAll:
-		break
-	case CancelOne:
-		params["OrderId"] = orderID
-	case CancelTradePair:
-		var (
-			mID int
-			err error
-		)
-		if mID, err = getMarketID(market); err != nil {
-			return nil, err
-		}
-		params["TradePairId"] = mID
-	default:
-		return nil, errors.Errorf("Incorrect type of cancellation %s; possilble types: %s %s %s",
-			Type, CancelAll, CancelOne, CancelTradePair)
+func cancelTrade(key, secret, nonce string, Type string, TradePair *string, orderID *int) ([]int, error) {
+	var params = map[string]interface{}{
+		"Type": Type,
 	}
-	params["Type"] = Type
-	resp, err := requestPost("canceltrade", key, secret, nonce, params)
+	switch Type {
+	case ByOrderID:
+		if orderID == nil {
+			return nil, errors.New("for this type orderID should be valid")
+		}
+		params["OrderId"] = *orderID
+	case ByMarket:
+		if TradePair == nil {
+			return nil, errors.New("for this type TradePair should be valid")
+		}
+		if tradepairID, err := getMarketID(*TradePair); err == nil {
+			params["TradePairId"] = tradepairID
+		} else {
+			return nil, errors.New("invalid tradepair")
+		}
+	case All:
+	// all ok
+	default:
+		return nil, errors.New("invalid cancel type")
+	}
+	resp, err := requestPost("CancelTrade", key, secret, nonce, params)
 	if err != nil {
 		return nil, err
 	}
 	if !resp.Success {
-		return nil, errors.Errorf("CancelTrade failed: %s params: %v",
-			resp.Message, params)
+		return nil, errors.New(resp.Message)
 	}
-	var result CancelledOrders
-	return result, json.Unmarshal(resp.Data, &result)
+	var orders []int
+	return orders, json.Unmarshal(resp.Data, &orders)
 }
 
 // SubmitTip submits a tip to Trollbox
-func SubmitTip(key, secret, nonce, currency string, activeUsers int, amount float64) (TipMessage, error) {
+func submitTip(key, secret, nonce, currency string, activeUsers int, amount float64) (string, error) {
 	var (
 		params = make(map[string]interface{})
 		cID    int
@@ -469,13 +463,13 @@ func SubmitTip(key, secret, nonce, currency string, activeUsers int, amount floa
 		return "", errors.Errorf("SubmitTip failed: %s",
 			resp.Message)
 	}
-	var result TipMessage
+	var result string
 	return result, json.Unmarshal(resp.Data, &result)
 }
 
 // SubmitWithdraw submits a withdrawal request. If address does not exists in you AddressBook, it will fail
 // paymentid will be used only for currencies, based of CryptoNote algorhitm
-func SubmitWithdraw(key, secret, nonce, currency, address, paymentid string, amount float64) (WithdrawID, error) {
+func submitWithdraw(key, secret, nonce, currency, address, paymentid string, amount float64) (int, error) {
 	var (
 		params = make(map[string]interface{})
 		err    error
@@ -500,12 +494,12 @@ func SubmitWithdraw(key, secret, nonce, currency, address, paymentid string, amo
 		return 0, errors.Errorf("SubmitWithdraw failed: %s, %s %f to %s ",
 			resp.Message, currency, amount, address)
 	}
-	var result WithdrawID
+	var result int
 	return result, json.Unmarshal(resp.Data, &result)
 }
 
-// SubmitTransfer submit a transfer funds to another user
-func SubmitTransfer(key, secret, nonce, currency, username string, amount float64) (TransferMessage, error) {
+// submitTransfer submit a transfer funds to another user
+func submitTransfer(key, secret, nonce, currency, username string, amount float64) (string, error) {
 	var (
 		params = make(map[string]interface{})
 		err    error
@@ -525,6 +519,6 @@ func SubmitTransfer(key, secret, nonce, currency, username string, amount float6
 		return "", errors.Errorf("SubmitTransfer failed: %s",
 			resp.Message)
 	}
-	var result TransferMessage
+	var result string
 	return result, json.Unmarshal(resp.Data, &result)
 }

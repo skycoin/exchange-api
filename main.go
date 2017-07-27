@@ -1,19 +1,5 @@
 package main
 
-import (
-	"os"
-	"strings"
-	"time"
-
-	"github.com/go-redis/redis"
-	"github.com/pkg/errors"
-	"github.com/uberfurrer/tradebot/api/rpc"
-	"github.com/uberfurrer/tradebot/db"
-	c2cx "github.com/uberfurrer/tradebot/exchange/c2cx.com"
-	cryptopia "github.com/uberfurrer/tradebot/exchange/cryptopia.co.nz"
-	"github.com/uberfurrer/tradebot/logger"
-)
-
 var (
 	c2cxKey         = "2A4C851A-1B86-4E08-863B-14582094CE0F"
 	c2cxSecret      = "83262169-B473-4BF2-9288-5E5AC898F4B0"
@@ -22,56 +8,11 @@ var (
 )
 
 func main() {
-	logger.SetLogLevel(logger.Errors, os.Stdout)
-
-	var c2cxClient = c2cx.Client{
-		Key:    c2cxKey,
-		Secret: c2cxSecret,
-		OrderBookTracker: db.NewOrderbookTracker(&redis.Options{
-			Addr: "localhost:6379",
-		}, "c2cx"),
-		RefreshInterval: 1000,
-	}
-	go c2cxClient.Update()
-	var c2cxRPC = rpc.PackageHandler{
-		Client:   &c2cxClient,
-		Handlers: c2cxHandlers,
-		Env: map[string]string{
-			"key":    c2cxKey,
-			"secret": c2cxSecret,
-		},
-	}
-
-	var cryptopiaClient = cryptopia.Client{
-		Key:    cryptopiaKey,
-		Secret: cryptopiaSecret,
-		Orderbook: db.NewOrderbookTracker(&redis.Options{
-			Addr: "localhost:6379",
-		}, "cryptopia"),
-		RefreshInterval: 1000,
-		TrackedBooks:    []string{"LTC/BTC", "SKY/DOGE"},
-	}
-	go cryptopiaClient.Update()
-	var cryptopiaRPC = rpc.PackageHandler{
-		Client:   &cryptopiaClient,
-		Handlers: cryptopiaHandlers,
-		Env: map[string]string{
-			"key":    cryptopiaKey,
-			"secret": cryptopiaSecret,
-		},
-	}
-	var srv = rpc.Server{
-		Handlers: map[string]rpc.PackageHandler{
-			"c2cx":      c2cxRPC,
-			"cryptopia": cryptopiaRPC,
-		},
-	}
-	var stop = make(chan struct{})
-	srv.Start("localhost:12345", stop)
 
 	//close stop for exit
 }
 
+/*
 // Additional functions, that does not wrapped by exchange.Client interface
 var cryptopiaHandlers = map[string]rpc.PackageFunc{
 	// GetDepositAddress gets deposit address for given currency
@@ -146,6 +87,8 @@ var cryptopiaHandlers = map[string]rpc.PackageFunc{
 		return rpc.MakeSuccessResponse(r, transactions)
 	},
 }
+*/
+/*
 var c2cxHandlers = map[string]rpc.PackageFunc{
 	// This order wont tracked
 	// Calling SubmitTrade directly allows to creating limited order
@@ -210,7 +153,7 @@ var c2cxHandlers = map[string]rpc.PackageFunc{
 			}
 			expTime = &t
 		}
-		orderID, err := c2cx.CreateOrder(env["key"], env["secret"], symbol, ordertype, priceTypeID, triggerprice, quantity, price,
+		orderID, err := c2cx.CreateOrder(env["key"], env["secret"], symbol, priceTypeID, triggerprice, quantity, price,
 			takeProfit, stopLoss, expTime)
 		if err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InternalError, err)
@@ -218,3 +161,4 @@ var c2cxHandlers = map[string]rpc.PackageFunc{
 		return rpc.MakeSuccessResponse(r, orderID)
 	},
 }
+*/

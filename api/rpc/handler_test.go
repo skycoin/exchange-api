@@ -4,12 +4,10 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/go-redis/redis"
-	"github.com/uberfurrer/tradebot/db"
 	"github.com/uberfurrer/tradebot/exchange"
 )
 
-var client = new(mockExchange)
+var client = ex{}
 
 func Test_defaultHandler_GetBalance(t *testing.T) {
 	var req = Request{
@@ -18,7 +16,7 @@ func Test_defaultHandler_GetBalance(t *testing.T) {
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 	}
-	resp := defaultHandlers["GetBalance"](req, client)
+	resp := defaultHandlers["balance"](req, client)
 	if resp.Error != nil {
 		t.Error(resp.Error)
 	}
@@ -33,11 +31,11 @@ func Test_defaulthandler_Cancel(t *testing.T) {
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 	}
-	resp := defaultHandlers["Cancel"](req, client)
+	resp := defaultHandlers["cancel_trade"](req, client)
 	if resp.Error != nil {
 		t.Error(resp.Error)
 	}
-	var want = "{\"TradePair\":\"BTC/LTC\",\"Type\":\"buy\",\"Status\":\"Completed\",\"OrderID\":1,\"Price\":1,\"Volume\":1,\"Submitted\":0,\"Accepted\":0,\"Completed\":0}"
+	var want = "{\"orderid\":0,\"type\":\"\",\"market\":\"\",\"amount\":0,\"price\":0,\"submitted_at\":-6795364578871,\"fee\":0,\"completed_amount\":0,\"status\":\"\",\"accepted_at\":-6795364578871,\"completed_at\":-6795364578871}"
 	if string(resp.Result) != want {
 		t.Fatalf("want: %s, expected: %s", want, resp.Result)
 	}
@@ -49,8 +47,8 @@ func Test_defaulthandler_CancelAll(t *testing.T) {
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 	}
-	var want = "[{\"TradePair\":\"BTC/LTC\",\"Type\":\"buy\",\"Status\":\"Completed\",\"OrderID\":1,\"Price\":1,\"Volume\":1,\"Submitted\":0,\"Accepted\":0,\"Completed\":0}]"
-	resp := defaultHandlers["CancelAll"](req, client)
+	var want = "[]"
+	resp := defaultHandlers["cancel_all"](req, client)
 	if resp.Error != nil {
 		t.Error(resp.Error)
 	}
@@ -65,11 +63,11 @@ func Test_defaulthandler_CancelMarket(t *testing.T) {
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 	}
-	resp := defaultHandlers["CancelMarket"](req, client)
+	resp := defaultHandlers["cancel_market"](req, client)
 	if resp.Error != nil {
 		t.Error(resp.Error)
 	}
-	var want = "[{\"TradePair\":\"BTC/LTC\",\"Type\":\"buy\",\"Status\":\"Completed\",\"OrderID\":1,\"Price\":1,\"Volume\":1,\"Submitted\":0,\"Accepted\":0,\"Completed\":0}]"
+	var want = "[]"
 	if string(resp.Result) != want {
 		t.Fatalf("want: %s, expected: %s", want, resp.Result)
 	}
@@ -81,7 +79,7 @@ func Test_defaulthandler_Buy(t *testing.T) {
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 	}
-	resp := defaultHandlers["Buy"](req, client)
+	resp := defaultHandlers["buy"](req, client)
 	if resp.Error != nil {
 		t.Error(resp.Error)
 	}
@@ -96,12 +94,12 @@ func Test_defaulthandler_Sell(t *testing.T) {
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 	}
-	resp := defaultHandlers["Sell"](req, client)
+	resp := defaultHandlers["sell"](req, client)
 	if resp.Error != nil {
 		t.Error(resp.Error)
 	}
-	if string(resp.Result) != "1" {
-		t.Fatalf("want: 1, exepected: %s", resp.Result)
+	if string(resp.Result) != "2" {
+		t.Fatalf("want: 2, exepected: %s", resp.Result)
 	}
 }
 func Test_defaulthandler_OrderDetails(t *testing.T) {
@@ -111,8 +109,8 @@ func Test_defaulthandler_OrderDetails(t *testing.T) {
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 	}
-	resp := defaultHandlers["OrderDetails"](req, client)
-	var want = "{\"TradePair\":\"BTC/LTC\",\"Type\":\"buy\",\"Status\":\"Completed\",\"OrderID\":1,\"Price\":1,\"Volume\":1,\"Submitted\":0,\"Accepted\":0,\"Completed\":0}"
+	resp := defaultHandlers["order_info"](req, client)
+	var want = "{\"orderid\":0,\"type\":\"\",\"market\":\"\",\"amount\":0,\"price\":0,\"submitted_at\":-6795364578871,\"fee\":0,\"completed_amount\":0,\"status\":\"\",\"accepted_at\":-6795364578871,\"completed_at\":-6795364578871}"
 	if resp.Error != nil {
 		t.Error(resp.Error)
 	}
@@ -127,11 +125,11 @@ func Test_defaulthandler_OrderStatus(t *testing.T) {
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 	}
-	resp := defaultHandlers["OrderStatus"](req, client)
+	resp := defaultHandlers["order_status"](req, client)
 	if resp.Error != nil {
 		t.Error(resp.Error)
 	}
-	if string(resp.Result) != "\"Completed\"" {
+	if string(resp.Result) != "\"completed\"" {
 		t.Fatalf("want: \"Completed\", expected: %s", resp.Result)
 	}
 }
@@ -142,8 +140,8 @@ func Test_defaulthandler_Completed(t *testing.T) {
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 	}
-	var want = "[{\"TradePair\":\"BTC/LTC\",\"Type\":\"buy\",\"Status\":\"Completed\",\"OrderID\":1,\"Price\":1,\"Volume\":1,\"Submitted\":0,\"Accepted\":0,\"Completed\":0}]"
-	resp := defaultHandlers["Completed"](req, client)
+	var want = "[]"
+	resp := defaultHandlers["completed"](req, client)
 	if resp.Error != nil {
 		t.Error(resp.Error)
 	}
@@ -158,8 +156,8 @@ func Test_defaulthandler_Executed(t *testing.T) {
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 	}
-	var want = "[{\"TradePair\":\"BTC/LTC\",\"Type\":\"sell\",\"Status\":\"Opened\",\"OrderID\":2,\"Price\":1,\"Volume\":1,\"Submitted\":0,\"Accepted\":0,\"Completed\":0}]"
-	resp := defaultHandlers["Executed"](req, client)
+	var want = "[]"
+	resp := defaultHandlers["executed"](req, client)
 	if resp.Error != nil {
 		t.Error(resp.Error)
 	}
@@ -168,118 +166,16 @@ func Test_defaulthandler_Executed(t *testing.T) {
 	}
 }
 
-type mockExchange int
+type ex struct{}
 
-func (d *mockExchange) Cancel(orderID int) (*exchange.OrderInfo, error) {
-	return &exchange.OrderInfo{
-		Type:      "buy",
-		Status:    exchange.StatusCompleted,
-		TradePair: "BTC/LTC",
-
-		Volume:  1.0,
-		Price:   1.0,
-		OrderID: orderID,
-
-		Submitted: int64(0),
-		Accepted:  int64(0),
-		Completed: int64(0),
-	}, nil
-}
-func (d *mockExchange) CancelMarket(sym string) ([]*exchange.OrderInfo, error) {
-	return []*exchange.OrderInfo{
-		&exchange.OrderInfo{
-			Type:      "buy",
-			Status:    exchange.StatusCompleted,
-			TradePair: sym,
-
-			Volume:  1.0,
-			Price:   1.0,
-			OrderID: 1,
-
-			Submitted: int64(0),
-			Accepted:  int64(0),
-			Completed: int64(0),
-		},
-	}, nil
-}
-func (d *mockExchange) CancelAll() ([]*exchange.OrderInfo, error) {
-	return []*exchange.OrderInfo{
-		&exchange.OrderInfo{
-			Type:      "buy",
-			Status:    exchange.StatusCompleted,
-			TradePair: "BTC/LTC",
-
-			Volume:  1.0,
-			Price:   1.0,
-			OrderID: 1,
-
-			Submitted: int64(0),
-			Accepted:  int64(0),
-			Completed: int64(0),
-		},
-	}, nil
-}
-func (d *mockExchange) Buy(sym string, price, amount float64) (int, error) {
-	return 1, nil
-}
-func (d *mockExchange) Sell(sym string, price, amount float64) (int, error) {
-	return 2, nil
-}
-func (d *mockExchange) Completed() []*exchange.OrderInfo {
-	return []*exchange.OrderInfo{
-		&exchange.OrderInfo{
-			Type:      "buy",
-			Status:    exchange.StatusCompleted,
-			TradePair: "BTC/LTC",
-
-			Volume:  1.0,
-			Price:   1.0,
-			OrderID: 1,
-
-			Submitted: int64(0),
-			Accepted:  int64(0),
-			Completed: int64(0),
-		},
-	}
-}
-func (d *mockExchange) Executed() []*exchange.OrderInfo {
-	return []*exchange.OrderInfo{
-		&exchange.OrderInfo{
-			Type:      "sell",
-			Status:    exchange.StatusOpened,
-			TradePair: "BTC/LTC",
-
-			Volume:  1.0,
-			Price:   1.0,
-			OrderID: 2,
-
-			Submitted: int64(0),
-			Accepted:  int64(0),
-			Completed: int64(0),
-		},
-	}
-}
-func (d *mockExchange) OrderDetails(orderID int) (exchange.OrderInfo, error) {
-	return exchange.OrderInfo{
-		Type:      "buy",
-		Status:    exchange.StatusCompleted,
-		TradePair: "BTC/LTC",
-
-		Volume:  1.0,
-		Price:   1.0,
-		OrderID: orderID,
-
-		Submitted: int64(0),
-		Accepted:  int64(0),
-		Completed: int64(0),
-	}, nil
-}
-func (d *mockExchange) OrderStatus(orderID int) (string, error) {
-	return exchange.StatusCompleted, nil
-}
-func (d *mockExchange) GetBalance(sym string) (string, error) {
-	return "You has 21 * 10e9 BTC", nil
-}
-func (d *mockExchange) OrderBook() exchange.OrderBookTracker {
-	return db.NewOrderbookTracker(&redis.Options{Addr: "localhost:6379"}, "dummy")
-}
+func (ex) Buy(string, float64, float64) (int, error)     { return 1, nil }
+func (ex) Sell(string, float64, float64) (int, error)    { return 2, nil }
+func (ex) Cancel(int) (exchange.Order, error)            { return exchange.Order{}, nil }
+func (ex) CancelMarket(string) ([]exchange.Order, error) { return []exchange.Order{}, nil }
+func (ex) CancelAll() ([]exchange.Order, error)          { return []exchange.Order{}, nil }
+func (ex) Executed() []int                               { return []int{} }
+func (ex) Completed() []int                              { return []int{} }
+func (ex) GetBalance(string) (string, error)             { return "You has 21 * 10e9 BTC", nil }
+func (ex) OrderDetails(int) (exchange.Order, error)      { return exchange.Order{}, nil }
+func (ex) OrderStatus(int) (string, error)               { return exchange.Completed, nil }
+func (ex) Orderbook() exchange.Orderbooks                { return nil }

@@ -15,36 +15,43 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/uberfurrer/tradebot/exchange"
 )
 
-/*
-// init caches
-func init() {
-	_, _ = getCurrencyID("BTC")
-	_, _ = getMarketID("LTC/BTC")
-}
-*/
-var currencyCache map[string]CurrencyInfo
-var marketCache map[string]int
+var incr int
 
 func getCurrencyID(currency string) (int, error) {
-	if currencyCache == nil {
-
-		currencies, err := GetCurrencies()
-		if err != nil {
-			return 0, err
-		}
-		currencyCache = make(map[string]CurrencyInfo)
-
-		for _, v := range currencies {
-			currencyCache[v.Symbol] = v
-		}
+	if v, ok := currencyCache[normalize(currency)]; ok {
+		return v.ID, nil
+	}
+	// If not found, try update first
+	err := updateCaches()
+	if err != nil {
+		return 0, err
 	}
 	if v, ok := currencyCache[normalize(currency)]; ok {
 		return v.ID, nil
 	}
-	return 0, errors.Errorf("Currency %s does not found", currency)
 
+	return 0, errors.Errorf("Currency %s does not found", currency)
+}
+
+func updateCaches() error {
+	crs, err := getCurrencies()
+	if err != nil {
+		return err
+	}
+	for _, v := range crs {
+		currencyCache[v.Symbol] = v
+	}
+	mrkts, err := getTradePairs()
+	if err != nil {
+		return err
+	}
+	for _, v := range mrkts {
+		marketCache[v.Label] = v.ID
+	}
+	return nil
 }
 
 func normalize(symbol string) string {
@@ -54,16 +61,13 @@ func normalize(symbol string) string {
 }
 
 func getMarketID(market string) (int, error) {
-	if marketCache == nil {
-
-		markets, err := GetTradePairs()
-		if err != nil {
-			return 0, err
-		}
-		marketCache = make(map[string]int)
-		for _, v := range markets {
-			marketCache[v.Label] = v.ID
-		}
+	if v, ok := marketCache[normalize(market)]; ok {
+		return v, nil
+	}
+	// If not found, try update first
+	err := updateCaches()
+	if err != nil {
+		return 0, err
 	}
 	if v, ok := marketCache[normalize(market)]; ok {
 		return v, nil
@@ -72,10 +76,12 @@ func getMarketID(market string) (int, error) {
 }
 
 func readResponse(r io.ReadCloser) (*response, error) {
+	incr++
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
+	//ioutil.WriteFile(fmt.Sprintf("responses/response%d.json", incr), b, os.ModePerm)
 	defer r.Close()
 	b = bytes.TrimPrefix(b, []byte("\xef\xbb\xbf"))
 	var resp response
@@ -116,9 +122,21 @@ func header(key, secret, nonce string, uri url.URL, params []byte) string {
 	return "amx " + key + ":" + token + ":" + nonce
 }
 
-// Nonce creates random string
-func Nonce() string {
+// nonce creates random string
+func nonce() string {
 	var b [8]byte
 	rand.Read(b[:])
 	return fmt.Sprintf("%x", b[:])
+}
+
+func convert(order Order) exchange.Order {
+	return exchange.Order{
+		OrderID:         order.OrderID,
+		Market:          order.Market,
+		Price:           order.Rate,
+		Amount:          order.Amount,
+		Accepted:        order.Timestamp,
+		Fee:             order.Fee,
+		CompletedAmount: order.Total - order.Remaining,
+	}
 }

@@ -1,162 +1,215 @@
 package exchange
 
 import (
-	"errors"
+	"crypto/md5"
+	"encoding/binary"
+	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
-// NewOrder creates new Order with given params
-func (tracker *OrderTracker) NewOrder(sym, action, status string, orderID int, vol, price float64) {
-	switch status {
-	case StatusCancelled, StatusCompleted:
-		tracker.completed = append(tracker.completed, &OrderInfo{
-			TradePair: sym,
-			Type:      action,
-			Status:    status,
+// Orders is interface that provides functionality for order tracking
+type Orders interface {
+	GetOpened() []int
+	GetCompleted() []int
+	GetOrderInfo(int) (Order, error)
+	GetOrderStatus(int) (string, error)
 
-			OrderID: orderID,
-			Price:   price,
-			Volume:  vol,
+	UpdateOrder(Order) error
+	Push(Order) error
+}
 
-			Submitted: int64(time.Now().UnixNano() / 10e5),
-			Accepted:  int64(time.Now().UnixNano() / 10e5),
-			Completed: int64(time.Now().UnixNano() / 10e5),
-		})
-	default:
-		tracker.executed[orderID] = &OrderInfo{
-			TradePair: sym,
-			Type:      action,
-			Status:    status,
+// Errors that might happens in order processing
+var (
+	ErrInvalidStatus = errors.Errorf("invalid order status, availible statuses: %s, %s, %s, %s, %s",
+		Submitted, Opened, Partial, Completed, Cancelled)
+	ErrExist       = errors.New("order with given orderid already exist")
+	ErrZeroOrderID = errors.New("order with zero orderID does not allowed")
+	ErrNotFound    = errors.New("order does not found")
+	ErrNotTracked  = errors.New("tracker does not present")
+)
 
-			OrderID: orderID,
-			Price:   price,
-			Volume:  vol,
+type positionData struct {
+	hash   int
+	status int
+}
+type tracker struct {
+	orders    map[int]positionData
+	opened    map[int]Order
+	completed map[int]Order
+}
 
-			Submitted: int64(time.Now().UnixNano() / 10e5),
-		}
-
+func (t *tracker) GetOpened() (orders []int) {
+	orders = make([]int, 0, len(t.opened))
+	for _, v := range t.opened {
+		orders = append(orders, v.OrderID)
 	}
+	return
 }
 
-// UpdateOrderDetails updates info of order with given orderID, if acceptedAt == nil, only status will be updated
-func (tracker *OrderTracker) UpdateOrderDetails(orderID int, status string, acceptedAt *time.Time) {
-	if v, ok := tracker.executed[orderID]; ok {
-		if acceptedAt != nil {
-			v.Accepted = int64(acceptedAt.UnixNano() / 10e5)
-		}
-		v.Status = status
+func (t *tracker) GetCompleted() (orders []int) {
+	orders = make([]int, 0, len(t.completed))
+	for _, v := range t.opened {
+		orders = append(orders, v.OrderID)
 	}
+	return
 }
 
-// Complete sets time and move Order from executed orders
-func (tracker *OrderTracker) Complete(orderID int, completedAt time.Time) {
-	if v, ok := tracker.executed[orderID]; ok {
-		v.Completed = int64(completedAt.UnixNano() / 10e5)
-		v.Status = StatusCompleted
-		tracker.completed = append(tracker.completed, v)
-
-		delete(tracker.executed, orderID)
-	}
+func (t *tracker) GetOrderInfo(orderid int) (Order, error) {
+	return t.lookupByOrderID(orderid)
 }
 
-// Cancel set comlpleted time as now and move Order form executed orders
-func (tracker *OrderTracker) Cancel(orderIDs ...int) {
-	for _, id := range orderIDs {
-		if v, ok := tracker.executed[id]; ok {
-			v.Completed = int64(time.Now().UnixNano() / 10e5)
-			v.Status = StatusCancelled
-			tracker.completed = append(tracker.completed, v)
-
-			delete(tracker.executed, id)
-		}
-	}
-}
-
-// Completed returns currently completed or cancelled orders
-func (tracker *OrderTracker) Completed() []*OrderInfo {
-	return tracker.completed[:]
-}
-
-// Clear clear history of completed orders
-func (tracker *OrderTracker) Clear() {
-	tracker.completed = tracker.completed[:0]
-}
-
-// Status returns a string status of order with given orderID,
-// if this order not found( after call flush, order was created from another client), Status returns non-nil error
-func (tracker *OrderTracker) Status(orderID int) (string, error) {
-	if v, ok := tracker.executed[orderID]; ok {
+func (t *tracker) GetOrderStatus(orderid int) (string, error) {
+	if v, err := t.lookupByOrderID(orderid); err == nil {
 		return v.Status, nil
 	}
-	for _, v := range tracker.completed {
-		if v.OrderID == orderID {
-			return v.Status, nil
+	return "", ErrNotFound
+}
+
+const (
+	statusOpen      = 0
+	statusCompleted = 1
+)
+
+func (t *tracker) lookupByOrderID(orderid int) (Order, error) {
+	if lookupInfo, ok := t.orders[orderid]; ok {
+		switch lookupInfo.status {
+		case statusOpen:
+			return t.opened[lookupInfo.hash], nil
+		case statusCompleted:
+			return t.completed[lookupInfo.hash], nil
 		}
 	}
-	return "", errors.New("Order not found")
+	return Order{}, ErrNotFound
 }
 
-// Get return detalied info of Order with given orderID
-// return error as Status()
-func (tracker *OrderTracker) Get(orderID int) (OrderInfo, error) {
-	if v, ok := tracker.executed[orderID]; ok {
-		return OrderInfo{
-			TradePair: v.TradePair,
-			Type:      v.Type,
-			Status:    v.Status,
-			OrderID:   v.OrderID,
-			Price:     v.Price,
-			Volume:    v.Volume,
-
-			Submitted: v.Submitted,
-			Accepted:  v.Accepted,
-			Completed: v.Completed,
-		}, nil
-	}
-	for _, v := range tracker.completed {
-		if v.OrderID == orderID {
-			return OrderInfo{
-				TradePair: v.TradePair,
-				Type:      v.Type,
-				Status:    v.Status,
-				OrderID:   v.OrderID,
-				Price:     v.Price,
-				Volume:    v.Volume,
-
-				Submitted: v.Submitted,
-				Accepted:  v.Accepted,
-				Completed: v.Completed,
-			}, nil
+func (t *tracker) UpdateOrder(order Order) error {
+	var hashValue = hash(order)
+	if lookupData, ok := t.orders[order.OrderID]; ok {
+		switch lookupData.status {
+		case statusOpen:
+			switch order.Status {
+			case Opened, Partial, Submitted:
+				t.opened[hashValue] = update(t.opened[hashValue], order)
+			case Completed, Cancelled:
+				exist := t.opened[hashValue]
+				delete(t.opened, hashValue)
+				t.orders[order.OrderID] = positionData{
+					hash:   hashValue,
+					status: statusCompleted,
+				}
+				t.completed[hashValue] = update(exist, order)
+			}
+		case statusCompleted:
+			t.completed[hashValue] = update(t.completed[hashValue], order)
 		}
+		return nil
 	}
-
-	return OrderInfo{}, errors.New("Order not found")
+	// if not found in t.orders
+	// it happens if OrderID of order was changed, but it is same order
+	// update lookup data and repeat
+	// old OrderID also saved
+	if v, ok := t.opened[hashValue]; ok {
+		lookupData := t.orders[v.OrderID]
+		t.orders[order.OrderID] = lookupData
+		err := t.UpdateOrder(order)
+		if err != nil {
+			return err
+		}
+		t.orders[v.OrderID] = t.orders[order.OrderID]
+		return nil
+	}
+	if v, ok := t.completed[hashValue]; ok {
+		lookupData := t.orders[v.OrderID]
+		t.orders[order.OrderID] = lookupData
+		err := t.UpdateOrder(order)
+		if err != nil {
+			return err
+		}
+		t.orders[v.OrderID] = t.orders[order.OrderID]
+		return nil
+	}
+	return ErrNotFound
 }
 
-// Executed returns incompleted orders
-func (tracker *OrderTracker) Executed() []*OrderInfo {
-	var result = make([]*OrderInfo, 0, len(tracker.executed))
-	for _, v := range tracker.executed {
-		result = append(result, &OrderInfo{
-			TradePair: v.TradePair,
-			Status:    v.Status,
-			Type:      v.Type,
-			OrderID:   v.OrderID,
-			Price:     v.Price,
-			Volume:    v.Volume,
-
-			Submitted: v.Submitted,
-			Accepted:  v.Accepted,
-			Completed: v.Completed,
-		})
+func update(exist, upd Order) Order {
+	var (
+		zerotime   = time.Time{}
+		zerofloat  = float64(0)
+		zerostring = ""
+	)
+	if upd.CompletedAmount != zerofloat {
+		exist.CompletedAmount = upd.CompletedAmount
 	}
-	return result[:]
+	if upd.Status != zerostring {
+		exist.Status = upd.Status
+	}
+	if upd.Fee != zerofloat {
+		exist.Fee = upd.Fee
+	}
+	if upd.Accepted != zerotime {
+		exist.Accepted = upd.Accepted
+	}
+	if upd.Completed != zerotime {
+		exist.Completed = upd.Completed
+	}
+	return exist
 }
 
-// NewTracker returns new OrderTracker instanse
-func NewTracker() *OrderTracker {
-	return &OrderTracker{
-		executed:  make(map[int]*OrderInfo),
-		completed: make([]*OrderInfo, 0),
+func (t *tracker) Push(order Order) error {
+	if order.OrderID == 0 {
+		return ErrZeroOrderID
 	}
+	if _, ok := t.orders[order.OrderID]; ok {
+		return ErrExist
+	}
+	order.Market = normalize(order.Market)
+	order.Status = strings.ToLower(order.Status)
+	var hashValue = hash(order)
+	var posData = positionData{
+		hash: hashValue,
+	}
+	switch order.Status {
+	case Submitted, Opened, Partial:
+		posData.status = statusOpen
+		t.opened[hashValue] = order
+	case Completed, Cancelled:
+		posData.status = statusCompleted
+		t.completed[hashValue] = order
+	default:
+		return ErrInvalidStatus
+	}
+	t.orders[order.OrderID] = posData
+	return nil
+
+}
+
+// NewTracker returns internal tracker instance
+func NewTracker() Orders {
+	return &tracker{
+		opened:    make(map[int]Order),
+		completed: make(map[int]Order),
+		orders:    make(map[int]positionData),
+	}
+}
+
+func normalize(sym string) string {
+	return strings.ToUpper(strings.Replace(sym, "_", "/", -1))
+}
+
+func hash(order Order) int {
+	order = truncate(order)
+	var (
+		buf    = make([]byte, 8*2)
+		amount = uint64(order.Amount * 10e8)
+		price  = uint64(order.Price * 10e8)
+	)
+	binary.BigEndian.PutUint64(buf[0:8], amount)
+	binary.BigEndian.PutUint64(buf[8:16], price)
+	buf = append(buf, order.Market...)
+	buf = append(buf, order.Accepted.String()...)
+	buf = append(buf, order.Type...)
+	hash := md5.Sum(buf[:])
+	return int(binary.BigEndian.Uint64(hash[0:8]))
 }
