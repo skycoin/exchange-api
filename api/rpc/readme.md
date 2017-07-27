@@ -3,12 +3,12 @@
   package rpc use JSONRPC 2.0 scheme
   PackageHandler handles exchange.Client interface and allow to add additional, exchange specific handlers to each functions, that does not supported for this interface. You can add any variables that you need using Env map and PackageHandler.Setenv() function.  
   Adding new function:  
-       PackageHandler.Handlers["method_name"] = func(r Request, env map[string]string) (resp Response) {  
-           var result = "success"  
-           //some function actions  
-           resp.SetBody(result)  
-           return resp  
-       }  
+    PackageHandler.Handlers["method_name"] = func(r Request, env map[string]string) (resp Response) {  
+        var result interface{}  
+        //some function actions  
+        resp.SetBody(result)  
+        return resp  
+    }  
  ## exchange.Client interface:
   #### Datatypes:
    * order   
