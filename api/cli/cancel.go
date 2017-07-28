@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/uberfurrer/tradebot/api/rpc"
-	"github.com/uberfurrer/tradebot/exchange/tracker"
+	"github.com/uberfurrer/tradebot/exchange"
 	"github.com/urfave/cli"
 )
 
@@ -59,7 +59,7 @@ func cancelTradeCmd() cli.Command {
 					fmt.Printf("Error processing request %s", err.Error())
 					return errRPC
 				}
-				var orderinfo tracker.Order
+				var orderinfo exchange.Order
 				if err := json.Unmarshal(resp.Result, &orderinfo); err != nil {
 					fmt.Printf("Error: invalid response format, %s", err.Error())
 					return errInvalidResponse
@@ -99,7 +99,7 @@ func cancelMarketCmd() cli.Command {
 					fmt.Printf("Error processing request, %s", err)
 					return errRPC
 				}
-				var orders []tracker.Order
+				var orders []exchange.Order
 				if err := json.Unmarshal(resp.Result, &orders); err != nil {
 					fmt.Printf("Error: invalid response format %s", err)
 					return errInvalidResponse
@@ -137,7 +137,7 @@ func cancelAllCmd() cli.Command {
 				fmt.Printf("Error processing request %s", err)
 				return errRPC
 			}
-			var orders []tracker.Order
+			var orders []exchange.Order
 			if err := json.Unmarshal(resp.Result, &orders); err != nil {
 				fmt.Printf("Error: invalid response %s", err)
 				return errInvalidResponse

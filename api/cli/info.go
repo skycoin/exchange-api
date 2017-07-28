@@ -9,7 +9,7 @@ import (
 	"fmt"
 
 	"github.com/uberfurrer/tradebot/api/rpc"
-	"github.com/uberfurrer/tradebot/exchange/tracker"
+	"github.com/uberfurrer/tradebot/exchange"
 	"github.com/urfave/cli"
 )
 
@@ -57,7 +57,7 @@ func infoCmd() cli.Command {
 				fmt.Printf("Error processing request %s", err)
 				return errRPC
 			}
-			var result tracker.Order
+			var result exchange.Order
 			if err = json.Unmarshal(resp.Result, &result); err != nil {
 				fmt.Printf("Error: invalid response, %s", err)
 				return errInvalidResponse
@@ -279,7 +279,7 @@ func executedCmd() cli.Command {
 	}
 }
 
-func getCompleted() ([]tracker.Order, error) {
+func getCompleted() ([]exchange.Order, error) {
 	var req = rpc.Request{
 		ID:      reqID(),
 		JSONRPC: rpc.JSONRPC,
@@ -291,7 +291,7 @@ func getCompleted() ([]tracker.Order, error) {
 		fmt.Printf("Error processing request %s", err)
 		return nil, errRPC
 	}
-	var result []tracker.Order
+	var result []exchange.Order
 	if err = json.Unmarshal(resp.Result, &result); err != nil {
 		fmt.Printf("Error: invalid response, %s", err)
 		return nil, errInvalidResponse
@@ -299,7 +299,7 @@ func getCompleted() ([]tracker.Order, error) {
 	return result, nil
 }
 
-func getExecuted() ([]tracker.Order, error) {
+func getExecuted() ([]exchange.Order, error) {
 	var req = rpc.Request{
 		ID:      reqID(),
 		JSONRPC: rpc.JSONRPC,
@@ -311,7 +311,7 @@ func getExecuted() ([]tracker.Order, error) {
 		fmt.Printf("Error processing request %s", err)
 		return nil, errRPC
 	}
-	var result []tracker.Order
+	var result []exchange.Order
 	if err = json.Unmarshal(resp.Result, &result); err != nil {
 		fmt.Printf("Error: invalid response, %s", err)
 		return nil, errInvalidResponse
