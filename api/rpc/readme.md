@@ -24,7 +24,7 @@
          "submitted_at": 1501200244000,  
          "fee": 0.001,  
          "completed_amount": 99.9,  
-         "status": Cancelled,  
+         "status": "Cancelled",  
          "completed_at": 1501200244000,  
          "accepted_at": 1501200244000  
     }
