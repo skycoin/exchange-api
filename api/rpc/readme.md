@@ -13,27 +13,31 @@
    ```
  ## exchange.Client interface:
   #### Datatypes:
-   * order   
-   `{`  
-     `"orderid": integer,`  
-     ` "type": string,`  
-     ` "market": string,`  
-     ` "amount": float64,`  
-     ` "price": float64,`  
-     ` "submitted_at": integer,`  
-     ` "fee": float64,`  
-     ` "completed_amount": float64,`  
-     ` "status": string,`  
-     ` "completed_at": integer,`  
-     ` "accepted_at": integer`  
-   `}`
+   * order  
+   ``` 
+     {  
+         "orderid": 1,  
+         "type": "Buy",  
+         "market": "LTC/BTC",  
+         "amount": 100.123,  
+         "price": 0.0001,  
+         "submitted_at": 1501200244000,  
+         "fee": 0.001,  
+         "completed_amount": 99.9,  
+         "status": Cancelled,  
+         "completed_at": 1501200244000,  
+         "accepted_at": 1501200244000  
+    }
+   ```
    * orderbook_record  
-   `{`  
-       `"timestamp": integer,`  
-       `"symbol": string,`  
-       `"asks": [{"price":float64, "volume": float64}...],`  
-       `"bids": [{"price":float64, "volume": float64}...]`  
-    `}`
+   ```
+     {  
+         "timestamp": integer,
+         "symbol": string,
+         "asks": [{"price":float64, "volume": float64}...],
+         "bids": [{"price":float64, "volume": float64}...]
+     }
+   ```
   #### Methods:
    * buy   
       request parametes: `{"symbol": string, "price": float64, "amount": float64}`  
