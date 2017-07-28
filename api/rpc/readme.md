@@ -1,6 +1,6 @@
 # RPC interface
  ## Overview
-  package rpc use JSONRPC 2.0 scheme
+  package rpc use JSONRPC 2.0 scheme  
   PackageHandler handles exchange.Client interface and allow to add additional, exchange specific handlers to each functions, that does not supported for this interface. You can add any variables that you need using Env map and `PackageHandler.Setenv()` function.  
   Adding new function:  
    ``` 
@@ -14,8 +14,8 @@
         return MakeSuccesResponse(r, result)
     }
    ```
-   Each function should check errors and return empty body and non-empty error field on error
-   `Use MakeErrorResponse()` and `MakeSuccessResponse()` for this
+   Each function should check errors and return empty body and non-empty error field on error  
+   Use `MakeErrorResponse()` and `MakeSuccessResponse()` for this
   
  ## exchange.Client interface:
   #### Datatypes:
