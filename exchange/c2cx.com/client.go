@@ -7,7 +7,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/uberfurrer/tradebot/exchange"
-	"github.com/uberfurrer/tradebot/logger"
 )
 
 // Client implements exchange.Client interface
@@ -16,7 +15,7 @@ type Client struct {
 	// Key and Secret needs for creating and accessing orders, update them
 	// You may use Client without it for tracking OrderBook
 	Key, Secret              string
-	OrderRefreshInterval     time.Duration
+	OrdersRefreshInterval    time.Duration
 	OrderbookRefreshInterval time.Duration
 
 	// Tracker provides provides functionality for tracking orders
@@ -56,9 +55,11 @@ func (c *Client) Cancel(orderID int) (exchange.Order, error) {
 	c.Orders.UpdateOrder(
 		exchange.Order{
 			OrderID:         orderID,
+			Price:           orders[0].Price,
+			Amount:          orders[0].Amount,
 			Status:          exchange.Cancelled,
-			Completed:       unixToTime(orders[0].CompleteDate),
-			Submitted:       unixToTime(orders[0].CreateDate),
+			Completed:       unix(orders[0].CompleteDate),
+			Accepted:        unix(orders[0].CreateDate),
 			Fee:             orders[0].Fee,
 			CompletedAmount: orders[0].CompletedAmount,
 		})
@@ -109,7 +110,7 @@ func (c *Client) CancelMarket(symbol string) ([]exchange.Order, error) {
 		orders = append(orders, order)
 	}
 	if rejected != nil {
-		return orders, errors.Errorf("this orders not cancelled: %v", rejected)
+		return orders, errors.Errorf("this orders does not cancelled: %v", rejected)
 	}
 	return orders, nil
 
@@ -129,9 +130,17 @@ func (c *Client) Buy(symbol string, price, amount float64) (orderID int, err err
 	if err != nil {
 		return
 	}
+
+	orders, err := getOrderinfo(c.Key, c.Secret, symbol, orderID, nil)
+	if err != nil {
+		return
+	}
+	if len(orders) != 1 {
+		return /// error update info
+	}
+	order.Accepted = convert(orders[0]).Accepted
 	order.OrderID = orderID
 	err = c.Orders.Push(order)
-
 	return
 }
 
@@ -207,7 +216,6 @@ func (c *Client) updateOrderbook() {
 	for _, v := range markets {
 		orderbook, err := getOrderbook(v)
 		if err != nil {
-			logger.Warningf("c2cx: update orderbook error: %s", err)
 			continue
 		}
 		c.Orderbooks.Update(v, orderbook.Bids, orderbook.Asks)
@@ -217,13 +225,12 @@ func (c *Client) updateOrders() {
 	for _, v := range markets {
 		orders, err := getOrderinfo(c.Key, c.Secret, v, -1, nil)
 		if err != nil {
-			logger.Warningf("c2cx: update orders error: %s", err)
 			continue
 		}
 		for _, v := range orders {
 			t := convert(v)
 			if err := c.Orders.UpdateOrder(t); err != nil {
-				logger.Warningf("c2cx: update order %d error: %s", t.OrderID, err)
+				continue
 			}
 		}
 	}
@@ -232,7 +239,7 @@ func (c *Client) updateOrders() {
 // Update starts update cycle
 func (c *Client) Update() {
 	bookt := time.NewTicker(c.OrderbookRefreshInterval)
-	t := time.NewTicker(c.OrderRefreshInterval)
+	t := time.NewTicker(c.OrdersRefreshInterval)
 	for {
 		select {
 		case <-bookt.C:

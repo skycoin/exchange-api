@@ -1,164 +1,219 @@
 package main
 
+import (
+	"encoding/json"
+	"errors"
+	"flag"
+	"time"
+
+	"github.com/go-redis/redis"
+	"github.com/uberfurrer/tradebot/db"
+	"github.com/uberfurrer/tradebot/exchange"
+	"github.com/uberfurrer/tradebot/exchange/c2cx.com"
+
+	"github.com/uberfurrer/tradebot/api/rpc"
+	"github.com/uberfurrer/tradebot/exchange/cryptopia.co.nz"
+)
+
 var (
-	c2cxKey         = "censored"
-	c2cxSecret      = "this too"
-	cryptopiaKey    = "and this"
-	cryptopiaSecret = ":)"
+	c2cxKey         = "2A4C851A-1B86-4E08-863B-14582094CE0F"         // = "censored"
+	c2cxSecret      = "83262169-B473-4BF2-9288-5E5AC898F4B0"         // = "this too"
+	cryptopiaKey    = "23a69c51c746446e819b213ef3841920"             // = "and this"
+	cryptopiaSecret = "poPwm3OQGOb85L0Zf3DL4TtgLPc2OpxZg9n8G7Sv2po=" // = ":)"
 )
 
 func main() {
+	var dbaddr = flag.String("db", "localhost:6379", "Redis address")
+	var srvaddr = flag.String("srv", "localhost:12345", "RPC listener address")
+	flag.Parse()
+	cryptopiaClient = &cryptopia.Client{
+		Key:    cryptopiaKey,
+		Secret: cryptopiaSecret,
+		Orders: exchange.NewTracker(),
+		Orderbooks: db.NewOrderbookTracker(&redis.Options{
+			Addr: *dbaddr,
+		}, "cryptopia"),
+		OrderbookRefreshInterval: time.Second * 5,
+		OrdersRefreshInterval:    time.Second * 5,
+	}
+	c2cxClient = &c2cx.Client{
+		Key:    c2cxKey,
+		Secret: c2cxSecret,
+		Orders: exchange.NewTracker(),
+		Orderbooks: db.NewOrderbookTracker(&redis.Options{
+			Addr: *dbaddr,
+		}, "c2cx"),
+		OrderbookRefreshInterval: time.Second * 5,
+		OrdersRefreshInterval:    time.Second * 5,
+	}
 
-	//close stop for exit
+	go c2cxClient.Update()
+	go cryptopiaClient.Update()
+
+	var server = rpc.Server{
+		Handlers: map[string]rpc.PackageHandler{
+			"cryptopia": rpc.PackageHandler{
+				Client: cryptopiaClient,
+				Env: map[string]string{
+					"key":    cryptopiaKey,
+					"secret": cryptopiaSecret,
+				},
+				Handlers: cryptopiaHandlers,
+			},
+			"c2cx": rpc.PackageHandler{
+				Client: c2cxClient,
+				Env: map[string]string{
+					"key":    c2cxKey,
+					"secret": c2cxSecret,
+				},
+				Handlers: c2cxHandlers,
+			},
+		},
+	}
+	var stop = make(chan struct{})
+	go server.Start(*srvaddr, stop)
+	<-stop
+	// Send anything for exit
 }
 
-/*
-// Additional functions, that does not wrapped by exchange.Client interface
+// exchange-specific functions, that not handles by Client interface
 var cryptopiaHandlers = map[string]rpc.PackageFunc{
-	// GetDepositAddress gets deposit address for given currency
-	// params: {"currency":string}
-	"GetDepositAddress": func(r rpc.Request, env map[string]string) rpc.Response {
+	"deposit": func(r rpc.Request, env map[string]string) rpc.Response {
 		params, err := rpc.DecodeParams(r)
 		if err != nil {
-			return rpc.MakeErrorResponse(r, rpc.ParseError, err)
+			return rpc.MakeErrorResponse(r, rpc.InvalidRequest, err)
 		}
 		currency, err := rpc.GetStringParam(params, "currency")
 		if err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
 		}
-		address, err := cryptopia.GetDepositAddress(env["key"], env["secret"], cryptopia.Nonce(), currency)
+		addr, err := cryptopia.GetDepositAddress(env["key"], env["secret"], currency)
 		if err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InternalError, err)
 		}
-		return rpc.MakeSuccessResponse(r, address)
+		return rpc.MakeSuccessResponse(r, addr)
 	},
-	// SubmitWithdraw creates withdrawal request with given currency and amount
-	// params: {"currency": string, "amount": float64, "paymentid":string, optional(needs only for CryptoNote based currencies)}
-	"SubmitWithdraw": func(r rpc.Request, env map[string]string) rpc.Response {
+	"withdraw": func(r rpc.Request, env map[string]string) rpc.Response {
 		params, err := rpc.DecodeParams(r)
 		if err != nil {
-			return rpc.MakeErrorResponse(r, rpc.ParseError, err)
+			return rpc.MakeErrorResponse(r, rpc.InvalidRequest, err)
+		}
+		currency, err := rpc.GetStringParam(params, "currency")
+		if err != nil {
+			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
+		}
+		addr, err := rpc.GetStringParam(params, "address")
+		if err != nil {
+			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
+		}
+		amount, err := rpc.GetFloatParam(params, "amount")
+		if err != nil {
+			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
 		}
 		var (
-			amount    float64
-			paymentID string
-			address   string
-			currency  string
+			paymentid *string
 		)
-		amount, err = rpc.GetFloatParam(params, "amount")
-		if err != nil {
-			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
+		if pid, err := rpc.GetStringParam(params, "payment_id"); err == nil {
+			paymentid = &pid
 		}
-		paymentID, _ = rpc.GetStringParam(params, "paymentid")
-		address, err = rpc.GetStringParam(params, "address")
-		if err != nil {
-			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
-		}
-		currency, err = rpc.GetStringParam(params, "currency")
-		if err != nil {
-			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
-		}
-		withdraw, err := cryptopia.SubmitWithdraw(env["key"], env["secret"], cryptopia.Nonce(), currency, address, paymentID, amount)
+		result, err := cryptopia.SubmitWithdraw(env["key"], env["secret"], currency, addr, paymentid, amount)
 		if err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InternalError, err)
 		}
-		return rpc.MakeSuccessResponse(r, withdraw)
+		return rpc.MakeSuccessResponse(r, result)
 	},
-	// GetTransactions gets list of transactions of given type
-	// params: {"type":string("Deposit" or "Withdraw"), "count":int, optional(default value is 100)}
-	"GetTransactions": func(r rpc.Request, env map[string]string) rpc.Response {
+	"transactions": func(r rpc.Request, env map[string]string) rpc.Response {
 		params, err := rpc.DecodeParams(r)
 		if err != nil {
-			return rpc.MakeErrorResponse(r, rpc.ParseError, err)
+			return rpc.MakeErrorResponse(r, rpc.InvalidRequest, err)
 		}
-		var (
-			txType string
-			count  int
-		)
-		txType, err = rpc.GetStringParam(params, "type")
+		txType, err := rpc.GetStringParam(params, "type")
 		if err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
 		}
-		count, _ = rpc.GetIntParam(params, "count")
-		transactions, err := cryptopia.GetTransactions(env["key"], env["secret"], cryptopia.Nonce(), txType, count)
+		if txType != cryptopia.Deposit && txType != cryptopia.Withdraw {
+			return rpc.MakeErrorResponse(r, rpc.InvalidParams, errors.New("invalid type"))
+		}
+		txs, err := cryptopia.GetTransactions(env["key"], env["secret"], txType, nil)
 		if err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InternalError, err)
 		}
-		return rpc.MakeSuccessResponse(r, transactions)
+		return rpc.MakeSuccessResponse(r, txs)
+	},
+	"tracking_add": func(r rpc.Request, env map[string]string) rpc.Response {
+		params, err := rpc.DecodeParams(r)
+		if err != nil {
+			return rpc.MakeErrorResponse(r, rpc.InvalidRequest, err)
+		}
+		market, err := rpc.GetStringParam(params, "market")
+		if err != nil {
+			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
+		}
+		cryptopiaClient.AddOrderbookTracking(market)
+		return rpc.MakeSuccessResponse(r, nil)
+
+	},
+	"tracking_rm": func(r rpc.Request, env map[string]string) rpc.Response {
+		params, err := rpc.DecodeParams(r)
+		if err != nil {
+			return rpc.MakeErrorResponse(r, rpc.InvalidRequest, err)
+		}
+		market, err := rpc.GetStringParam(params, "market")
+		if err != nil {
+			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
+		}
+		err = cryptopiaClient.RemoveOrderbookTracking(market)
+		if err != nil {
+			return rpc.MakeErrorResponse(r, rpc.InternalError, err)
+		}
+		return rpc.MakeSuccessResponse(r, nil)
 	},
 }
-*/
-/*
+
 var c2cxHandlers = map[string]rpc.PackageFunc{
-	// This order wont tracked
-	// Calling SubmitTrade directly allows to creating limited order
-	// params:{ "ordertype":string("buy" or "sell"), "pricetype": string("Market" or "Limit"), "symbol": string,
-	//          "triggerprice": float64, "quantity": float64, "price": float64, "takeprofit":float64,
-	//          "stoploss":float64, "exptime": string(time in RFC3389 format)}
-	// required params: "ordertype", "pricetype","symbol" ,"triggerprice"(if pricetype - market, then this field means amount), "quantity", "price"
-	"SubmitTrade": func(r rpc.Request, env map[string]string) rpc.Response {
+	"submit_trade": func(r rpc.Request, env map[string]string) rpc.Response {
 		params, err := rpc.DecodeParams(r)
 		if err != nil {
-			return rpc.MakeErrorResponse(r, rpc.ParseError, err)
+			return rpc.MakeErrorResponse(r, rpc.InvalidRequest, err)
 		}
 		var (
-			ordertype, exptime, pricetype, symbol string
-			triggerprice, price, quantity         float64
-			priceTypeID                           int
-			takeProfit, stopLoss                  *float64
-			expTime                               *time.Time
+			advanced        *c2cx.AdvancedOrderParams
+			priceTypeID     int
+			orderType       string
+			price, quantity float64
+			market          string
 		)
-		ordertype, err = rpc.GetStringParam(params, "ordertype")
-		if err != nil {
+		if priceTypeID, err = rpc.GetIntParam(params, "price_type_id"); err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
 		}
-		pricetype, err = rpc.GetStringParam(params, "pricetype")
-		if err != nil {
+		if orderType, err = rpc.GetStringParam(params, "order_type"); err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
 		}
-		switch strings.ToLower(pricetype) {
-		case "limit":
-			priceTypeID = c2cx.PriceTypeLimit
-		case "market":
-			priceTypeID = c2cx.PriceTypeMarket
-		default:
-			return rpc.MakeErrorResponse(r, rpc.InvalidParams, errors.Errorf("price type should be \"market\" or \"limit\", given %s", pricetype))
-		}
-		symbol, err = rpc.GetStringParam(params, "symbol")
-		if err != nil {
+		if market, err = rpc.GetStringParam(params, "market"); err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
 		}
-		triggerprice, err = rpc.GetFloatParam(params, "triggerprice")
-		if err != nil {
+		if price, err = rpc.GetFloatParam(params, "price"); err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
 		}
-		quantity, err = rpc.GetFloatParam(params, "quantity")
-		if err != nil {
+		if quantity, err = rpc.GetFloatParam(params, "quantity"); err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
 		}
-		price, err = rpc.GetFloatParam(params, "price")
-		takeprofit, err := rpc.GetFloatParam(params, "takeprofit")
-		if err == nil {
-			takeProfit = &takeprofit
-		}
-		stoploss, err := rpc.GetFloatParam(params, "stoploss")
-		if err == nil {
-			stopLoss = &stoploss
-		}
-		exptime, err = rpc.GetStringParam(params, "exptime")
-		if err != nil {
-			t, err := time.Parse(time.RFC3339, exptime)
-			if err != nil {
-				return rpc.MakeErrorResponse(r, rpc.ParseError, err)
+		if adv, ok := params["advanced"]; ok {
+			if data, ok := adv.(json.RawMessage); ok {
+				advanced = new(c2cx.AdvancedOrderParams)
+				err = json.Unmarshal(data, advanced)
+				if err != nil {
+					return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
+				}
 			}
-			expTime = &t
 		}
-		orderID, err := c2cx.CreateOrder(env["key"], env["secret"], symbol, priceTypeID, triggerprice, quantity, price,
-			takeProfit, stopLoss, expTime)
+		orderid, err := c2cx.CreateOrder(env["key"], env["secret"], market, price, quantity, orderType, priceTypeID, advanced)
 		if err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InternalError, err)
 		}
-		return rpc.MakeSuccessResponse(r, orderID)
+		return rpc.MakeSuccessResponse(r, orderid)
 	},
 }
-*/
+
+var c2cxClient *c2cx.Client
+var cryptopiaClient *cryptopia.Client

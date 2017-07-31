@@ -6,97 +6,61 @@ import (
 
 	"github.com/go-redis/redis"
 	"github.com/uberfurrer/tradebot/db"
-	"github.com/uberfurrer/tradebot/exchange"
+
+	exchange "github.com/uberfurrer/tradebot/exchange"
 )
 
-func TestClientUpdateOrderbook(t *testing.T) {
-	var c = Client{
-		Key:    "",
-		Secret: "",
-		Orders: nil,
+var (
+	cl = Client{
+		Key:                      key,
+		Secret:                   secret,
+		OrdersRefreshInterval:    time.Second * 5,
+		OrderbookRefreshInterval: time.Second * 5,
+		Orders: exchange.NewTracker(),
 		Orderbooks: db.NewOrderbookTracker(&redis.Options{
 			Addr: "localhost:6379",
 		}, "c2cx"),
 	}
-	c.updateOrderbook()
-	for _, v := range markets {
-		book, err := c.Orderbook().Get(v)
-		if err != nil {
-			t.Error(err)
-		}
-		if sym, err := normalize(book.Symbol); err != nil || sym != v {
-			t.Error("corrupted orderbook record")
-		}
-	}
-
-}
-
-func TestClientUpdate(t *testing.T) {
-	var c = &Client{
-		Key:                      "",
-		Secret:                   "",
-		OrderRefreshInterval:     time.Second * 5,
-		OrderbookRefreshInterval: time.Second * 5,
-		Stop:   make(chan struct{}),
-		Orders: exchange.NewTracker(),
-		Orderbooks: db.NewOrderbookTracker(&redis.Options{
-			Addr: "localhost:6379",
-		}, "c2cx_test"),
-	}
-	go c.Update()
-	defer func() { c.Stop <- struct{}{} }()
-	for {
-		_, err := c.Orderbook().Get("BTC/SKY")
-		if err != nil {
-			continue
-		}
-		break
-	}
-}
-
-func TestClientGetBalance(t *testing.T) {
-	var c = &Client{
-		Secret:                   "83262169-B473-4BF2-9288-5E5AC898F4B0",
-		Key:                      "2A4C851A-1B86-4E08-863B-14582094CE0F",
-		OrderRefreshInterval:     time.Second * 5,
-		OrderbookRefreshInterval: time.Second * 5,
-		Stop:   make(chan struct{}),
-		Orders: exchange.NewTracker(),
-		Orderbooks: db.NewOrderbookTracker(&redis.Options{
-			Addr: "localhost:6379",
-		}, "c2cx_test"),
-	}
-	if b, err := c.GetBalance("BTC"); err != nil || len(b) == 0 {
-		t.Error("GetBalance failed")
-	}
-}
+	orderMarket = "CNY_SHL"
+	orderPrice  = 0.01
+	orderAmount = 10.0
+	orderID     int
+)
 
 func TestClientCreateOrder(t *testing.T) {
-	var c = &Client{
-		Secret:                   "83262169-B473-4BF2-9288-5E5AC898F4B0",
-		Key:                      "2A4C851A-1B86-4E08-863B-14582094CE0F",
-		OrderRefreshInterval:     time.Second * 5,
-		OrderbookRefreshInterval: time.Second * 5,
-		Stop:   make(chan struct{}),
-		Orders: exchange.NewTracker(),
-		Orderbooks: db.NewOrderbookTracker(&redis.Options{
-			Addr: "localhost:6379",
-		}, "c2cx_test"),
-	}
-	go c.Update()
-	defer func() { c.Stop <- struct{}{} }()
-	orderid, err := c.Buy("BTC/SKY", 0.00001, 0.00001)
+	var err error
+	orderID, err = cl.Buy(orderMarket, orderPrice, orderAmount)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
-	t.Log("created", orderid)
+}
+func TestClientUpdateOrders(t *testing.T) {
+	cl.updateOrders()
+	cl.updateOrderbook()
+}
+func TestClientGetExecuted(t *testing.T) {
+	orders := cl.Executed()
+	if len(orders) != 1 {
+		t.Error("placed order not found in tracker", len(orders), orders)
+	}
+	if orders[0] != orderID {
+		t.Errorf("want %d orderID, expected %d", orderID, orders[0])
+	}
+}
 
-	t.Log("tracker", c.Executed())
+func TestClientGetCompleted(t *testing.T) {
+	orders := cl.Completed()
+	if len(orders) > 0 {
+		t.Error("it should not contains completed orders")
+	}
+}
 
-	order, err := c.Cancel(orderid)
+func TestClientCancelMarket(t *testing.T) {
+	_, err := cl.Cancel(orderID)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
-	t.Log("cancelled", order)
-	t.Log("tracker", c.Completed())
+	if len(cl.Orders.GetCompleted()) != 1 {
+		t.Error("it should have one completed order")
+	}
 }

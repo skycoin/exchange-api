@@ -37,6 +37,12 @@ func getCurrencyID(currency string) (int, error) {
 }
 
 func updateCaches() error {
+	if currencyCache == nil {
+		currencyCache = make(map[string]CurrencyInfo)
+	}
+	if marketCache == nil {
+		marketCache = make(map[string]int)
+	}
 	crs, err := getCurrencies()
 	if err != nil {
 		return err

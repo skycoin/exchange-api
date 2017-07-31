@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	exchange "github.com/uberfurrer/tradebot/exchange"
+	"github.com/uberfurrer/tradebot/exchange"
 )
 
 func sign(secret string, params url.Values) string {
@@ -75,7 +75,7 @@ func abcdsort(params url.Values) string {
 
 }
 
-// normalize() canoncialize tradepair symbol
+// normalize tradepair symbol
 func normalize(sym string) (string, error) {
 	sym = strings.ToUpper(strings.Replace(sym, "/", "_", -1))
 	for _, v := range markets {
@@ -86,7 +86,7 @@ func normalize(sym string) (string, error) {
 	return "", errors.Errorf("Market pair %s does not exists", sym)
 }
 
-func unixToTime(unix int64) time.Time {
+func unix(unix int64) time.Time {
 	var secs = int64(unix / 10e2)
 	var nanos = int64((unix % 10e2) * 10e5)
 	return time.Unix(secs, nanos)
@@ -121,9 +121,9 @@ func convert(order Order) exchange.Order {
 		accepted  time.Time
 		completed time.Time
 	)
-	accepted = unixToTime(order.CreateDate)
+	accepted = unix(order.CreateDate)
 	if order.CompleteDate != 0 {
-		completed = unixToTime(order.CompleteDate)
+		completed = unix(order.CompleteDate)
 	}
 
 	return exchange.Order{

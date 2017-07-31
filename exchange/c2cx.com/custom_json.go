@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	exchange "github.com/uberfurrer/tradebot/exchange"
+	"github.com/uberfurrer/tradebot/exchange"
 )
 
 // UnmarshalJSON implements json.Unmarshaler
@@ -13,7 +13,7 @@ func (order *Order) UnmarshalJSON(b []byte) error {
 		Amount          float64 `json:"amount"`
 		AvgPrice        float64 `json:"avgPrice"`
 		CompletedAmount string  `json:"completedAmount"`
-		Fee             string  `json:"fee"`
+		Fee             float64 `json:"fee"`
 		CreateDate      int64   `json:"createDate"`
 		CompleteDate    int64   `json:"completeDate,omitempty"`
 		OrderID         int     `json:"orderId"`
@@ -25,14 +25,11 @@ func (order *Order) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
-	var completedAmount, fee float64
+	var completedAmount float64
 	if completedAmount, err = strconv.ParseFloat(orderinfo.CompletedAmount, 64); err != nil {
 		return err
 	}
-	if fee, err = strconv.ParseFloat(orderinfo.Fee, 64); err != nil {
-		return err
-	}
-	order = &Order{
+	*order = Order{
 		OrderID:         orderinfo.OrderID,
 		Status:          orderinfo.Status,
 		Amount:          orderinfo.Amount,
@@ -40,7 +37,7 @@ func (order *Order) UnmarshalJSON(b []byte) error {
 		AvgPrice:        orderinfo.AvgPrice,
 		Type:            orderinfo.Type,
 		CompletedAmount: completedAmount,
-		Fee:             fee,
+		Fee:             orderinfo.Fee,
 		CreateDate:      orderinfo.CreateDate,
 		CompleteDate:    orderinfo.CompleteDate,
 	}

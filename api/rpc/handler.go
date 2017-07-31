@@ -1,8 +1,9 @@
 package rpc
 
 import (
+	"log"
+
 	exchange "github.com/uberfurrer/tradebot/exchange"
-	"github.com/uberfurrer/tradebot/logger"
 )
 
 // PackageHandler handles one exchange, resolve methods and returns json formatted responses
@@ -141,7 +142,7 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 				break
 			}
-			rate, err := GetFloatParam(params, "rate")
+			rate, err := GetFloatParam(params, "price")
 			if err != nil {
 				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 				break
@@ -179,7 +180,7 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 				break
 			}
-			rate, err := GetFloatParam(params, "rate")
+			rate, err := GetFloatParam(params, "price")
 			if err != nil {
 				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 				break
@@ -189,7 +190,7 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 				break
 			}
-			orderID, err := c.Buy(symbol, rate, amount)
+			orderID, err := c.Sell(symbol, rate, amount)
 			if err != nil {
 				resp.Error = makeError(InternalError, internalErrorMsg, err)
 				break
@@ -323,7 +324,7 @@ func (h *PackageHandler) Setenv(key, value string) {
 
 // Process lookups given method and calls it
 func (h *PackageHandler) Process(r Request) *Response {
-	logger.Infof("processing request, method %s, params %s\n", r.Method, r.Params)
+	log.Printf("processing request, method %s, params %s\n", r.Method, r.Params)
 	if f, ok := defaultHandlers[r.Method]; ok {
 		resp := f(r, h.Client)
 		return &resp

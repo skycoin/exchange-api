@@ -1,118 +1,84 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 
-	"github.com/uberfurrer/tradebot/api/rpc"
 	"github.com/urfave/cli"
 )
 
-// endpoint buy
-// params; {"symbol":"CNY_BTC", "price":1.0, "amount": 1.0}
-func buyCmd() cli.Command {
+func buyCMD() cli.Command {
 	var name = "buy"
 	return cli.Command{
-		Name: name,
+		Name:      name,
+		Usage:     "Place buy order",
+		ArgsUsage: "<symbol> <price> <amount>",
 		Action: func(c *cli.Context) error {
-			var args = c.Args()
-			if len(args) != 3 {
-				return errInvalidParams
+			if len(c.Args()) != 3 {
+				return errInvalidInput
 			}
 			var (
-				price, amount float64
 				err           error
+				symbol        string
+				price, amount float64
 			)
-			if args[0] == "" {
-				return errInvalidParams
+			symbol = c.Args().Get(0)
+			if price, err = strconv.ParseFloat(c.Args().Get(1), 64); err != nil {
+				return err
 			}
-			if price, err = strconv.ParseFloat(args[1], 64); err != nil {
-				return errInvalidParams
+			if amount, err = strconv.ParseFloat(c.Args().Get(2), 64); err != nil {
+				return err
 			}
-			if amount, err = strconv.ParseFloat(args[2], 64); err != nil {
-				return errInvalidParams
-			}
-			params, _ := json.Marshal(map[string]interface{}{
-				"symbol": args[0],
+			var params = map[string]interface{}{
+				"symbol": symbol,
 				"price":  price,
 				"amount": amount,
-			})
-			var req = rpc.Request{
-				ID:      reqID(),
-				JSONRPC: rpc.JSONRPC,
-				Method:  "buy",
-				Params:  params,
 			}
-			resp, err := rpc.Do(rpcaddr, endpoint, req)
-			if err != nil {
-				fmt.Printf("Error processing request, %s", err)
-				return errRPC
-			}
-			var orderid int
-			if err = json.Unmarshal(resp.Result, &orderid); err != nil {
-				fmt.Printf("Error: invalid response, %s", err)
-				return errInvalidResponse
-			}
-			b, _ := json.MarshalIndent(map[string]int{"orderid": orderid}, "", "    ")
-			fmt.Println(string(b))
 
+			resp, err := rpcRequest("buy", params)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("Order %s created\n", resp)
 			return nil
 		},
-		ArgsUsage: "[tradepair price amount]",
-		Usage:     "buy places a buy order",
 	}
 }
 
-// endpoint sell
-// params; {"symbol":"CNY_BTC", "price":1.0, "amount": 1.0}}
-func sellCmd() cli.Command {
+func sellCMD() cli.Command {
 	var name = "sell"
 	return cli.Command{
-		Name: name,
+		Name:      name,
+		Usage:     "Place sell order",
+		ArgsUsage: "<symbol> <price> <amount>",
 		Action: func(c *cli.Context) error {
-			var args = c.Args()
-			if len(args) != 3 {
-				return errInvalidParams
+			if len(c.Args()) != 3 {
+				return errInvalidInput
 			}
 			var (
-				price, amount float64
 				err           error
+				symbol        string
+				price, amount float64
 			)
-			if args[0] == "" {
-				return errInvalidParams
+			symbol = c.Args().Get(0)
+			if price, err = strconv.ParseFloat(c.Args().Get(1), 64); err != nil {
+				return err
 			}
-			if price, err = strconv.ParseFloat(args[1], 64); err != nil {
-				return errInvalidParams
+			if amount, err = strconv.ParseFloat(c.Args().Get(2), 64); err != nil {
+				return err
 			}
-			if amount, err = strconv.ParseFloat(args[2], 64); err != nil {
-				return errInvalidParams
-			}
-			params, _ := json.Marshal(map[string]interface{}{
-				"symbol": args[0],
+			var params = map[string]interface{}{
+				"symbol": symbol,
 				"price":  price,
 				"amount": amount,
-			})
-			var req = rpc.Request{
-				ID:      reqID(),
-				JSONRPC: rpc.JSONRPC,
-				Method:  "sell",
-				Params:  params,
 			}
-			resp, err := rpc.Do(rpcaddr, endpoint, req)
+
+			resp, err := rpcRequest("sell", params)
 			if err != nil {
-				fmt.Printf("Error processing request, %s", err)
-				return errRPC
+				return err
 			}
-			var orderid int
-			if err = json.Unmarshal(resp.Result, &orderid); err != nil {
-				fmt.Printf("Error: invalid response, %s", err)
-			}
-			b, _ := json.MarshalIndent(map[string]int{"orderid": orderid}, "", "    ")
-			fmt.Println(string(b))
+			fmt.Printf("Order %s created\n", resp)
 			return nil
 		},
-		ArgsUsage: "[tradepair price amount]",
-		Usage:     "sell places a sell order",
 	}
 }

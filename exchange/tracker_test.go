@@ -7,7 +7,7 @@ import (
 )
 
 var store = &tracker{
-	orders:    make(map[int]positionData),
+	orders:    make(map[int]idx),
 	opened:    make(map[int]Order),
 	completed: make(map[int]Order),
 }

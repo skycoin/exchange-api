@@ -22,4 +22,4 @@
  ## Client
   Client implements order tracking for orders, that was created using it.
   Using Client.TrackedBooks you can set markets, where orderbooks will tracked.
-  Close Client.Stop channel for stop updating
+  If order instantly executed, `Client.Buy()` and `Client.Sell()` returns negative orderID

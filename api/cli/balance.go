@@ -4,41 +4,33 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/uberfurrer/tradebot/api/rpc"
+	"github.com/uberfurrer/tradebot/exchange"
 	"github.com/urfave/cli"
 )
 
-// endpoint balance
-// params: {"currency":"btc"}
-func balanceCmd() cli.Command {
+func balanceCMD() cli.Command {
 	var name = "balance"
 	return cli.Command{
 		Name:      name,
-		Usage:     "Gets balance of given currency",
-		ArgsUsage: "[currency]",
+		Usage:     "Print balance",
+		ArgsUsage: "<currency>",
 		Action: func(c *cli.Context) error {
-			var args = c.Args()
-			if len(args) != 1 {
-				return errInvalidParams
+			if c.NArg() != 1 {
+				return errInvalidInput
 			}
-			params, _ := json.Marshal(map[string]string{"currency": args[0]})
-			var req = rpc.Request{
-				ID:      reqID(),
-				JSONRPC: rpc.JSONRPC,
-				Method:  "balance",
-				Params:  params,
+			var params = map[string]interface{}{
+				"currency": c.Args().First(),
 			}
-			resp, err := rpc.Do(rpcaddr, endpoint, req)
+			resp, err := rpcRequest("balance", params)
 			if err != nil {
-				fmt.Printf("Error processing request %s\n", err)
-				return errRPC
+				return err
 			}
-			var result string
-			if err = json.Unmarshal(resp.Result, &result); err != nil {
-				fmt.Printf("Error: invalid response, %s\n", err)
-				return errInvalidResponse
+			var order exchange.Order
+			err = json.Unmarshal(resp, &order)
+			if err != nil {
+				return err
 			}
-			fmt.Println(result)
+			fmt.Println(orderFull(order))
 			return nil
 		},
 	}

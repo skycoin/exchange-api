@@ -4,42 +4,42 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/uberfurrer/tradebot/api/rpc"
 	"github.com/uberfurrer/tradebot/exchange"
 	"github.com/urfave/cli"
 )
 
-func orderbookCmd() cli.Command {
+func orderbookCMD() cli.Command {
 	var name = "orderbook"
+	var short bool
 	return cli.Command{
 		Name:      name,
-		Usage:     "Gets orderbook for given market, if this market tracked by node",
-		ArgsUsage: "[market]",
+		Usage:     "Print orderbook",
+		ArgsUsage: "<market>",
 		Action: func(c *cli.Context) error {
-			var args = c.Args()
-			if len(args) != 1 {
-				return errInvalidParams
+			if c.NArg() != 1 {
+				return errInvalidInput
 			}
-			params, _ := json.Marshal(map[string]string{"symbol": args[0]})
-			var req = rpc.Request{
-				ID:      reqID(),
-				JSONRPC: rpc.JSONRPC,
-				Method:  "orderbook",
-				Params:  params,
+			var params = map[string]interface{}{
+				"symbol": c.Args().First(),
 			}
-			resp, err := rpc.Do(rpcaddr, endpoint, req)
+			resp, err := rpcRequest("orderbook", params)
 			if err != nil {
-				fmt.Printf("Error processing request %s\n", err)
-				return errRPC
+				return err
 			}
-			var result exchange.MarketRecord
-			if err = json.Unmarshal(resp.Result, &result); err != nil {
-				fmt.Printf("Error: invalid request, %s\n", err)
-				return errInvalidResponse
+			var orderbook exchange.MarketRecord
+			err = json.Unmarshal(resp, &orderbook)
+			if err != nil {
+				return err
 			}
-			b, _ := json.MarshalIndent(result, "", "    ")
-			fmt.Println(string(b))
+			if short {
+				fmt.Println(orderbookShort(orderbook))
+			} else {
+				fmt.Println(orderbookFull(orderbook))
+			}
 			return nil
+		},
+		Flags: []cli.Flag{
+			cli.BoolFlag{Name: "short", Destination: &short, Usage: "Short output"},
 		},
 	}
 }

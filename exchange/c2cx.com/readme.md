@@ -9,7 +9,4 @@
    * GetOrderInfo
    * GetOrderByStatus 
   ## Client 
-   Client track orderbooks and orders, that was created through it.
-   Close Client.Stop for cancel updating.
- # Bugs:
-  * CreateOrder does not working. I sent report to c2cx.com support
+   Client track orderbooks and orders, that was created through it

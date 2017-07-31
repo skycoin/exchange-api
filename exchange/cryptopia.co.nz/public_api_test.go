@@ -4,14 +4,6 @@ import (
 	"testing"
 )
 
-func init() {
-	//fill cache
-	//_, _ = getCurrencyID("")
-	//_, _ = getMarketID("")
-	currencyCache = make(map[string]CurrencyInfo)
-	marketCache = make(map[string]int)
-}
-
 func Test_getCurrencyID(t *testing.T) {
 	btcID, err := getCurrencyID("btc")
 	if err != nil {

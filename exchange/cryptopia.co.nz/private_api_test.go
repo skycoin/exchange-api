@@ -31,7 +31,7 @@ func TestSubmitTrade(t *testing.T) {
 		key    = "23a69c51c746446e819b213ef3841920"
 		secret = "poPwm3OQGOb85L0Zf3DL4TtgLPc2OpxZg9n8G7Sv2po="
 	)
-	order, err := submitTrade(key, secret, nonce(), "LTC/BTC", exchange.Buy, 0.001, 0.01)
+	order, err := submitTrade(key, secret, nonce(), "ETH/LTC", exchange.Buy, 10000, 0.00006)
 	t.Log(order, err)
 	if err != nil {
 		t.Fatal(err)

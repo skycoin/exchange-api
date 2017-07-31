@@ -262,6 +262,34 @@ func (c *Client) Update() {
 	}
 }
 
+// AddOrderbookTracking normalize and adds market to Client.TrackedBooks
+func (c *Client) AddOrderbookTracking(market string) {
+	if c.TrackedBooks == nil {
+		c.TrackedBooks = make([]string, 0, 1)
+	}
+	market = normalize(market)
+	c.TrackedBooks = append(c.TrackedBooks, market)
+}
+
+// RemoveOrderbookTracking delete markets from Client.TrackedBooks
+func (c *Client) RemoveOrderbookTracking(market string) error {
+	if c.TrackedBooks == nil || len(c.TrackedBooks) == 0 {
+		return ErrNoOrderbooks
+	}
+	market = normalize(market)
+	var tmp = make([]string, 0, len(c.TrackedBooks))
+	for _, v := range c.TrackedBooks {
+		if market != v {
+			tmp = append(tmp, v)
+		}
+	}
+	if len(c.TrackedBooks) == len(tmp) {
+		return ErrOrderbookNotFound
+	}
+	c.TrackedBooks = tmp
+	return nil
+}
+
 var errNotFound = errors.New("order with given orderid does not found")
 
 func lookupOrder(key, secret string, orderID int) (Order, error) {
@@ -276,3 +304,9 @@ func lookupOrder(key, secret string, orderID int) (Order, error) {
 	}
 	return Order{}, errNotFound
 }
+
+// ErrNoOrderbooks returns by Client.RemoveOrderbookTracking() if Client does not track any orderbooks
+var ErrNoOrderbooks = errors.New("orderbooks not tracked")
+
+// ErrOrderbookNotFound returns by Client.RemoveOrderbookTracking() if this market isnt tracked by Client
+var ErrOrderbookNotFound = errors.New("this orderbook isnt tracked")

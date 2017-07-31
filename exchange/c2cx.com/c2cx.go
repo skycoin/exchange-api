@@ -2,7 +2,7 @@ package c2cx
 
 import (
 	"github.com/pkg/errors"
-	exchange "github.com/uberfurrer/tradebot/exchange"
+	"github.com/uberfurrer/tradebot/exchange"
 )
 
 // add new markets here
@@ -38,15 +38,19 @@ func CancelOrder(key, secret string, orderID int) error {
 
 // AdvancedOrderParams is extended parameters, that may be used for setting stop loss,take profit and trigger price
 type AdvancedOrderParams struct {
-	TakeProfit   float64
-	StopLoss     float64
-	TriggerPrice float64
+	TakeProfit   float64 `json:"take_profit"`
+	StopLoss     float64 `json:"stop_loss"`
+	TriggerPrice float64 `json:"trigger_price"`
 }
 
 // CreateOrder creates new order with given parameters
 // if adv == nil, then isAdvancedOrder will set to zero
 // availible priceTypeIDs defined below
 func CreateOrder(key, secret string, market string, price, quantity float64, orderType string, priceTypeID int, adv *AdvancedOrderParams) (int, error) {
+	var err error
+	if market, err = normalize(market); err != nil {
+		return 0, err
+	}
 	return createOrder(key, secret, market, price, quantity, orderType, priceTypeID, adv)
 }
 

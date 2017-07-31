@@ -30,12 +30,12 @@ var (
 	ErrNotTracked  = errors.New("tracker does not present")
 )
 
-type positionData struct {
+type idx struct {
 	hash   int
 	status int
 }
 type tracker struct {
-	orders    map[int]positionData
+	orders    map[int]idx
 	opened    map[int]Order
 	completed map[int]Order
 }
@@ -50,7 +50,7 @@ func (t *tracker) GetOpened() (orders []int) {
 
 func (t *tracker) GetCompleted() (orders []int) {
 	orders = make([]int, 0, len(t.completed))
-	for _, v := range t.opened {
+	for _, v := range t.completed {
 		orders = append(orders, v.OrderID)
 	}
 	return
@@ -85,24 +85,23 @@ func (t *tracker) lookupByOrderID(orderid int) (Order, error) {
 }
 
 func (t *tracker) UpdateOrder(order Order) error {
-	var hashValue = hash(order)
 	if lookupData, ok := t.orders[order.OrderID]; ok {
 		switch lookupData.status {
 		case statusOpen:
 			switch order.Status {
 			case Opened, Partial, Submitted:
-				t.opened[hashValue] = update(t.opened[hashValue], order)
+				t.opened[lookupData.hash] = update(t.opened[lookupData.hash], order)
 			case Completed, Cancelled:
-				exist := t.opened[hashValue]
-				delete(t.opened, hashValue)
-				t.orders[order.OrderID] = positionData{
-					hash:   hashValue,
+				exist := t.opened[lookupData.hash]
+				delete(t.opened, lookupData.hash)
+				t.orders[order.OrderID] = idx{
+					hash:   lookupData.hash,
 					status: statusCompleted,
 				}
-				t.completed[hashValue] = update(exist, order)
+				t.completed[lookupData.hash] = update(exist, order)
 			}
 		case statusCompleted:
-			t.completed[hashValue] = update(t.completed[hashValue], order)
+			t.completed[lookupData.hash] = update(t.completed[lookupData.hash], order)
 		}
 		return nil
 	}
@@ -110,6 +109,7 @@ func (t *tracker) UpdateOrder(order Order) error {
 	// it happens if OrderID of order was changed, but it is same order
 	// update lookup data and repeat
 	// old OrderID also saved
+	var hashValue = hash(order)
 	if v, ok := t.opened[hashValue]; ok {
 		lookupData := t.orders[v.OrderID]
 		t.orders[order.OrderID] = lookupData
@@ -167,7 +167,7 @@ func (t *tracker) Push(order Order) error {
 	order.Market = normalize(order.Market)
 	order.Status = strings.ToLower(order.Status)
 	var hashValue = hash(order)
-	var posData = positionData{
+	var posData = idx{
 		hash: hashValue,
 	}
 	switch order.Status {
@@ -190,7 +190,7 @@ func NewTracker() Orders {
 	return &tracker{
 		opened:    make(map[int]Order),
 		completed: make(map[int]Order),
-		orders:    make(map[int]positionData),
+		orders:    make(map[int]idx),
 	}
 }
 
@@ -207,7 +207,6 @@ func hash(order Order) int {
 	)
 	binary.BigEndian.PutUint64(buf[0:8], amount)
 	binary.BigEndian.PutUint64(buf[8:16], price)
-	buf = append(buf, order.Market...)
 	buf = append(buf, order.Accepted.String()...)
 	buf = append(buf, order.Type...)
 	hash := md5.Sum(buf[:])

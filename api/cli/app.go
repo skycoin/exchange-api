@@ -2,20 +2,23 @@ package cli
 
 import "github.com/urfave/cli"
 
+var rpcaddr = new(string)
+var endpoint string
+
 // App is a cli app
 var App = cli.App{
 	Commands: []cli.Command{
 		cli.Command{
 			Name: "c2cx",
 			Subcommands: []cli.Command{
-				balanceCmd(),
-				buyCmd(),
-				sellCmd(),
-				cancelCmd(),
-				orderbookCmd(),
-				orderCmd(),
-				completedCmd(),
-				executedCmd(),
+				orderCMDs(),
+				completedCMDs(),
+				executedCMDs(),
+				cancelCMDs(),
+				buyCMD(),
+				sellCMD(),
+				orderbookCMD(),
+				sumbitTradeCMD(),
 			},
 			Before: func(c *cli.Context) error {
 				endpoint = "c2cx"
@@ -25,19 +28,25 @@ var App = cli.App{
 		cli.Command{
 			Name: "cryptopia",
 			Subcommands: []cli.Command{
-				balanceCmd(),
-				buyCmd(),
-				sellCmd(),
-				cancelCmd(),
-				orderbookCmd(),
-				orderCmd(),
-				completedCmd(),
-				executedCmd(),
+				orderCMDs(),
+				completedCMDs(),
+				executedCMDs(),
+				cancelCMDs(),
+				buyCMD(),
+				sellCMD(),
+				orderbookCMD(),
+				depositCMD(),
+				submitWithdrawCMD(),
+				transactionsCMD(),
+				trackingCMDs(),
 			},
 			Before: func(c *cli.Context) error {
 				endpoint = "cryptopia"
 				return nil
 			},
 		},
+	},
+	Flags: []cli.Flag{
+		cli.StringFlag{Name: "rpc", Destination: rpcaddr, Value: "localhost:12345"},
 	},
 }

@@ -3,14 +3,12 @@ package cryptopia
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/uberfurrer/tradebot/logger"
 )
 
 type response struct {
@@ -36,7 +34,6 @@ func requestGet(endpoint string, params string) (*response, error) {
 	}
 	resp, err := httpclient.Get(reqURL.String())
 	if err != nil {
-		logger.Error("cryptopia: http error:", err)
 		return nil, err
 	}
 	return readResponse(resp.Body)
@@ -51,7 +48,6 @@ func requestPost(endpoint, key, secret, nonce string, params map[string]interfac
 	resp, err := httpclient.Do(req)
 
 	if err != nil {
-		logger.Error("cryptopia: http error:", err)
 		return nil, err
 	}
 	return readResponse(resp.Body)
@@ -109,7 +105,6 @@ func getMarkets(baseMarket string, hours int) ([]MarketInfo, error) {
 		return nil, err
 	}
 	if !resp.Success {
-		log.Println(resp)
 		return nil, errors.Errorf("GetMarkets failed: %s",
 			resp.Message)
 
@@ -209,6 +204,9 @@ func getMarketOrderGroups(count int, markets ...string) ([]MarketOrdersWithLabel
 		err           error
 		marketID      int
 	)
+	if len(markets) == 0 {
+		return nil, errNoOrders
+	}
 	for _, v := range markets {
 		if marketID, err = getMarketID(v); err != nil {
 			return nil, err
@@ -230,6 +228,8 @@ func getMarketOrderGroups(count int, markets ...string) ([]MarketOrdersWithLabel
 	var result []MarketOrdersWithLabel
 	return result, json.Unmarshal(resp.Data, &result)
 }
+
+var errNoOrders = errors.New("no orders for updating")
 
 // Private API functions
 
@@ -296,8 +296,8 @@ func getOpenOrders(key, secret, nonce string, market *string, count *int) ([]Ord
 		return nil, err
 	}
 	if !resp.Success {
-		return nil, errors.Errorf("GetOpenOrders failed: %s Market %s Count %d",
-			resp.Message, *market, count)
+		return nil, errors.Errorf("GetOpenOrders failed: %s Market %#v Count %#v",
+			resp.Message, market, count)
 	}
 	var result []Order
 	return result, json.Unmarshal(resp.Data, &result)

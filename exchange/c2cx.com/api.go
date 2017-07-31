@@ -2,14 +2,12 @@ package c2cx
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 
-	exchange "github.com/uberfurrer/tradebot/exchange"
-	"github.com/uberfurrer/tradebot/logger"
+	"github.com/uberfurrer/tradebot/exchange"
 )
 
 type response struct {
@@ -23,7 +21,7 @@ var (
 	apiroot    = url.URL{
 		Scheme: "https",
 		Host:   "api.c2cx.com",
-		Path:   "/v1/",
+		Path:   "/rest/",
 	}
 )
 
@@ -46,8 +44,6 @@ func requestPost(method, key, secret string, params url.Values) (*response, erro
 	}
 	params.Add("apiKey", key)
 	req, _ := http.NewRequest("POST", reqURL.String(), strings.NewReader(params.Encode()+"&"+"sign="+sign(secret, params)))
-	log.Println(reqURL.String())
-	log.Println(params.Encode() + "&" + "sign=" + sign(secret, params))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := httpclient.Do(req)
 	if err != nil {
@@ -65,7 +61,6 @@ func getOrderbook(symbol string) (*Orderbook, error) {
 		err      error
 	)
 	if symbol, err = normalize(symbol); err != nil {
-		logger.Error("c2cx: invalid market,", err)
 		return nil, err
 	}
 	params.Add("symbol", symbol)
@@ -194,6 +189,7 @@ var statuses = map[string]int{
 	exchange.Partial:   3,
 	exchange.Completed: 4,
 	exchange.Cancelled: 5,
+	exchange.Submitted: 7,
 }
 
 // getOrderByStatus get all orders with given status

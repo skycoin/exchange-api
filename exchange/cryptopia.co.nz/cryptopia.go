@@ -4,34 +4,27 @@ import "time"
 
 // Order types, buy or sell
 const (
-	OrderTypeBuy  = ""
-	OrderTypeSell = ""
+	OrderTypeBuy  = "Buy"
+	OrderTypeSell = "Sell"
 )
 
 // Transaction types
 const (
-	TxTypeDeposit  = ""
-	TxTypeWithdraw = ""
+	TxTypeDeposit  = "Deposit"
+	TxTypeWithdraw = "Withdraw"
 )
 
 // Cancellation types
 const (
-	CancelTypeAll    = ""
-	CancelTypeMarket = ""
-	CancelTypeOrder  = ""
+	CancelTypeAll    = "All"
+	CancelTypeMarket = "Market"
+	CancelTypeOrder  = "Trade"
 )
 
 var (
 	currencyCache map[string]CurrencyInfo
 	marketCache   map[string]int
 )
-
-/*
-func init() {
-	currencyCache = make(map[string]CurrencyInfo)
-	marketCache = make(map[string]int)
-}
-*/
 
 //CurrencyInfo represents currency info
 type CurrencyInfo struct {
