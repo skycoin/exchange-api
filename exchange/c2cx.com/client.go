@@ -52,13 +52,19 @@ func (c *Client) Cancel(orderID int) (exchange.Order, error) {
 	if len(orders) != 1 {
 		return exchange.Order{}, errors.New("order does not found")
 	}
+	var completedTime time.Time
+	if orders[0].CompleteDate != 0 {
+		completedTime = unix(orders[0].CompleteDate)
+	} else {
+		completedTime = time.Now()
+	}
 	c.Orders.UpdateOrder(
 		exchange.Order{
 			OrderID:         orderID,
 			Price:           orders[0].Price,
 			Amount:          orders[0].Amount,
 			Status:          exchange.Cancelled,
-			Completed:       unix(orders[0].CompleteDate),
+			Completed:       completedTime,
 			Accepted:        unix(orders[0].CreateDate),
 			Fee:             orders[0].Fee,
 			CompletedAmount: orders[0].CompletedAmount,
@@ -213,7 +219,7 @@ func (c *Client) GetBalance(currency string) (string, error) {
 	return "", errors.Errorf("currency %s does not found", currency)
 }
 func (c *Client) updateOrderbook() {
-	for _, v := range markets {
+	for _, v := range Markets {
 		orderbook, err := getOrderbook(v)
 		if err != nil {
 			continue
@@ -222,7 +228,7 @@ func (c *Client) updateOrderbook() {
 	}
 }
 func (c *Client) updateOrders() {
-	for _, v := range markets {
+	for _, v := range Markets {
 		orders, err := getOrderinfo(c.Key, c.Secret, v, -1, nil)
 		if err != nil {
 			continue

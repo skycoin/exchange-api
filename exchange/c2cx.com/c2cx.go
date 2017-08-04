@@ -5,8 +5,9 @@ import (
 	"github.com/uberfurrer/tradebot/exchange"
 )
 
+// Markets is all supported markets
 // add new markets here
-var markets = []string{"CNY_BTC", "CNY_ETH", "CNY_ETC", "CNY_SKY", "ETH_SKY", "BTC_SKY", "CNY_SHL", "BTC_BCC"}
+var Markets = []string{"CNY_BTC", "CNY_ETH", "CNY_ETC", "CNY_SKY", "ETH_SKY", "BTC_SKY", "CNY_SHL", "BTC_BCC"}
 
 // GetOrderInfo gets extended information about orders with given tradepair ando orderID
 // if orderID is -1, then all orders in given market will be returned
@@ -36,7 +37,7 @@ func CancelOrder(key, secret string, orderID int) error {
 	return cancelOrder(key, secret, orderID)
 }
 
-// AdvancedOrderParams is extended parameters, that may be used for setting stop loss,take profit and trigger price
+// AdvancedOrderParams is extended parameters, that can be used for set stoploss, takeprofit and trigger price
 type AdvancedOrderParams struct {
 	TakeProfit   float64 `json:"take_profit"`
 	StopLoss     float64 `json:"stop_loss"`

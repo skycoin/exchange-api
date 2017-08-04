@@ -10,9 +10,8 @@ type newOrder struct {
 	OrderID int `json:"orderId"`
 }
 
-// Balance represents a response from GetUserInfo
-// Note: all keys must be lowercase
-// Keys: "btc", "etc", "eth", "cny", "sky"
+// Balance is a map with strings of balances
+// all keys must be lowercase
 type Balance map[string]string
 
 // UnmarshalJSON implements json.Unmarshaler
@@ -26,7 +25,7 @@ func (r *Balance) UnmarshalJSON(b []byte) error {
 			Etc float64 `json:"etc"`
 			Eth float64 `json:"eth"`
 			Cny float64 `json:"cny"`
-			Sky float64 `json:""`
+			Sky float64 `json:"sky"`
 		} `json:"balance"`
 		Frozen struct {
 			Btc float64 `json:"btc"`

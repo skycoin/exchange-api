@@ -80,7 +80,7 @@ func getOrderbook(symbol string) (*Orderbook, error) {
 // return value is a map[string]string
 // all keys should be a lowercase
 func getBalance(key, secret string) (userInfo Balance, err error) {
-	var endpoint = "getbalance"
+	var endpoint = "getuserinfo" // for new api it should be getbalance
 	resp, err := requestPost(endpoint, key, secret, nil)
 	if err != nil {
 		return nil, err

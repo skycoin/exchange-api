@@ -18,7 +18,7 @@ func TestCreateOrder(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("Order %d successfully created", orderid)
+	//t.Logf("Order %d successfully created", orderid)
 	order = orderid
 }
 
@@ -27,13 +27,31 @@ func TestGetOrderInfo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	var found = false
 	for _, v := range orders {
-		t.Logf("%#v", convert(v))
+		if order == v.OrderID {
+			found = true
+			break
+		}
 	}
+	if !found {
+		t.Errorf("order %d not found", order)
+	}
+
 }
 func TestCancelOrder(t *testing.T) {
 	err := CancelOrder(key, secret, order)
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestGetUserInfo(t *testing.T) {
+	b, err := GetBalance(key, secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(b) != 5 {
+		t.Fatal("invalid balance response")
 	}
 }

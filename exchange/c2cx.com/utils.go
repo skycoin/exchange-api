@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/url"
 	"strings"
 	"time"
@@ -78,7 +79,7 @@ func abcdsort(params url.Values) string {
 // normalize tradepair symbol
 func normalize(sym string) (string, error) {
 	sym = strings.ToUpper(strings.Replace(sym, "/", "_", -1))
-	for _, v := range markets {
+	for _, v := range Markets {
 		if v == sym {
 			return sym, nil
 		}
@@ -101,6 +102,7 @@ func readResponse(r io.ReadCloser) (*response, error) {
 		resp response
 	)
 	b, err := ioutil.ReadAll(r)
+	log.Println(string(b))
 	if err != nil {
 		return nil, err
 	}
