@@ -6,7 +6,7 @@ import (
 )
 
 // add new markets here
-var markets = []string{"CNY_BTC", "CNY_ETH", "CNY_ETC", "CNY_SKY", "ETH_SKY", "BTC_SKY", "CNY_SHL"}
+var markets = []string{"CNY_BTC", "CNY_ETH", "CNY_ETC", "CNY_SKY", "ETH_SKY", "BTC_SKY", "CNY_SHL", "BTC_BCC"}
 
 // GetOrderInfo gets extended information about orders with given tradepair ando orderID
 // if orderID is -1, then all orders in given market will be returned
