@@ -24,7 +24,6 @@
    - Price
    - Amount
    - Timestamp
-   - Market
  ## Orderbooks
   Orderbooks is interface for orderbooks tracking, it wraps underlying DB or other store. Client manipulates orderbook through this interface.
   
