@@ -11,7 +11,7 @@ import (
 
 // Server serve all request for all exchanges
 type Server struct {
-	Handlers map[string]PackageHandler
+	Handlers map[string]Wrapper
 	mux      *http.ServeMux
 }
 

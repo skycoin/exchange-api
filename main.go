@@ -51,8 +51,8 @@ func main() {
 	go cryptopiaClient.Update()
 
 	var server = rpc.Server{
-		Handlers: map[string]rpc.PackageHandler{
-			"cryptopia": rpc.PackageHandler{
+		Handlers: map[string]rpc.Wrapper{
+			"cryptopia": rpc.Wrapper{
 				Client: cryptopiaClient,
 				Env: map[string]string{
 					"key":    cryptopiaKey,
@@ -60,7 +60,7 @@ func main() {
 				},
 				Handlers: cryptopiaHandlers,
 			},
-			"c2cx": rpc.PackageHandler{
+			"c2cx": rpc.Wrapper{
 				Client: c2cxClient,
 				Env: map[string]string{
 					"key":    c2cxKey,
@@ -77,7 +77,7 @@ func main() {
 }
 
 // exchange-specific functions, that not handles by Client interface
-var cryptopiaHandlers = map[string]rpc.PackageFunc{
+var cryptopiaHandlers = map[string]rpc.HandlerFunc{
 	"deposit": func(r rpc.Request, env map[string]string) rpc.Response {
 		params, err := rpc.DecodeParams(r)
 		if err != nil {
@@ -170,7 +170,7 @@ var cryptopiaHandlers = map[string]rpc.PackageFunc{
 	},
 }
 
-var c2cxHandlers = map[string]rpc.PackageFunc{
+var c2cxHandlers = map[string]rpc.HandlerFunc{
 	"submit_trade": func(r rpc.Request, env map[string]string) rpc.Response {
 		params, err := rpc.DecodeParams(r)
 		if err != nil {

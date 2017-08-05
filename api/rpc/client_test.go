@@ -5,8 +5,8 @@ import "encoding/json"
 
 func TestClientDo(t *testing.T) {
 	var server = Server{
-		Handlers: map[string]PackageHandler{
-			"test": PackageHandler{
+		Handlers: map[string]Wrapper{
+			"test": Wrapper{
 				Client:   new(ex),
 				Handlers: nil,
 				Env:      nil,

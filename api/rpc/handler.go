@@ -6,19 +6,19 @@ import (
 	exchange "github.com/uberfurrer/tradebot/exchange"
 )
 
-// PackageHandler handles one exchange, resolve methods and returns json formatted responses
-type PackageHandler struct {
+// Wrapper handles one exchange, resolve methods and returns json formatted responses
+type Wrapper struct {
 	Client exchange.Client
 	// Handlers contains all Handlers for all functions, provided by exchange
-	Handlers map[string]PackageFunc
+	Handlers map[string]HandlerFunc
 	// env needs if you want call additional, package-specific functions, that does not included in exchange.Client interface
 	// env typically contains api keys
 	Env map[string]string
 }
 
-// PackageFunc wraps function, provides by exchange package
-// PackageFunc should validating params and checks correct for request scheme - matching jsonrpc version and has id
-type PackageFunc func(r Request, env map[string]string) Response
+// HandlerFunc wraps function, provides by exchange package
+// HandlerFunc should validating params and checks correct for request scheme - matching jsonrpc version and has id
+type HandlerFunc func(r Request, env map[string]string) Response
 
 // defaultHandlers contain functions that will executed, if called functionality, handled by exchange.Client interface
 var defaultHandlers = map[string]func(Request, exchange.Client) Response{
@@ -307,15 +307,15 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 }
 
 // PackageFunc adds a PackageFunc for specified method
-func (h *PackageHandler) PackageFunc(method string, f PackageFunc) {
+func (h *Wrapper) PackageFunc(method string, f HandlerFunc) {
 	if h.Handlers == nil {
-		h.Handlers = make(map[string]PackageFunc)
+		h.Handlers = make(map[string]HandlerFunc)
 	}
 	h.Handlers[method] = f
 }
 
 // Setenv sets a environment variable
-func (h *PackageHandler) Setenv(key, value string) {
+func (h *Wrapper) Setenv(key, value string) {
 	if h.Env == nil {
 		h.Env = make(map[string]string)
 	}
@@ -323,7 +323,7 @@ func (h *PackageHandler) Setenv(key, value string) {
 }
 
 // Process lookups given method and calls it
-func (h *PackageHandler) Process(r Request) *Response {
+func (h *Wrapper) Process(r Request) *Response {
 	log.Printf("processing request, method %s, params %s\n", r.Method, r.Params)
 	if f, ok := defaultHandlers[r.Method]; ok {
 		resp := f(r, h.Client)

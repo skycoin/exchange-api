@@ -24,9 +24,9 @@ func TestPackageHandler_AddFunction(t *testing.T) {
 		}
 		return MakeSuccessResponse(r, env["envparam"])
 	}
-	var handler = PackageHandler{
+	var handler = Wrapper{
 		Client: new(ex),
-		Handlers: map[string]PackageFunc{
+		Handlers: map[string]HandlerFunc{
 			"test": f,
 		},
 		Env: map[string]string{
