@@ -36,6 +36,7 @@ func orderInfoCMD() cli.Command {
 			if err != nil {
 				return err
 			}
+			fmt.Println(orderFull(order))
 			return nil
 		},
 	}
