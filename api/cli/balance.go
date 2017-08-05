@@ -1,10 +1,8 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 
-	"github.com/uberfurrer/tradebot/exchange"
 	"github.com/urfave/cli"
 )
 
@@ -25,12 +23,7 @@ func balanceCMD() cli.Command {
 			if err != nil {
 				return err
 			}
-			var order exchange.Order
-			err = json.Unmarshal(resp, &order)
-			if err != nil {
-				return err
-			}
-			fmt.Println(orderFull(order))
+			fmt.Println(string(resp))
 			return nil
 		},
 	}

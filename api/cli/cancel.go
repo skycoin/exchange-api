@@ -65,7 +65,7 @@ func cancelMarketCMD() cli.Command {
 			for _, v := range orders {
 				fmt.Println(orderShort(v))
 			}
-			fmt.Printf("Cancelled %d orders", len(orders))
+			fmt.Printf("Cancelled %d orders\n", len(orders))
 			return nil
 		},
 	}
@@ -91,7 +91,7 @@ func cancelAllCMD() cli.Command {
 			for _, v := range orders {
 				fmt.Println(orderShort(v))
 			}
-			fmt.Printf("Cancelled %d orders", len(orders))
+			fmt.Printf("Cancelled %d orders\n", len(orders))
 			return nil
 		},
 	}

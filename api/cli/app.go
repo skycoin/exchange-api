@@ -19,6 +19,7 @@ var App = cli.App{
 				sellCMD(),
 				orderbookCMD(),
 				sumbitTradeCMD(),
+				balanceCMD(),
 			},
 			Before: func(c *cli.Context) error {
 				endpoint = "c2cx"
@@ -39,6 +40,7 @@ var App = cli.App{
 				submitWithdrawCMD(),
 				transactionsCMD(),
 				trackingCMDs(),
+				balanceCMD(),
 			},
 			Before: func(c *cli.Context) error {
 				endpoint = "cryptopia"

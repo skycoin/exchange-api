@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/url"
 	"strings"
 	"time"
@@ -102,7 +101,6 @@ func readResponse(r io.ReadCloser) (*response, error) {
 		resp response
 	)
 	b, err := ioutil.ReadAll(r)
-	log.Println(string(b))
 	if err != nil {
 		return nil, err
 	}

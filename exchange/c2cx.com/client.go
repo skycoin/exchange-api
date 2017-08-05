@@ -1,6 +1,7 @@
 package c2cx
 
 import (
+	"log"
 	"time"
 
 	"strings"
@@ -53,6 +54,7 @@ func (c *Client) Cancel(orderID int) (exchange.Order, error) {
 		return exchange.Order{}, errors.New("order does not found")
 	}
 	var completedTime time.Time
+	log.Println(orders[0].CompleteDate)
 	if orders[0].CompleteDate != 0 {
 		completedTime = unix(orders[0].CompleteDate)
 	} else {
@@ -96,6 +98,7 @@ func (c *Client) CancelMarket(symbol string) ([]exchange.Order, error) {
 		orderids []int
 		orders   []exchange.Order
 	)
+	symbol = strings.ToUpper(strings.Replace(symbol, "_", "/", -1))
 	for _, v := range c.Orders.GetOpened() {
 		order, err := c.Orders.GetOrderInfo(v)
 		if err != nil {

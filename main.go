@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"log"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis"
@@ -15,20 +17,54 @@ import (
 	"github.com/uberfurrer/tradebot/exchange/cryptopia.co.nz"
 )
 
+/*
 var (
 	c2cxKey         = "2A4C851A-1B86-4E08-863B-14582094CE0F"         // = "censored"
 	c2cxSecret      = "83262169-B473-4BF2-9288-5E5AC898F4B0"         // = "this too"
 	cryptopiaKey    = "23a69c51c746446e819b213ef3841920"             // = "and this"
 	cryptopiaSecret = "poPwm3OQGOb85L0Zf3DL4TtgLPc2OpxZg9n8G7Sv2po=" // = ":)"
 )
+*/
+var keys struct {
+	cryptopia struct {
+		key    string
+		secret string
+	}
+	c2cx struct {
+		key    string
+		secret string
+	}
+}
+var (
+	c2cxClient      *c2cx.Client
+	cryptopiaClient *cryptopia.Client
+)
 
 func main() {
 	var dbaddr = flag.String("db", "localhost:6379", "Redis address")
 	var srvaddr = flag.String("srv", "localhost:12345", "RPC listener address")
+	var cryptopiaKey = flag.String("cryptopia", "", "key and secret joined \":\"")
+	var c2cxKey = flag.String("c2cx", "", "c2cx key and secret joined \":\"")
 	flag.Parse()
+
+	vals := strings.SplitN(*cryptopiaKey, ":", 2)
+	if len(vals) != 2 {
+		log.Println("-cryptopia flag does not set")
+		return
+	}
+	keys.cryptopia.key = vals[0]
+	keys.cryptopia.secret = vals[1]
+	vals = strings.SplitN(*c2cxKey, ":", 2)
+	if len(vals) != 2 {
+		log.Println("-c2cx flag does not set")
+		return
+	}
+	keys.c2cx.key = vals[0]
+	keys.c2cx.secret = vals[1]
+
 	cryptopiaClient = &cryptopia.Client{
-		Key:    cryptopiaKey,
-		Secret: cryptopiaSecret,
+		Key:    keys.cryptopia.key,
+		Secret: keys.cryptopia.secret,
 		Orders: exchange.NewTracker(),
 		Orderbooks: db.NewOrderbookTracker(&redis.Options{
 			Addr: *dbaddr,
@@ -37,8 +73,8 @@ func main() {
 		OrdersRefreshInterval:    time.Second * 5,
 	}
 	c2cxClient = &c2cx.Client{
-		Key:    c2cxKey,
-		Secret: c2cxSecret,
+		Key:    keys.c2cx.key,
+		Secret: keys.c2cx.secret,
 		Orders: exchange.NewTracker(),
 		Orderbooks: db.NewOrderbookTracker(&redis.Options{
 			Addr: *dbaddr,
@@ -55,16 +91,16 @@ func main() {
 			"cryptopia": rpc.Wrapper{
 				Client: cryptopiaClient,
 				Env: map[string]string{
-					"key":    cryptopiaKey,
-					"secret": cryptopiaSecret,
+					"key":    keys.cryptopia.key,
+					"secret": keys.cryptopia.secret,
 				},
 				Handlers: cryptopiaHandlers,
 			},
 			"c2cx": rpc.Wrapper{
 				Client: c2cxClient,
 				Env: map[string]string{
-					"key":    c2cxKey,
-					"secret": c2cxSecret,
+					"key":    keys.c2cx.key,
+					"secret": keys.c2cx.secret,
 				},
 				Handlers: c2cxHandlers,
 			},
@@ -214,6 +250,3 @@ var c2cxHandlers = map[string]rpc.HandlerFunc{
 		return rpc.MakeSuccessResponse(r, orderid)
 	},
 }
-
-var c2cxClient *c2cx.Client
-var cryptopiaClient *cryptopia.Client
