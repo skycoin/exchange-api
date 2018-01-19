@@ -1,16 +1,16 @@
-# tradebot
+# exchange-api
 
-Tradebot is a Go abstraction of cryptocoin trading exchanges. It abstract these four operations:
+Skycoin's exchange-api is a Go abstraction of cryptocoin trading exchanges. It abstract these four operations:
 * placing a bid/ask order
 * tracking the status of an existing order
 * withdrawing bitcoin from the exchange
 * depositing bitcoin to the exchange
 
-Tradebot provides an internal Go API, a REST API, and a command line interface.
+It provides an internal Go API, a REST API, and a command line interface.
 
-Currently tradebot supports the `cryptopia` and `c2cx` exchanges. Additional exchanges can be implemented in Go.
+Currently it supports the `cryptopia` and `c2cx` exchanges. Additional exchanges can be implemented in Go.
 
-You can view [tradebot's source code](https://github.com/skycoin/exchange-api) via github.
+You can view [the source code](https://github.com/skycoin/exchange-api) via github.
 
 ## Terminology
 
@@ -32,7 +32,7 @@ briancaine note:
 
 briancaine note:
 
-  here's where we document tradebot if you wanted to link it into another program as a library. straightforward enough
+  here's where we document how you'd link it into another program as a library. straightforward enough
 
 ### Exchange API
 
@@ -148,7 +148,7 @@ type MarketRecord struct {
 
 ## REST API
 
-Tradebot's REST API is based on [JSON-RPC 2.0](http://www.jsonrpc.org/specification).
+The REST API is based on [JSON-RPC 2.0](http://www.jsonrpc.org/specification).
 
 ### Types
 
@@ -252,7 +252,7 @@ Returns: `Orderbook_record`
 
 ## CLI
 
-Tradebot provides a command line interface to the REST API.
+A command line interface to the REST API is provided.
 
 A CLI call takes the form: `cli <exchange> <command> [subcommand] [params...]`
 
