@@ -2,7 +2,7 @@ package c2cx
 
 import (
 	"github.com/pkg/errors"
-	"github.com/uberfurrer/tradebot/exchange"
+	"github.com/skycoin/exchange-api/exchange"
 )
 
 // Markets is all supported markets

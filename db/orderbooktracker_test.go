@@ -7,7 +7,7 @@ import (
 	"reflect"
 
 	"github.com/go-redis/redis"
-	exchange "github.com/uberfurrer/tradebot/exchange"
+	exchange "github.com/skycoin/exchange-api/exchange"
 )
 
 func TestRecord_MarshalJSON_UnmarshalJSON(t *testing.T) {

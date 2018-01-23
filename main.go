@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
-	"github.com/uberfurrer/tradebot/db"
-	"github.com/uberfurrer/tradebot/exchange"
-	"github.com/uberfurrer/tradebot/exchange/c2cx.com"
+	"github.com/skycoin/exchange-api/db"
+	"github.com/skycoin/exchange-api/exchange"
+	"github.com/skycoin/exchange-api/exchange/c2cx.com"
 
-	"github.com/uberfurrer/tradebot/api/rpc"
-	"github.com/uberfurrer/tradebot/exchange/cryptopia.co.nz"
+	"github.com/skycoin/exchange-api/api/rpc"
+	"github.com/skycoin/exchange-api/exchange/cryptopia.co.nz"
 )
 
 /*

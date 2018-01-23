@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
-	"github.com/uberfurrer/tradebot/db"
-	"github.com/uberfurrer/tradebot/exchange"
-	cryptopia "github.com/uberfurrer/tradebot/exchange/cryptopia.co.nz"
+	"github.com/skycoin/exchange-api/db"
+	"github.com/skycoin/exchange-api/exchange"
+	cryptopia "github.com/skycoin/exchange-api/exchange/cryptopia.co.nz"
 )
 
 func TestClientInit(t *testing.T) {

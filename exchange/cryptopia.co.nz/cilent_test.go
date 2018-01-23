@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
-	"github.com/uberfurrer/tradebot/db"
-	"github.com/uberfurrer/tradebot/exchange"
+	"github.com/skycoin/exchange-api/db"
+	"github.com/skycoin/exchange-api/exchange"
 )
 
 var c = Client{

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/go-redis/redis"
-	"github.com/uberfurrer/tradebot/exchange"
+	"github.com/skycoin/exchange-api/exchange"
 )
 
 type orderbooktracker struct {
