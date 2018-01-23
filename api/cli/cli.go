@@ -3,9 +3,9 @@ package cli
 import (
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"math/big"
 
-	"github.com/pkg/errors"
 	"github.com/uberfurrer/tradebot/api/rpc"
 )
 

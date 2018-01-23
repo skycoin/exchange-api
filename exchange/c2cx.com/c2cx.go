@@ -1,7 +1,8 @@
 package c2cx
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
+
 	"github.com/uberfurrer/tradebot/exchange"
 )
 
@@ -87,5 +88,5 @@ type Orderbook struct {
 }
 
 func apiError(endpoint, message string) error {
-	return errors.Errorf("c2cx: %s falied, %s", endpoint, message)
+	return fmt.Errorf("c2cx: %s falied, %s", endpoint, message)
 }

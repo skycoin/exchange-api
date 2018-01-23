@@ -3,11 +3,10 @@ package rpc
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-
-	"github.com/pkg/errors"
 )
 
 // Do does request to given addr and endpoint
@@ -31,7 +30,7 @@ func Do(addr, endpoint string, r Request) (*Response, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return nil, errors.Errorf("reesponse status code %d", resp.StatusCode)
+		return nil, fmt.Errorf("reesponse status code %d", resp.StatusCode)
 	}
 	respdata, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

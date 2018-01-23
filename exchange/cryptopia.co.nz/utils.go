@@ -14,7 +14,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/uberfurrer/tradebot/exchange"
 )
 
@@ -33,7 +32,7 @@ func getCurrencyID(currency string) (int, error) {
 		return v.ID, nil
 	}
 
-	return 0, errors.Errorf("Currency %s does not found", currency)
+	return 0, fmt.Errorf("Currency %s does not found", currency)
 }
 
 func updateCaches() error {
@@ -78,7 +77,7 @@ func getMarketID(market string) (int, error) {
 	if v, ok := marketCache[normalize(market)]; ok {
 		return v, nil
 	}
-	return 0, errors.Errorf("TradePair %s does not found", market)
+	return 0, fmt.Errorf("TradePair %s does not found", market)
 }
 
 func readResponse(r io.ReadCloser) (*response, error) {
