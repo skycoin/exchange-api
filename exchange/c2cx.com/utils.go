@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/uberfurrer/tradebot/exchange"
+	"github.com/skycoin/exchange-api/exchange"
 )
 
 func sign(secret string, params url.Values) string {

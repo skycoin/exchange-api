@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/uberfurrer/tradebot/exchange"
+	"github.com/skycoin/exchange-api/exchange"
 )
 
 var client = ex{}

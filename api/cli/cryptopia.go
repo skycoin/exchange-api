@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/uberfurrer/tradebot/exchange/cryptopia.co.nz"
+	"github.com/skycoin/exchange-api/exchange/cryptopia.co.nz"
 	"github.com/urfave/cli"
 )
 

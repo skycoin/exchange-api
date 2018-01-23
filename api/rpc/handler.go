@@ -3,7 +3,7 @@ package rpc
 import (
 	"log"
 
-	exchange "github.com/uberfurrer/tradebot/exchange"
+	exchange "github.com/skycoin/exchange-api/exchange"
 )
 
 // Wrapper handles one exchange, resolve methods and returns json formatted responses
