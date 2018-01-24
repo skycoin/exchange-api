@@ -29,7 +29,7 @@
   - `orderbook`
 
   and you can add specific handlers for each exchange
-  api/rpc package contains more documentation - methods, params structures for each call, return values and description for each method
+  rpc package contains more documentation - methods, params structures for each call, return values and description for each method
   rpc endpoints for each exchange are different -  
   http://rpcaddr:rpcport/c2cx and http://rpcaddr:rpcport/cryptopia, respectively 
 # Cli
