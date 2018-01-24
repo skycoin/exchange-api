@@ -42,9 +42,10 @@ func (t *orderbooktracker) Get(sym string) (exchange.MarketRecord, error) {
 	if err = result.Err(); err != nil {
 		return r, err
 	}
-	if bb, err := result.Bytes(); err == nil {
-		err = json.Unmarshal(bb, &r)
+	if bb, err := result.Bytes(); err != nil {
+		return r, err
 	}
+	err = json.Unmarshal(bb, &r)
 	return r, err
 }
 
