@@ -6,7 +6,7 @@ import (
 	"math/big"
 
 	"github.com/pkg/errors"
-	"github.com/skycoin/exchange-api/api/rpc"
+	"github.com/skycoin/exchange-api/rpc"
 )
 
 var errRPC = errors.New("RPC request failed")
