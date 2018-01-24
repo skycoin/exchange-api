@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	exchange "github.com/uberfurrer/tradebot/exchange"
+	exchange "github.com/skycoin/exchange-api/exchange"
 )
 
 func Test_sign(t *testing.T) {

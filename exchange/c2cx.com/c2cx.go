@@ -3,7 +3,7 @@ package c2cx
 import (
 	"fmt"
 
-	"github.com/uberfurrer/tradebot/exchange"
+	"github.com/skycoin/exchange-api/exchange"
 )
 
 // Markets is all supported markets

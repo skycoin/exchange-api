@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/uberfurrer/tradebot/api/cli"
+	"github.com/skycoin/exchange-api/api/cli"
 )
 
 func main() {

@@ -14,7 +14,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/uberfurrer/tradebot/exchange"
+	"github.com/skycoin/exchange-api/exchange"
 )
 
 var incr int

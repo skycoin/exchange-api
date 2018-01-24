@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	c2cx "github.com/uberfurrer/tradebot/exchange/c2cx.com"
+	c2cx "github.com/skycoin/exchange-api/exchange/c2cx.com"
 	"github.com/urfave/cli"
 )
 

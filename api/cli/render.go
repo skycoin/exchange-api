@@ -1,6 +1,6 @@
 package cli
 
-import "github.com/uberfurrer/tradebot/exchange"
+import "github.com/skycoin/exchange-api/exchange"
 import "encoding/json"
 
 func orderShort(order exchange.Order) string {

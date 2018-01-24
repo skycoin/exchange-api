@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/uberfurrer/tradebot/exchange"
+	"github.com/skycoin/exchange-api/exchange"
 )
 
 // UnmarshalJSON implements json.Unmarshaler
