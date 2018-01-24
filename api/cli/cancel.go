@@ -10,7 +10,7 @@ import (
 )
 
 func cancelTradeCMD() cli.Command {
-	var name = "trade"
+	name := "trade"
 	return cli.Command{
 		Name:      name,
 		Usage:     "Cancel order",
@@ -23,7 +23,7 @@ func cancelTradeCMD() cli.Command {
 			if err != nil {
 				return err
 			}
-			var params = map[string]interface{}{
+			params := map[string]interface{}{
 				"orderid": orderid,
 			}
 			resp, err := rpcRequest("cancel_trade", params)
@@ -41,7 +41,7 @@ func cancelTradeCMD() cli.Command {
 	}
 }
 func cancelMarketCMD() cli.Command {
-	var name = "market"
+	name := "market"
 	return cli.Command{
 		Name:      name,
 		Usage:     "Cancel all orders in market",
@@ -50,7 +50,7 @@ func cancelMarketCMD() cli.Command {
 			if c.NArg() != 1 {
 				return errInvalidInput
 			}
-			var params = map[string]interface{}{
+			params := map[string]interface{}{
 				"symbol": c.Args().First(),
 			}
 			resp, err := rpcRequest("cancel_market", params)
@@ -71,7 +71,7 @@ func cancelMarketCMD() cli.Command {
 	}
 }
 func cancelAllCMD() cli.Command {
-	var name = "all"
+	name := "all"
 	return cli.Command{
 		Name:  name,
 		Usage: "Cancel all orders",

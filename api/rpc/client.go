@@ -12,10 +12,8 @@ import (
 
 // Do does request to given addr and endpoint
 func Do(addr, endpoint string, r Request) (*Response, error) {
-	var (
-		c          = http.Client{}
-		requestURI = url.URL{}
-	)
+	c          := http.Client{}
+	requestURI := url.URL{}
 
 	requestURI.Host = addr
 	requestURI.Scheme = "http"

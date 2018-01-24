@@ -9,7 +9,7 @@ import (
 )
 
 func orderbookCMD() cli.Command {
-	var name = "orderbook"
+	name := "orderbook"
 	var short bool
 	return cli.Command{
 		Name:      name,
@@ -19,7 +19,7 @@ func orderbookCMD() cli.Command {
 			if c.NArg() != 1 {
 				return errInvalidInput
 			}
-			var params = map[string]interface{}{
+			params := map[string]interface{}{
 				"symbol": c.Args().First(),
 			}
 			resp, err := rpcRequest("orderbook", params)

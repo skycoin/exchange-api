@@ -27,7 +27,7 @@ func (s *Server) Handler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(500)
 	}
-	var ep = strings.TrimPrefix(r.URL.Path, "/")
+	ep := strings.TrimPrefix(r.URL.Path, "/")
 	if v, ok := s.Handlers[ep]; ok {
 		resp := v.Process(req)
 		if resp == nil {

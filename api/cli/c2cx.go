@@ -8,14 +8,12 @@ import (
 )
 
 func sumbitTradeCMD() cli.Command {
-	var name = "submittrade"
-	var (
-		pricetype    = new(string)
-		ordertype    = new(string)
-		takeprofit   = new(float64)
-		stoploss     = new(float64)
-		triggerprice = new(float64)
-	)
+	name := "submittrade"
+	pricetype    := new(string)
+	ordertype    := new(string)
+	takeprofit   := new(float64)
+	stoploss     := new(float64)
+	triggerprice := new(float64)
 	return cli.Command{
 		Name:      name,
 		Usage:     "Create new order with advanced parameters",
@@ -24,11 +22,10 @@ func sumbitTradeCMD() cli.Command {
 			if c.NArg() != 3 {
 				return errInvalidInput
 			}
-			var (
-				symbol        string
-				price, amount float64
-			)
-			var params = map[string]interface{}{
+			symbol := ""
+			price  := 0.0
+			amount := 0.0
+			params := map[string]interface{}{
 				"price_type_id": pricetype,
 				"order_type":    ordertype,
 				"symbol":        symbol,

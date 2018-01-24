@@ -4,7 +4,7 @@ import "github.com/skycoin/exchange-api/exchange"
 import "encoding/json"
 
 func orderShort(order exchange.Order) string {
-	var r = map[string]interface{}{
+	r := map[string]interface{}{
 		"orderid": order.OrderID,
 		"market":  order.Market,
 		"price":   order.Price,
@@ -15,7 +15,7 @@ func orderShort(order exchange.Order) string {
 }
 
 func orderFull(order exchange.Order) string {
-	var r = map[string]interface{}{
+	r := map[string]interface{}{
 		"orderid": order.OrderID,
 		"market":  order.Market,
 		"type":    order.Type,
@@ -52,12 +52,10 @@ func orderbookFull(orderbook exchange.MarketRecord) string {
 }
 
 func orderbookShort(orderbook exchange.MarketRecord) string {
-	var (
-		averageBuyPrice  float64
-		averageSellPrice float64
-		totalBuyVolume   float64
-		totalSellVolume  float64
-	)
+	averageBuyPrice  := 0.0
+	averageSellPrice := 0.0
+	totalBuyVolume   := 0.0
+	totalSellVolume  := 0.0
 	for _, v := range orderbook.Bids {
 		if v.Price == 0 {
 			continue
@@ -82,7 +80,7 @@ func orderbookShort(orderbook exchange.MarketRecord) string {
 
 		averageSellPrice += v.Price * (v.Volume / totalSellVolume)
 	}
-	var representation = map[string]interface{}{
+	representation := map[string]interface{}{
 		"timestamp":          orderbook.Timestamp,
 		"symbol":             orderbook.Symbol,
 		"average_sell_price": averageSellPrice,

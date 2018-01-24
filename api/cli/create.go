@@ -8,7 +8,7 @@ import (
 )
 
 func buyCMD() cli.Command {
-	var name = "buy"
+	name := "buy"
 	return cli.Command{
 		Name:      name,
 		Usage:     "Place buy order",
@@ -17,19 +17,17 @@ func buyCMD() cli.Command {
 			if len(c.Args()) != 3 {
 				return errInvalidInput
 			}
-			var (
-				err           error
-				symbol        string
-				price, amount float64
-			)
-			symbol = c.Args().Get(0)
+			var err error
+			price  := 0.0
+			amount := 0.0
+			symbol := c.Args().Get(0)
 			if price, err = strconv.ParseFloat(c.Args().Get(1), 64); err != nil {
 				return err
 			}
 			if amount, err = strconv.ParseFloat(c.Args().Get(2), 64); err != nil {
 				return err
 			}
-			var params = map[string]interface{}{
+			params := map[string]interface{}{
 				"symbol": symbol,
 				"price":  price,
 				"amount": amount,
@@ -46,7 +44,7 @@ func buyCMD() cli.Command {
 }
 
 func sellCMD() cli.Command {
-	var name = "sell"
+	name := "sell"
 	return cli.Command{
 		Name:      name,
 		Usage:     "Place sell order",
@@ -55,19 +53,17 @@ func sellCMD() cli.Command {
 			if len(c.Args()) != 3 {
 				return errInvalidInput
 			}
-			var (
-				err           error
-				symbol        string
-				price, amount float64
-			)
-			symbol = c.Args().Get(0)
+			var err error
+			price  := 0.0
+			amount := 0.0
+			symbol := c.Args().Get(0)
 			if price, err = strconv.ParseFloat(c.Args().Get(1), 64); err != nil {
 				return err
 			}
 			if amount, err = strconv.ParseFloat(c.Args().Get(2), 64); err != nil {
 				return err
 			}
-			var params = map[string]interface{}{
+			params := map[string]interface{}{
 				"symbol": symbol,
 				"price":  price,
 				"amount": amount,

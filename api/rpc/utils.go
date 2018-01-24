@@ -27,7 +27,7 @@ func DecodeParams(r Request) (map[string]interface{}, error) {
 	if r.Params == nil {
 		return nil, errEmptyParams
 	}
-	var result = make(map[string]interface{})
+	result := make(map[string]interface{})
 	err := json.Unmarshal(r.Params, &result)
 	return result, err
 }
@@ -72,10 +72,8 @@ var errInvalidType = errors.New("invalid param type")
 
 // MakeErrorResponse creates error response
 func MakeErrorResponse(r Request, errortype int, err error) Response {
-	var (
-		errorcode int
-		errormsg  string
-	)
+	errorcode := 0
+	errormsg  := ""
 	switch errortype {
 	case InvalidParams:
 		errorcode = InvalidParams

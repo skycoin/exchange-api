@@ -10,7 +10,7 @@ import (
 var client = ex{}
 
 func Test_defaultHandler_GetBalance(t *testing.T) {
-	var req = Request{
+	req := Request{
 		Params:  json.RawMessage("{\"currency\":\"BTC\"}"),
 		Method:  "/",
 		ID:      new(string),
@@ -25,7 +25,7 @@ func Test_defaultHandler_GetBalance(t *testing.T) {
 	}
 }
 func Test_defaulthandler_Cancel(t *testing.T) {
-	var req = Request{
+	req := Request{
 		Params:  json.RawMessage("{\"orderid\":1}"),
 		Method:  "/",
 		ID:      new(string),
@@ -35,19 +35,19 @@ func Test_defaulthandler_Cancel(t *testing.T) {
 	if resp.Error != nil {
 		t.Error(resp.Error)
 	}
-	var want = "{\"orderid\":0,\"type\":\"\",\"market\":\"\",\"amount\":0,\"price\":0,\"submitted_at\":-6795364578871,\"fee\":0,\"completed_amount\":0,\"status\":\"\",\"accepted_at\":-6795364578871,\"completed_at\":-6795364578871}"
+	want := "{\"orderid\":0,\"type\":\"\",\"market\":\"\",\"amount\":0,\"price\":0,\"submitted_at\":-6795364578871,\"fee\":0,\"completed_amount\":0,\"status\":\"\",\"accepted_at\":-6795364578871,\"completed_at\":-6795364578871}"
 	if string(resp.Result) != want {
 		t.Fatalf("want: %s, expected: %s", want, resp.Result)
 	}
 }
 func Test_defaulthandler_CancelAll(t *testing.T) {
-	var req = Request{
+	req := Request{
 		Params:  json.RawMessage(nil),
 		Method:  "/",
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 	}
-	var want = "[]"
+	want := "[]"
 	resp := defaultHandlers["cancel_all"](req, client)
 	if resp.Error != nil {
 		t.Error(resp.Error)
@@ -57,7 +57,7 @@ func Test_defaulthandler_CancelAll(t *testing.T) {
 	}
 }
 func Test_defaulthandler_CancelMarket(t *testing.T) {
-	var req = Request{
+	req := Request{
 		Params:  json.RawMessage("{\"symbol\":\"BTC/LTC\"}"),
 		Method:  "/",
 		ID:      new(string),
@@ -67,13 +67,13 @@ func Test_defaulthandler_CancelMarket(t *testing.T) {
 	if resp.Error != nil {
 		t.Error(resp.Error)
 	}
-	var want = "[]"
+	want := "[]"
 	if string(resp.Result) != want {
 		t.Fatalf("want: %s, expected: %s", want, resp.Result)
 	}
 }
 func Test_defaulthandler_Buy(t *testing.T) {
-	var req = Request{
+	req := Request{
 		Params:  json.RawMessage("{\"symbol\":\"BTC/LTC\",\"rate\":1.0,\"amount\":1.1}"),
 		Method:  "/",
 		ID:      new(string),
@@ -88,7 +88,7 @@ func Test_defaulthandler_Buy(t *testing.T) {
 	}
 }
 func Test_defaulthandler_Sell(t *testing.T) {
-	var req = Request{
+	req := Request{
 		Params:  json.RawMessage("{\"symbol\":\"BTC/LTC\",\"rate\":1.0,\"amount\":1.1}"),
 		Method:  "/",
 		ID:      new(string),
@@ -103,14 +103,14 @@ func Test_defaulthandler_Sell(t *testing.T) {
 	}
 }
 func Test_defaulthandler_OrderDetails(t *testing.T) {
-	var req = Request{
+	req := Request{
 		Params:  json.RawMessage("{\"orderid\":1}"),
 		Method:  "/",
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 	}
 	resp := defaultHandlers["order_info"](req, client)
-	var want = "{\"orderid\":0,\"type\":\"\",\"market\":\"\",\"amount\":0,\"price\":0,\"submitted_at\":-6795364578871,\"fee\":0,\"completed_amount\":0,\"status\":\"\",\"accepted_at\":-6795364578871,\"completed_at\":-6795364578871}"
+	want := "{\"orderid\":0,\"type\":\"\",\"market\":\"\",\"amount\":0,\"price\":0,\"submitted_at\":-6795364578871,\"fee\":0,\"completed_amount\":0,\"status\":\"\",\"accepted_at\":-6795364578871,\"completed_at\":-6795364578871}"
 	if resp.Error != nil {
 		t.Error(resp.Error)
 	}
@@ -119,7 +119,7 @@ func Test_defaulthandler_OrderDetails(t *testing.T) {
 	}
 }
 func Test_defaulthandler_OrderStatus(t *testing.T) {
-	var req = Request{
+	req := Request{
 		Params:  json.RawMessage("{\"orderid\":1}"),
 		Method:  "/",
 		ID:      new(string),
@@ -134,13 +134,13 @@ func Test_defaulthandler_OrderStatus(t *testing.T) {
 	}
 }
 func Test_defaulthandler_Completed(t *testing.T) {
-	var req = Request{
+	req := Request{
 		Params:  json.RawMessage(nil),
 		Method:  "/",
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 	}
-	var want = "[]"
+	want := "[]"
 	resp := defaultHandlers["completed"](req, client)
 	if resp.Error != nil {
 		t.Error(resp.Error)
@@ -150,13 +150,13 @@ func Test_defaulthandler_Completed(t *testing.T) {
 	}
 }
 func Test_defaulthandler_Executed(t *testing.T) {
-	var req = Request{
+	req := Request{
 		Params:  json.RawMessage(nil),
 		Method:  "/",
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 	}
-	var want = "[]"
+	want := "[]"
 	resp := defaultHandlers["executed"](req, client)
 	if resp.Error != nil {
 		t.Error(resp.Error)

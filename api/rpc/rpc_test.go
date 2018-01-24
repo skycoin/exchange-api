@@ -4,13 +4,13 @@ import "testing"
 import "encoding/json"
 
 func TestPackageHandler_AddFunction(t *testing.T) {
-	var request = Request{
+	request := Request{
 		ID:      new(string),
 		JSONRPC: JSONRPC,
 		Method:  "test",
 		Params:  json.RawMessage("{\"param\": \"value\"}"),
 	}
-	var f = func(r Request, env map[string]string) Response {
+	f := func(r Request, env map[string]string) Response {
 		params, err := DecodeParams(r)
 		if err != nil {
 			t.Fatal(err)
@@ -24,7 +24,7 @@ func TestPackageHandler_AddFunction(t *testing.T) {
 		}
 		return MakeSuccessResponse(r, env["envparam"])
 	}
-	var handler = Wrapper{
+	handler := Wrapper{
 		Client: new(ex),
 		Handlers: map[string]HandlerFunc{
 			"test": f,

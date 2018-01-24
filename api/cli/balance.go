@@ -7,7 +7,7 @@ import (
 )
 
 func balanceCMD() cli.Command {
-	var name = "balance"
+	name := "balance"
 	return cli.Command{
 		Name:      name,
 		Usage:     "Print balance",
@@ -16,7 +16,7 @@ func balanceCMD() cli.Command {
 			if c.NArg() != 1 {
 				return errInvalidInput
 			}
-			var params = map[string]interface{}{
+			params := map[string]interface{}{
 				"currency": c.Args().First(),
 			}
 			resp, err := rpcRequest("balance", params)
