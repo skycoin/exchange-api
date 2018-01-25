@@ -3,6 +3,8 @@ package c2cx
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/shopspring/decimal"
 )
 
 // newOrder represents an response from CreateOrder function
@@ -14,21 +16,31 @@ type newOrder struct {
 // all keys must be lowercase
 type Balance map[string]string
 
+type balanceResponseEntry struct {
+	Btc float64 `json:"btc"`
+	Etc float64 `json:"etc"`
+	Eth float64 `json:"eth"`
+	Cny float64 `json:"cny"`
+	Sky float64 `json:"sky"`
+}
+
 type balanceResponse struct {
-	Balance struct {
-		Btc float64 `json:"btc"`
-		Etc float64 `json:"etc"`
-		Eth float64 `json:"eth"`
-		Cny float64 `json:"cny"`
-		Sky float64 `json:"sky"`
-	} `json:"balance"`
-	Frozen struct {
-		Btc float64 `json:"btc"`
-		Etc float64 `json:"etc"`
-		Eth float64 `json:"eth"`
-		Cny float64 `json:"cny"`
-		Sky float64 `json:"sky"`
-	} `json:"frozen"`
+	Balance balanceResponseEntry `json:"balance"`
+	Frozen  balanceResponseEntry `json:"frozen"`
+}
+
+func subFloatsToDecimal(a, b float64) decimal.Decimal {
+	return decimal.NewFromFloat(a).Sub(decimal.NewFromFloat(b))
+}
+
+func (br balanceResponse) Balances() map[string]decimal.Decimal {
+	res := make(map[string]decimal.Decimal)
+	res["btc"] = subFloatsToDecimal(br.Balance.Btc, br.Frozen.Btc)
+	res["etc"] = subFloatsToDecimal(br.Balance.Etc, br.Frozen.Etc)
+	res["eth"] = subFloatsToDecimal(br.Balance.Eth, br.Frozen.Eth)
+	res["cny"] = subFloatsToDecimal(br.Balance.Cny, br.Frozen.Cny)
+	res["sky"] = subFloatsToDecimal(br.Balance.Sky, br.Frozen.Sky)
+	return res
 }
 
 // UnmarshalJSON implements json.Unmarshaler
