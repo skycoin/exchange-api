@@ -14,27 +14,29 @@ type newOrder struct {
 // all keys must be lowercase
 type Balance map[string]string
 
+type balanceResponse struct {
+	Balance struct {
+		Btc float64 `json:"btc"`
+		Etc float64 `json:"etc"`
+		Eth float64 `json:"eth"`
+		Cny float64 `json:"cny"`
+		Sky float64 `json:"sky"`
+	} `json:"balance"`
+	Frozen struct {
+		Btc float64 `json:"btc"`
+		Etc float64 `json:"etc"`
+		Eth float64 `json:"eth"`
+		Cny float64 `json:"cny"`
+		Sky float64 `json:"sky"`
+	} `json:"frozen"`
+}
+
 // UnmarshalJSON implements json.Unmarshaler
 func (r *Balance) UnmarshalJSON(b []byte) error {
 	if *r == nil {
 		(*r) = make(map[string]string)
 	}
-	var v struct {
-		Balance struct {
-			Btc float64 `json:"btc"`
-			Etc float64 `json:"etc"`
-			Eth float64 `json:"eth"`
-			Cny float64 `json:"cny"`
-			Sky float64 `json:"sky"`
-		} `json:"balance"`
-		Frozen struct {
-			Btc float64 `json:"btc"`
-			Etc float64 `json:"etc"`
-			Eth float64 `json:"eth"`
-			Cny float64 `json:"cny"`
-			Sky float64 `json:"sky"`
-		} `json:"frozen"`
-	}
+	var v balanceResponse
 	err := json.Unmarshal(b, &v)
 	if err != nil {
 		return err
