@@ -33,20 +33,23 @@ func (t *orderbooktracker) Update(sym string, Bids []exchange.MarketOrder, Asks 
 }
 
 // Get gets information about stock
-func (t *orderbooktracker) Get(sym string) (exchange.MarketRecord, error) {
-	var (
-		r   exchange.MarketRecord
-		err error
-	)
+func (t *orderbooktracker) Get(sym string) (*exchange.MarketRecord, error) {
 	result := t.db.HGet(t.hash, normalize(sym))
-	if err = result.Err(); err != nil {
-		return r, err
+	if err := result.Err(); err != nil {
+		return nil, err
 	}
-	if bb, err := result.Bytes(); err != nil {
-		return r, err
+
+	bb, err := result.Bytes()
+	if err != nil {
+		return nil, err
 	}
-	err = json.Unmarshal(bb, &r)
-	return r, err
+
+	var r exchange.MarketRecord
+	if err := json.Unmarshal(bb, &r); err != nil {
+		return nil, err
+	}
+
+	return &r, nil
 }
 
 // NewOrderbookTracker returns exchange.OrderbookTracker that wraps redis connection
