@@ -220,7 +220,7 @@ func getMarketOrderGroups(count int, markets ...string) ([]MarketOrdersWithLabel
 	}
 	resp, err := requestGet("getmarketordergroups", requestParams)
 	if err != nil {
-		return nil, fmt.Errorf("GetMarketOrderGroups failed, markets: %s", strings.Join(markets, " "))
+		return nil, fmt.Errorf("GetMarketOrderGroups failed, markets: %s; original error: %v", strings.Join(markets, " "), err)
 	}
 	if !resp.Success {
 		return nil, fmt.Errorf("GetMarketOrderGroups failed: %s, Market: %s",
