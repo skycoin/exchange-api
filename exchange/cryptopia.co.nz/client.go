@@ -3,7 +3,8 @@ package cryptopia
 import (
 	"time"
 
-	"github.com/pkg/errors"
+	"errors"
+
 	"github.com/skycoin/exchange-api/exchange"
 )
 
