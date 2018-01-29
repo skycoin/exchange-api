@@ -1,12 +1,14 @@
 package c2cx
 
 import (
+	"fmt"
 	"log"
 	"time"
 
 	"strings"
 
-	"github.com/pkg/errors"
+	"errors"
+
 	"github.com/skycoin/exchange-api/exchange"
 )
 
@@ -119,7 +121,7 @@ func (c *Client) CancelMarket(symbol string) ([]exchange.Order, error) {
 		orders = append(orders, order)
 	}
 	if rejected != nil {
-		return orders, errors.Errorf("this orders does not cancelled: %v", rejected)
+		return orders, fmt.Errorf("this orders does not cancelled: %v", rejected)
 	}
 	return orders, nil
 
@@ -219,7 +221,7 @@ func (c *Client) GetBalance(currency string) (string, error) {
 	if v, ok := info[strings.ToLower(currency)]; ok {
 		return v, nil
 	}
-	return "", errors.Errorf("currency %s does not found", currency)
+	return "", fmt.Errorf("currency %s does not found", currency)
 }
 func (c *Client) updateOrderbook() {
 	for _, v := range Markets {

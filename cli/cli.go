@@ -3,10 +3,10 @@ package cli
 import (
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"math/big"
 
-	"github.com/pkg/errors"
-	"github.com/skycoin/exchange-api/api/rpc"
+	"github.com/skycoin/exchange-api/rpc"
 )
 
 var errRPC = errors.New("RPC request failed")

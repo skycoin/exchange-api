@@ -3,10 +3,11 @@ package exchange
 import (
 	"crypto/md5"
 	"encoding/binary"
+	"fmt"
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
+	"errors"
 )
 
 // Orders is interface that provides functionality for order tracking
@@ -22,7 +23,7 @@ type Orders interface {
 
 // Errors that might happens in order processing
 var (
-	ErrInvalidStatus = errors.Errorf("invalid order status, availible statuses: %s, %s, %s, %s, %s",
+	ErrInvalidStatus = fmt.Errorf("invalid order status, availible statuses: %s, %s, %s, %s, %s",
 		Submitted, Opened, Partial, Completed, Cancelled)
 	ErrExist       = errors.New("order with given orderid already exist")
 	ErrZeroOrderID = errors.New("order with zero orderID does not allowed")

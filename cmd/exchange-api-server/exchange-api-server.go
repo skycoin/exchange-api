@@ -13,8 +13,8 @@ import (
 	"github.com/skycoin/exchange-api/exchange"
 	"github.com/skycoin/exchange-api/exchange/c2cx.com"
 
-	"github.com/skycoin/exchange-api/api/rpc"
 	"github.com/skycoin/exchange-api/exchange/cryptopia.co.nz"
+	"github.com/skycoin/exchange-api/rpc"
 )
 
 /*
