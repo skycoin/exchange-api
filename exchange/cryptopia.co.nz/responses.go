@@ -12,23 +12,24 @@ import (
 // balance represents balance of all avalible currencies
 type balance map[string]string
 
+type currency struct {
+	CurrencyID      int     `json:"CurrencyId"`
+	Symbol          string  `json:"Symbol"`
+	Total           float64 `json:"Total"`
+	Available       float64 `json:"Available"`
+	Unconfirmed     float64 `json:"Unconfirmed"`
+	HeldForTrades   float64 `json:"HeldForTrades"`
+	PendingWithdraw float64 `json:"PendingWithdraw"`
+	Address         string  `json:"Address"`
+	BaseAddress     string  `json:"BaseAddress"`
+	Status          string  `json:"Status"`
+	StatusMessage   string  `json:"StatusMessage"`
+}
+
 // UnmarshalJSON implements json.Unmarshaler interface
 func (r *balance) UnmarshalJSON(b []byte) error {
 	if r == nil {
 		(*r) = make(map[string]string)
-	}
-	type currency struct {
-		CurrencyID      int     `json:"CurrencyId"`
-		Symbol          string  `json:"Symbol"`
-		Total           float64 `json:"Total"`
-		Available       float64 `json:"Available"`
-		Unconfirmed     float64 `json:"Unconfirmed"`
-		HeldForTrades   float64 `json:"HeldForTrades"`
-		PendingWithdraw float64 `json:"PendingWithdraw"`
-		Address         string  `json:"Address"`
-		BaseAddress     string  `json:"BaseAddress"`
-		Status          string  `json:"Status"`
-		StatusMessage   string  `json:"StatusMessage"`
 	}
 
 	var tmp = make([]currency, 0)
@@ -53,22 +54,24 @@ type newOrder struct {
 	FilledOrders []int `json:"FilledOrders,omitempty"`
 }
 
+type orderJSON struct {
+	OrderID     *int    `json:"OrderId,omitempty"`
+	TradeID     *int    `json:"TradeId,omitempty"`
+	TradePairID int     `json:"TradePairId"`
+	Market      string  `json:"Market"`
+	Type        string  `json:"Type"`
+	Rate        float64 `json:"Rate"`
+	Amount      float64 `json:"Amount"`
+	Total       float64 `json:"Total"`
+	Fee         float64 `json:"Fee,omitempty"`
+	Remaining   float64 `json:"Remaining,omitempty"`
+	Timestamp   string  `json:"TimeStamp"`
+}
+
 // UnmarshalJSON implements an json.Unmarshaler interface
 func (order *Order) UnmarshalJSON(b []byte) error {
 	var (
-		tmp = struct {
-			OrderID     *int    `json:"OrderId,omitempty"`
-			TradeID     *int    `json:"TradeId,omitempty"`
-			TradePairID int     `json:"TradePairId"`
-			Market      string  `json:"Market"`
-			Type        string  `json:"Type"`
-			Rate        float64 `json:"Rate"`
-			Amount      float64 `json:"Amount"`
-			Total       float64 `json:"Total"`
-			Fee         float64 `json:"Fee,omitempty"`
-			Remaining   float64 `json:"Remaining,omitempty"`
-			Timestamp   string  `json:"TimeStamp"`
-		}{}
+		tmp = orderJSON{}
 		orderID int
 		ts      time.Time
 	)
