@@ -1,3 +1,4 @@
+[![GoDoc](https://godoc.org/github.com/skycoin/exchange-api?status.svg)](https://godoc.org/github.com/skycoin/exchange-api)
 
 # Node
  Node is main executable
