@@ -11,7 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
+	"errors"
+
 	"github.com/skycoin/exchange-api/exchange"
 )
 
@@ -83,7 +84,7 @@ func normalize(sym string) (string, error) {
 			return sym, nil
 		}
 	}
-	return "", errors.Errorf("Market pair %s does not exists", sym)
+	return "", fmt.Errorf("Market pair %s does not exists", sym)
 }
 
 func unix(unix int64) time.Time {
