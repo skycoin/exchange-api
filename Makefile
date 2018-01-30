@@ -35,5 +35,20 @@ install-linters: ## Install linters
 	go get -u github.com/alecthomas/gometalinter
 	gometalinter --vendored-linters --install
 
+format:  # Formats the code. Must have goimports installed (use make install-linters).
+	# This sorts imports by [stdlib, 3rdpart, skycoin/skycoin, skycoin/teller]
+
+	goimports -w -local github.com/skycoin/exchange-api ./cli
+	goimports -w -local github.com/skycoin/exchange-api ./cmd
+	goimports -w -local github.com/skycoin/exchange-api ./db
+	goimports -w -local github.com/skycoin/exchange-api ./exchange
+	goimports -w -local github.com/skycoin/exchange-api ./rpc
+
+	goimports -w -local github.com/skycoin/skycoin ./cli
+	goimports -w -local github.com/skycoin/skycoin ./cmd
+	goimports -w -local github.com/skycoin/skycoin ./db
+	goimports -w -local github.com/skycoin/skycoin ./exchange
+	goimports -w -local github.com/skycoin/skycoin ./rpc
+
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
