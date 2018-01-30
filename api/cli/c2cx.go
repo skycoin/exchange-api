@@ -8,12 +8,12 @@ import (
 )
 
 func sumbitTradeCMD() cli.Command {
-	name := "submittrade"
-	pricetype    := new(string)
-	ordertype    := new(string)
-	takeprofit   := new(float64)
-	stoploss     := new(float64)
-	triggerprice := new(float64)
+	name         := "submittrade"
+	pricetype    := ""
+	ordertype    := ""
+	takeprofit   := 0.0
+	stoploss     := 0.0
+	triggerprice := 0.0
 	return cli.Command{
 		Name:      name,
 		Usage:     "Create new order with advanced parameters",
@@ -26,15 +26,15 @@ func sumbitTradeCMD() cli.Command {
 			price  := 0.0
 			amount := 0.0
 			params := map[string]interface{}{
-				"price_type_id": pricetype,
-				"order_type":    ordertype,
+				"price_type_id": &pricetype,
+				"order_type":    &ordertype,
 				"symbol":        symbol,
 				"price":         price,
 				"amount":        amount,
 				"advanced": c2cx.AdvancedOrderParams{
-					StopLoss:     *stoploss,
-					TakeProfit:   *takeprofit,
-					TriggerPrice: *triggerprice,
+					StopLoss:     stoploss,
+					TakeProfit:   takeprofit,
+					TriggerPrice: triggerprice,
 				},
 			}
 			resp, err := rpcRequest("submit_trade", params)
@@ -48,23 +48,23 @@ func sumbitTradeCMD() cli.Command {
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:        "pricetype",
-				Destination: pricetype,
+				Destination: &pricetype,
 			},
 			cli.StringFlag{
 				Name:        "type",
-				Destination: ordertype,
+				Destination: &ordertype,
 			},
 			cli.Float64Flag{
 				Name:        "takeprofit",
-				Destination: takeprofit,
+				Destination: &takeprofit,
 			},
 			cli.Float64Flag{
 				Name:        "stoploss",
-				Destination: stoploss,
+				Destination: &stoploss,
 			},
 			cli.Float64Flag{
 				Name:        "triggerprice",
-				Destination: triggerprice,
+				Destination: &triggerprice,
 			},
 		},
 	}
