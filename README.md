@@ -16,7 +16,11 @@
   - Getting balance
 
  Node using jsonrpc 2.0 protocol for rpc calls:
- ## RPC methods:
+
+## RPC methods:
+
+More details on the RPC interface are available in [the RPC README file](https://github.com/skycoin/exchange-api/tree/master/rpc#readme).
+
   - `buy`
   - `sell`
   - `order_info`
@@ -33,6 +37,9 @@
   rpc endpoints for each exchange are different -  
   http://rpcaddr:rpcport/c2cx and http://rpcaddr:rpcport/cryptopia, respectively 
 # Cli
+
+More details on the CLI are available in [the CLI README file](https://github.com/skycoin/exchange-api/tree/master/cli#readme).
+
  Cli command structure:  
  `cli <exchange> <command> [subcommand] [params]`  
  Commands tree: 
