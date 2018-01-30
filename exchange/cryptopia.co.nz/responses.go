@@ -7,23 +7,24 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
 )
 
 // balance represents balance of all avalible currencies
 type balance map[string]string
 
 type currency struct {
-	CurrencyID      int     `json:"CurrencyId"`
-	Symbol          string  `json:"Symbol"`
-	Total           float64 `json:"Total"`
-	Available       float64 `json:"Available"`
-	Unconfirmed     float64 `json:"Unconfirmed"`
-	HeldForTrades   float64 `json:"HeldForTrades"`
-	PendingWithdraw float64 `json:"PendingWithdraw"`
-	Address         string  `json:"Address"`
-	BaseAddress     string  `json:"BaseAddress"`
-	Status          string  `json:"Status"`
-	StatusMessage   string  `json:"StatusMessage"`
+	CurrencyID      int             `json:"CurrencyId"`
+	Symbol          string          `json:"Symbol"`
+	Total           decimal.Decimal `json:"Total"`
+	Available       decimal.Decimal `json:"Available"`
+	Unconfirmed     decimal.Decimal `json:"Unconfirmed"`
+	HeldForTrades   decimal.Decimal `json:"HeldForTrades"`
+	PendingWithdraw decimal.Decimal `json:"PendingWithdraw"`
+	Address         string          `json:"Address"`
+	BaseAddress     string          `json:"BaseAddress"`
+	Status          string          `json:"Status"`
+	StatusMessage   string          `json:"StatusMessage"`
 }
 
 // UnmarshalJSON implements json.Unmarshaler interface
@@ -37,9 +38,14 @@ func (r *balance) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	var result = make(balance)
+
 	for _, v := range tmp {
+		asFloat := func(dec decimal.Decimal) float64 {
+			res, _ := obj.Float64()
+			return res
+		}
 		result[strings.ToUpper(v.Symbol)] = fmt.Sprintf("Total: %.8f Available: %.8f Unconfirmed: %.8f Held: %.8f Pending: %.8f",
-			v.Total, v.Available, v.Unconfirmed, v.HeldForTrades, v.PendingWithdraw)
+			asFloat(v.Total), asFloat(v.Available), asFloat(v.Unconfirmed), asFloat(v.HeldForTrades), asFloat(v.PendingWithdraw))
 	}
 	*r = result
 	return nil
