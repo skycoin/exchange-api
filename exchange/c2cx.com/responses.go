@@ -17,11 +17,11 @@ type newOrder struct {
 type Balance map[string]string
 
 type balanceResponseEntry struct {
-	Btc float64 `json:"btc"`
-	Etc float64 `json:"etc"`
-	Eth float64 `json:"eth"`
-	Cny float64 `json:"cny"`
-	Sky float64 `json:"sky"`
+	Btc decimal.Decimal `json:"btc"`
+	Etc decimal.Decimal `json:"etc"`
+	Eth decimal.Decimal `json:"eth"`
+	Cny decimal.Decimal `json:"cny"`
+	Sky decimal.Decimal `json:"sky"`
 }
 
 type balanceResponse struct {
@@ -29,17 +29,13 @@ type balanceResponse struct {
 	Frozen  balanceResponseEntry `json:"frozen"`
 }
 
-func subFloatsToDecimal(a, b float64) decimal.Decimal {
-	return decimal.NewFromFloat(a).Sub(decimal.NewFromFloat(b))
-}
-
 func (br balanceResponse) Balances() map[string]decimal.Decimal {
 	res := make(map[string]decimal.Decimal)
-	res["btc"] = subFloatsToDecimal(br.Balance.Btc, br.Frozen.Btc)
-	res["etc"] = subFloatsToDecimal(br.Balance.Etc, br.Frozen.Etc)
-	res["eth"] = subFloatsToDecimal(br.Balance.Eth, br.Frozen.Eth)
-	res["cny"] = subFloatsToDecimal(br.Balance.Cny, br.Frozen.Cny)
-	res["sky"] = subFloatsToDecimal(br.Balance.Sky, br.Frozen.Sky)
+	res["btc"] = br.Balance.Btc.Sub(br.Frozen.Btc)
+	res["etc"] = br.Balance.Etc.Sub(br.Frozen.Etc)
+	res["eth"] = br.Balance.Eth.Sub(br.Frozen.Eth)
+	res["cny"] = br.Balance.Cny.Sub(br.Frozen.Cny)
+	res["sky"] = br.Balance.Sky.Sub(br.Frozen.Sky)
 	return res
 }
 
