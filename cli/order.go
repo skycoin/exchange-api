@@ -11,7 +11,7 @@ import (
 )
 
 func orderInfoCMD() cli.Command {
-	var name = "info"
+	name := "info"
 	return cli.Command{
 		Name:      name,
 		Usage:     "Print information about order",
@@ -24,7 +24,7 @@ func orderInfoCMD() cli.Command {
 			if err != nil {
 				return err
 			}
-			var params = map[string]interface{}{
+			params := map[string]interface{}{
 				"orderid": orderid,
 			}
 			resp, err := rpcRequest("order_info", params)
@@ -42,7 +42,7 @@ func orderInfoCMD() cli.Command {
 	}
 }
 func orderStatusCMD() cli.Command {
-	var name = "status"
+	name := "status"
 	return cli.Command{
 		Name:      name,
 		Usage:     "Print order status",
@@ -55,7 +55,7 @@ func orderStatusCMD() cli.Command {
 			if err != nil {
 				return err
 			}
-			var params = map[string]interface{}{
+			params := map[string]interface{}{
 				"orderid": orderid,
 			}
 			resp, err := rpcRequest("order_status", params)
@@ -69,7 +69,7 @@ func orderStatusCMD() cli.Command {
 }
 
 func completedAllCMD() cli.Command {
-	var name = "all"
+	name := "all"
 	var short bool
 	return cli.Command{
 		Name:  name,
@@ -89,7 +89,7 @@ func completedAllCMD() cli.Command {
 			}
 			for _, v := range orderids {
 				var order exchange.Order
-				var params = map[string]interface{}{
+				params := map[string]interface{}{
 					"orderid": v,
 				}
 				resp, err := rpcRequest("order_info", params)
@@ -110,8 +110,9 @@ func completedAllCMD() cli.Command {
 		},
 	}
 }
+
 func completedMarketCMD() cli.Command {
-	var name = "market"
+	name := "market"
 	var short bool
 	return cli.Command{
 		Name:      name,
@@ -133,7 +134,7 @@ func completedMarketCMD() cli.Command {
 			market := strings.ToUpper(strings.Replace(c.Args().First(), "_", "/", -1))
 			for _, v := range orderids {
 				var order exchange.Order
-				var params = map[string]interface{}{
+				params := map[string]interface{}{
 					"orderid": v,
 				}
 				resp, err := rpcRequest("order_info", params)
@@ -159,7 +160,7 @@ func completedMarketCMD() cli.Command {
 }
 
 func executedAllCMD() cli.Command {
-	var name = "all"
+	name := "all"
 	var short bool
 	return cli.Command{
 		Name:  name,
@@ -179,7 +180,7 @@ func executedAllCMD() cli.Command {
 			}
 			for _, v := range orderids {
 				var order exchange.Order
-				var params = map[string]interface{}{
+				params := map[string]interface{}{
 					"orderid": v,
 				}
 				resp, err := rpcRequest("order_info", params)
@@ -201,7 +202,7 @@ func executedAllCMD() cli.Command {
 	}
 }
 func executedMarketCMD() cli.Command {
-	var name = "market"
+	name := "market"
 	var short bool
 	return cli.Command{
 		Name:      name,
@@ -223,7 +224,7 @@ func executedMarketCMD() cli.Command {
 			market := strings.ToUpper(strings.Replace(c.Args().First(), "_", "/", -1))
 			for _, v := range orderids {
 				var order exchange.Order
-				var params = map[string]interface{}{
+				params := map[string]interface{}{
 					"orderid": v,
 				}
 				resp, err := rpcRequest("order_info", params)

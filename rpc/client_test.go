@@ -4,7 +4,7 @@ import "testing"
 import "encoding/json"
 
 func TestClientDo(t *testing.T) {
-	var server = Server{
+	server := Server{
 		Handlers: map[string]Wrapper{
 			"test": Wrapper{
 				Client:   new(ex),
@@ -13,10 +13,8 @@ func TestClientDo(t *testing.T) {
 			},
 		},
 	}
-	var (
-		addr = "localhost:12345"
-		stop = make(chan struct{})
-	)
+	addr := "localhost:12345"
+	stop := make(chan struct{})
 	go server.Start(addr, stop)
 	params, _ := json.Marshal(map[string]interface{}{"currency": "BTC"})
 	resp, err := Do(addr, "test", Request{

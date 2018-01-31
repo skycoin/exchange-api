@@ -21,7 +21,7 @@ func reqID() *string {
 
 func rpcRequest(method string, params map[string]interface{}) (json.RawMessage, error) {
 	p, err := json.Marshal(params)
-	var req = rpc.Request{
+	req := rpc.Request{
 		ID:      reqID(),
 		JSONRPC: rpc.JSONRPC,
 		Method:  method,

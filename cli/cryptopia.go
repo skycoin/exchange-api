@@ -11,7 +11,7 @@ import (
 )
 
 func submitWithdrawCMD() cli.Command {
-	var name = "withdraw"
+	name := "withdraw"
 	return cli.Command{
 		Name:      name,
 		Usage:     "Withdraw funds to address",
@@ -20,14 +20,12 @@ func submitWithdrawCMD() cli.Command {
 			if c.NArg() < 3 || c.NArg() > 4 {
 				return errInvalidInput
 			}
-			var (
-				err    error
-				amount float64
-			)
+			var err error
+			amount := 0.0
 			if amount, err = strconv.ParseFloat(c.Args().Get(2), 64); err != nil {
 				return err
 			}
-			var params = map[string]interface{}{
+			params := map[string]interface{}{
 				"address":  c.Args().Get(0),
 				"currency": c.Args().Get(1),
 				"amount":   amount,
@@ -47,7 +45,7 @@ func submitWithdrawCMD() cli.Command {
 }
 
 func depositCMD() cli.Command {
-	var name = "deposit"
+	name := "deposit"
 	return cli.Command{
 		Name:      name,
 		Usage:     "Print address for deposit",
@@ -56,7 +54,7 @@ func depositCMD() cli.Command {
 			if c.NArg() != 1 {
 				return errInvalidInput
 			}
-			var params = map[string]interface{}{
+			params := map[string]interface{}{
 				"currency": c.Args().First(),
 			}
 			resp, err := rpcRequest("deposit", params)
@@ -74,7 +72,7 @@ func depositCMD() cli.Command {
 }
 
 func transactionsCMD() cli.Command {
-	var name = "transactions"
+	name := "transactions"
 	return cli.Command{
 		Name:      name,
 		Usage:     "Print list of transactions",
@@ -83,7 +81,7 @@ func transactionsCMD() cli.Command {
 			if c.NArg() != 1 {
 				return errInvalidInput
 			}
-			var params = map[string]interface{}{
+			params := map[string]interface{}{
 				"type": strings.Title(c.Args().First()),
 			}
 			resp, err := rpcRequest("transactions", params)
@@ -104,7 +102,7 @@ func transactionsCMD() cli.Command {
 }
 
 func trackingAddCMD() cli.Command {
-	var name = "add"
+	name := "add"
 	return cli.Command{
 		Name:      name,
 		Usage:     "Add market to orderbook tracking list",
@@ -113,7 +111,7 @@ func trackingAddCMD() cli.Command {
 			if c.NArg() != 1 {
 				return errInvalidInput
 			}
-			var params = map[string]interface{}{
+			params := map[string]interface{}{
 				"market": c.Args().First(),
 			}
 			_, err := rpcRequest("tracking_add", params)
@@ -128,7 +126,7 @@ func trackingAddCMD() cli.Command {
 }
 
 func trackingRemoveCMD() cli.Command {
-	var name = "remove"
+	name := "remove"
 	return cli.Command{
 		Name:      name,
 		Usage:     "Remove market from orderbook tracking list",
@@ -137,7 +135,7 @@ func trackingRemoveCMD() cli.Command {
 			if c.NArg() != 1 {
 				return errInvalidInput
 			}
-			var params = map[string]interface{}{
+			params := map[string]interface{}{
 				"market": c.Args().First(),
 			}
 			_, err := rpcRequest("tracking_rm", params)
