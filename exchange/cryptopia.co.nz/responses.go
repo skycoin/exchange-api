@@ -44,8 +44,12 @@ func (r *balance) UnmarshalJSON(b []byte) error {
 			res, _ := obj.Float64()
 			return res
 		}
-		result[strings.ToUpper(v.Symbol)] = fmt.Sprintf("Total: %.8f Available: %.8f Unconfirmed: %.8f Held: %.8f Pending: %.8f",
-			asFloat(v.Total), asFloat(v.Available), asFloat(v.Unconfirmed), asFloat(v.HeldForTrades), asFloat(v.PendingWithdraw))
+		result[strings.ToUpper(v.Symbol)] = fmt.Sprintf("Total: %s Available: %s Unconfirmed: %s Held: %s Pending: %s",
+			v.Total.StringFixed(8),
+			v.Available.StringFixed(8),
+			v.Unconfirmed.StringFixed(8),
+			v.HeldForTrades.StringFixed(8),
+			v.PendingWithdrawal.StringFixed(8))
 	}
 	*r = result
 	return nil
