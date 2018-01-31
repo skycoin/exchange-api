@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/go-redis/redis"
+
 	exchange "github.com/skycoin/exchange-api/exchange"
 )
 
@@ -14,8 +15,8 @@ func TestRecord_MarshalJSON_UnmarshalJSON(t *testing.T) {
 	var r = exchange.MarketRecord{
 		Timestamp: time.Unix(1499202345, 0),
 		Symbol:    "BTC/LTC",
-		Asks:      []exchange.MarketOrder{exchange.MarketOrder{Price: 1, Volume: 1}},
-		Bids:      []exchange.MarketOrder{exchange.MarketOrder{Price: 1, Volume: 1}},
+		Asks:      []exchange.MarketOrder{{Price: 1, Volume: 1}},
+		Bids:      []exchange.MarketOrder{{Price: 1, Volume: 1}},
 	}
 	data, err := r.MarshalJSON()
 	if err != nil {
@@ -42,13 +43,13 @@ func Test_orderbooktracker_UpdateSym(t *testing.T) {
 	var r = exchange.MarketRecord{
 		Timestamp: time.Now(),
 		Symbol:    "BTC/LTC",
-		Bids:      []exchange.MarketOrder{exchange.MarketOrder{Price: 1, Volume: 1}},
-		Asks:      []exchange.MarketOrder{exchange.MarketOrder{Price: 1, Volume: 1}},
+		Bids:      []exchange.MarketOrder{{Price: 1, Volume: 1}},
+		Asks:      []exchange.MarketOrder{{Price: 1, Volume: 1}},
 	}
 	tr.Update(
 		"BTC/LTC",
-		[]exchange.MarketOrder{exchange.MarketOrder{Price: 1, Volume: 1}},
-		[]exchange.MarketOrder{exchange.MarketOrder{Price: 1, Volume: 1}},
+		[]exchange.MarketOrder{{Price: 1, Volume: 1}},
+		[]exchange.MarketOrder{{Price: 1, Volume: 1}},
 	)
 	rec, err := tr.Get("BTC/LTC")
 	if err != nil {

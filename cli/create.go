@@ -17,9 +17,11 @@ func buyCMD() cli.Command {
 			if len(c.Args()) != 3 {
 				return errInvalidInput
 			}
-			var err error
-			price  := 0.0
-			amount := 0.0
+			var (
+				err    error
+				price  float64
+				amount float64
+			)
 			symbol := c.Args().Get(0)
 			if price, err = strconv.ParseFloat(c.Args().Get(1), 64); err != nil {
 				return err
@@ -53,9 +55,11 @@ func sellCMD() cli.Command {
 			if len(c.Args()) != 3 {
 				return errInvalidInput
 			}
-			var err error
-			price  := 0.0
-			amount := 0.0
+			var (
+				err    error
+				price  float64
+				amount float64
+			)
 			symbol := c.Args().Get(0)
 			if price, err = strconv.ParseFloat(c.Args().Get(1), 64); err != nil {
 				return err

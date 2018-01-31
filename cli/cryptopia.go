@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/skycoin/exchange-api/exchange/cryptopia.co.nz"
 	"github.com/urfave/cli"
+
+	"github.com/skycoin/exchange-api/exchange/cryptopia.co.nz"
 )
 
 func submitWithdrawCMD() cli.Command {
@@ -20,8 +21,10 @@ func submitWithdrawCMD() cli.Command {
 			if c.NArg() < 3 || c.NArg() > 4 {
 				return errInvalidInput
 			}
-			var err error
-			amount := 0.0
+			var (
+				err    error
+				amount float64
+			)
 			if amount, err = strconv.ParseFloat(c.Args().Get(2), 64); err != nil {
 				return err
 			}

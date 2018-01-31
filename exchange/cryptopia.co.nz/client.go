@@ -22,8 +22,7 @@ type Client struct {
 
 	Stop chan struct{}
 	// Add concurrecny for updating
-	instantOrdersCounter  int
-	activeOrderTradepairs []int
+	instantOrdersCounter int
 }
 
 // Cancel cancels one order by given orderID

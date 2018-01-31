@@ -11,7 +11,7 @@ import (
 
 // Do does request to given addr and endpoint
 func Do(addr, endpoint string, r Request) (*Response, error) {
-	c          := http.Client{}
+	c := http.Client{}
 	requestURI := url.URL{}
 
 	requestURI.Host = addr

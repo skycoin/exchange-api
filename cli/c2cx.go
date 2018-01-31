@@ -3,16 +3,17 @@ package cli
 import (
 	"fmt"
 
-	c2cx "github.com/skycoin/exchange-api/exchange/c2cx.com"
 	"github.com/urfave/cli"
+
+	c2cx "github.com/skycoin/exchange-api/exchange/c2cx.com"
 )
 
 func sumbitTradeCMD() cli.Command {
-	name         := "submittrade"
-	pricetype    := ""
-	ordertype    := ""
-	takeprofit   := 0.0
-	stoploss     := 0.0
+	name := "submittrade"
+	pricetype := ""
+	ordertype := ""
+	takeprofit := 0.0
+	stoploss := 0.0
 	triggerprice := 0.0
 	return cli.Command{
 		Name:      name,
@@ -23,7 +24,7 @@ func sumbitTradeCMD() cli.Command {
 				return errInvalidInput
 			}
 			symbol := ""
-			price  := 0.0
+			price := 0.0
 			amount := 0.0
 			params := map[string]interface{}{
 				"price_type_id": &pricetype,

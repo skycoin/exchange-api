@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/skycoin/exchange-api/exchange"
 	"github.com/urfave/cli"
+
+	"github.com/skycoin/exchange-api/exchange"
 )
 
 func orderInfoCMD() cli.Command {

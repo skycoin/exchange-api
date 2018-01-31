@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/skycoin/exchange-api/exchange"
 	"github.com/urfave/cli"
+
+	"github.com/skycoin/exchange-api/exchange"
 )
 
 func cancelTradeCMD() cli.Command {

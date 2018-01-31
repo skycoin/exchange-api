@@ -7,5 +7,8 @@ import (
 )
 
 func main() {
-	cli.App.Run(os.Args)
+	err := cli.App.Run(os.Args)
+	if err != nil {
+		panic(err)
+	}
 }

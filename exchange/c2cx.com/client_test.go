@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
+
 	"github.com/skycoin/exchange-api/db"
 
 	exchange "github.com/skycoin/exchange-api/exchange"

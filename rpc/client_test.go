@@ -6,7 +6,7 @@ import "encoding/json"
 func TestClientDo(t *testing.T) {
 	server := Server{
 		Handlers: map[string]Wrapper{
-			"test": Wrapper{
+			"test": {
 				Client:   new(ex),
 				Handlers: nil,
 				Env:      nil,

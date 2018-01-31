@@ -10,7 +10,10 @@ func orderShort(order exchange.Order) string {
 		"price":   order.Price,
 		"amount":  order.Amount,
 	}
-	str, _ := json.MarshalIndent(r, "", "    ")
+	str, err := json.MarshalIndent(r, "", "    ")
+	if err != nil {
+		panic(err)
+	}
 	return string(str)
 }
 
@@ -52,10 +55,10 @@ func orderbookFull(orderbook exchange.MarketRecord) string {
 }
 
 func orderbookShort(orderbook exchange.MarketRecord) string {
-	averageBuyPrice  := 0.0
+	averageBuyPrice := 0.0
 	averageSellPrice := 0.0
-	totalBuyVolume   := 0.0
-	totalSellVolume  := 0.0
+	totalBuyVolume := 0.0
+	totalSellVolume := 0.0
 	for _, v := range orderbook.Bids {
 		if v.Price == 0 {
 			continue
