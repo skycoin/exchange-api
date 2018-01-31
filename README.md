@@ -20,7 +20,7 @@
 
 ## RPC methods:
 
-More details on the RPC interface are available in [the RPC README file](https://github.com/skycoin/exchange-api/tree/master/rpc#readme).
+More details on the RPC interface are available in [the RPC README file](rpc/readme.md).
 
   - `buy`
   - `sell`
@@ -39,7 +39,7 @@ More details on the RPC interface are available in [the RPC README file](https:/
   http://rpcaddr:rpcport/c2cx and http://rpcaddr:rpcport/cryptopia, respectively 
 # Cli
 
-More details on the CLI are available in [the CLI README file](https://github.com/skycoin/exchange-api/tree/master/cli#readme).
+More details on the CLI are available in [the CLI README file](cli/readme.md).
 
  Cli command structure:  
  `cli <exchange> <command> [subcommand] [params]`  
