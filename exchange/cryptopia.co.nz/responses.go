@@ -70,11 +70,13 @@ type orderJSON struct {
 	TradePairID int     `json:"TradePairId"`
 	Market      string  `json:"Market"`
 	Type        string  `json:"Type"`
-	Rate        float64 `json:"Rate"`
-	Amount      float64 `json:"Amount"`
-	Total       float64 `json:"Total"`
-	Fee         float64 `json:"Fee,omitempty"`
-	Remaining   float64 `json:"Remaining,omitempty"`
+
+	Rate        decimal.Decimal `json:"Rate"`
+	Amount      decimal.Decimal `json:"Amount"`
+	Total       decimal.Decimal `json:"Total"`
+	Fee         decimal.Decimal `json:"Fee,omitempty"`
+	Remaining   decimal.Decimal `json:"Remaining,omitempty"`
+
 	Timestamp   string  `json:"TimeStamp"`
 }
 

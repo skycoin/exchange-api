@@ -1,6 +1,9 @@
 package cryptopia
 
-import "time"
+import (
+	"time"
+	"github.com/shopspring/decimal"
+)
 
 // Order types, buy or sell
 const (
@@ -241,11 +244,11 @@ type Order struct {
 	Market      string
 	Type        string
 
-	Rate      float64
-	Amount    float64
-	Total     float64
-	Fee       float64
-	Remaining float64
+	Rate      decimal.Decimal
+	Amount    decimal.Decimal
+	Total     decimal.Decimal
+	Fee       decimal.Decimal
+	Remaining decimal.Decimal
 
 	Timestamp time.Time
 }
