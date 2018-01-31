@@ -39,8 +39,6 @@ More details on the RPC interface are available in [the RPC README file](rpc/rea
   http://rpcaddr:rpcport/c2cx and http://rpcaddr:rpcport/cryptopia, respectively 
 # Cli
 
-More details on the CLI are available in [the CLI README file](cli/readme.md).
-
  Cli command structure:  
  `cli <exchange> <command> [subcommand] [params]`  
  Commands tree: 
