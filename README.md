@@ -1,4 +1,5 @@
 [![GoDoc](https://godoc.org/github.com/skycoin/exchange-api?status.svg)](https://godoc.org/github.com/skycoin/exchange-api)
+[![Build Status](https://travis-ci.org/skycoin/exchange-api.svg?branch=master)](https://travis-ci.org/skycoin/exchange-api)
 
 # Node
  Node is main executable
