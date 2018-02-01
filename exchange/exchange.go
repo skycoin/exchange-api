@@ -1,6 +1,10 @@
 package exchange
 
-import "time"
+import (
+	"time"
+
+	"github.com/shopspring/decimal"
+)
 
 // Order types
 const (
@@ -12,14 +16,14 @@ const (
 type Order struct {
 	Type      string
 	Market    string
-	Amount    float64
-	Price     float64
+	Amount    decimal.Decimal
+	Price     decimal.Decimal
 	Submitted time.Time
 
 	//Mutable fields
 	OrderID         int
-	Fee             float64
-	CompletedAmount float64
+	Fee             decimal.Decimal
+	CompletedAmount decimal.Decimal
 	Status          string
 	Accepted        time.Time
 	Completed       time.Time

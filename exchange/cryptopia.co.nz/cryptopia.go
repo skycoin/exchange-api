@@ -2,6 +2,7 @@ package cryptopia
 
 import (
 	"time"
+
 	"github.com/shopspring/decimal"
 )
 

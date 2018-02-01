@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
 )
 
 type response struct {
@@ -363,7 +364,7 @@ const (
 )
 
 // submitTrade submits a new trade offer
-func submitTrade(key, secret, nonce, market, Type string, rate, amount float64) (int, error) {
+func submitTrade(key, secret, nonce, market, Type string, rate, amount decimal.Decimal) (int, error) {
 	var (
 		params = make(map[string]interface{})
 		err    error
@@ -440,7 +441,7 @@ func cancelTrade(key, secret, nonce string, Type string, TradePair *string, orde
 }
 
 // SubmitTip submits a tip to Trollbox
-func submitTip(key, secret, nonce, currency string, activeUsers int, amount float64) (string, error) {
+func submitTip(key, secret, nonce, currency string, activeUsers int, amount decimal.Decimal) (string, error) {
 	var (
 		params = make(map[string]interface{})
 		cID    int
@@ -469,7 +470,7 @@ func submitTip(key, secret, nonce, currency string, activeUsers int, amount floa
 
 // SubmitWithdraw submits a withdrawal request. If address does not exists in you AddressBook, it will fail
 // paymentid will be used only for currencies, based of CryptoNote algorhitm
-func submitWithdraw(key, secret, nonce, currency, address, paymentid string, amount float64) (int, error) {
+func submitWithdraw(key, secret, nonce, currency, address, paymentid string, amount decimal.Decimal) (int, error) {
 	var (
 		params = make(map[string]interface{})
 		err    error
@@ -499,7 +500,7 @@ func submitWithdraw(key, secret, nonce, currency, address, paymentid string, amo
 }
 
 // submitTransfer submit a transfer funds to another user
-func submitTransfer(key, secret, nonce, currency, username string, amount float64) (string, error) {
+func submitTransfer(key, secret, nonce, currency, username string, amount decimal.Decimal) (string, error) {
 	var (
 		params = make(map[string]interface{})
 		err    error

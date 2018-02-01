@@ -65,25 +65,25 @@ type newOrder struct {
 }
 
 type orderJSON struct {
-	OrderID     *int    `json:"OrderId,omitempty"`
-	TradeID     *int    `json:"TradeId,omitempty"`
-	TradePairID int     `json:"TradePairId"`
-	Market      string  `json:"Market"`
-	Type        string  `json:"Type"`
+	OrderID     *int   `json:"OrderId,omitempty"`
+	TradeID     *int   `json:"TradeId,omitempty"`
+	TradePairID int    `json:"TradePairId"`
+	Market      string `json:"Market"`
+	Type        string `json:"Type"`
 
-	Rate        decimal.Decimal `json:"Rate"`
-	Amount      decimal.Decimal `json:"Amount"`
-	Total       decimal.Decimal `json:"Total"`
-	Fee         decimal.Decimal `json:"Fee,omitempty"`
-	Remaining   decimal.Decimal `json:"Remaining,omitempty"`
+	Rate      decimal.Decimal `json:"Rate"`
+	Amount    decimal.Decimal `json:"Amount"`
+	Total     decimal.Decimal `json:"Total"`
+	Fee       decimal.Decimal `json:"Fee,omitempty"`
+	Remaining decimal.Decimal `json:"Remaining,omitempty"`
 
-	Timestamp   string  `json:"TimeStamp"`
+	Timestamp string `json:"TimeStamp"`
 }
 
 // UnmarshalJSON implements an json.Unmarshaler interface
 func (order *Order) UnmarshalJSON(b []byte) error {
 	var (
-		tmp = orderJSON{}
+		tmp     = orderJSON{}
 		orderID int
 		ts      time.Time
 	)

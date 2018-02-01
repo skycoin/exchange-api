@@ -135,19 +135,14 @@ func nonce() string {
 	return fmt.Sprintf("%x", b[:])
 }
 
-func bareFloat64(d decimal.Decimal) float64 {
-	res, _ = d.Float64()
-	return res
-}
-
 func convert(order Order) exchange.Order {
 	return exchange.Order{
 		OrderID:         order.OrderID,
 		Market:          order.Market,
-		Price:           bareFloat64(order.Rate),
-		Amount:          bareFloat64(order.Amount),
+		Price:           order.Rate,
+		Amount:          order.Amount,
 		Accepted:        order.Timestamp,
-		Fee:             bareFloat64(order.Fee),
-		CompletedAmount: bareFloat64(order.Total.Sub(order.Remaining)),
+		Fee:             order.Fee,
+		CompletedAmount: order.Total.Sub(order.Remaining),
 	}
 }

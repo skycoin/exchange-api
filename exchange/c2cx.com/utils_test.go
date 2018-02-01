@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/shopspring/decimal"
 	exchange "github.com/skycoin/exchange-api/exchange"
 )
 
@@ -41,10 +42,10 @@ func Test_convert(t *testing.T) {
 			},
 			out: exchange.Order{
 				OrderID:         1,
-				Amount:          1.0,
-				Price:           1.0,
-				Fee:             0.01,
-				CompletedAmount: 0,
+				Amount:          decimal.NewFromFloat(1.0),
+				Price:           decimal.NewFromFloat(1.0),
+				Fee:             decimal.NewFromFloat(0.01),
+				CompletedAmount: decimal.NewFromFloat(0.0),
 
 				Status:   exchange.Opened,
 				Accepted: accepted,
@@ -65,10 +66,10 @@ func Test_convert(t *testing.T) {
 			},
 			out: exchange.Order{
 				OrderID:         2,
-				Amount:          1.0,
-				Price:           1.0,
-				Fee:             0.01,
-				CompletedAmount: 0.5,
+				Amount:          decimal.NewFromFloat(1.0),
+				Price:           decimal.NewFromFloat(1.0),
+				Fee:             decimal.NewFromFloat(0.01),
+				CompletedAmount: decimal.NewFromFloat(0.5),
 
 				Status:   exchange.Partial,
 				Accepted: accepted,
@@ -89,10 +90,10 @@ func Test_convert(t *testing.T) {
 			},
 			out: exchange.Order{
 				OrderID:         3,
-				Amount:          1.0,
-				Price:           1.0,
-				Fee:             0.01,
-				CompletedAmount: 1.0,
+				Amount:          decimal.NewFromFloat(1.0),
+				Price:           decimal.NewFromFloat(1.0),
+				Fee:             decimal.NewFromFloat(0.01),
+				CompletedAmount: decimal.NewFromFloat(1.0),
 
 				Status:   exchange.Completed,
 				Accepted: accepted,
@@ -113,10 +114,10 @@ func Test_convert(t *testing.T) {
 			},
 			out: exchange.Order{
 				OrderID:         4,
-				Amount:          1.0,
-				Price:           1.0,
-				Fee:             0.01,
-				CompletedAmount: 0.7,
+				Amount:          decimal.NewFromFloat(1.0),
+				Price:           decimal.NewFromFloat(1.0),
+				Fee:             decimal.NewFromFloat(0.01),
+				CompletedAmount: decimal.NewFromFloat(0.7),
 
 				Status:   exchange.Cancelled,
 				Type:     exchange.Buy,

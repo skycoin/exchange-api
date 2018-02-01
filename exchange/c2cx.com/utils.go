@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
 	"github.com/skycoin/exchange-api/exchange"
 )
 
@@ -131,11 +132,11 @@ func convert(order Order) exchange.Order {
 		Status:  status,
 		Type:    order.Type,
 
-		CompletedAmount: order.CompletedAmount,
-		Fee:             order.Fee,
+		CompletedAmount: decimal.NewFromFloat(order.CompletedAmount),
+		Fee:             decimal.NewFromFloat(order.Fee),
 
-		Price:  order.Price,
-		Amount: order.Amount,
+		Price:  decimal.NewFromFloat(order.Price),
+		Amount: decimal.NewFromFloat(order.Amount),
 
 		Accepted:  accepted,
 		Completed: completed,

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
 	"github.com/skycoin/exchange-api/exchange"
 )
 
@@ -63,13 +64,13 @@ func (c *Client) Cancel(orderID int) (exchange.Order, error) {
 	c.Orders.UpdateOrder(
 		exchange.Order{
 			OrderID:         orderID,
-			Price:           orders[0].Price,
-			Amount:          orders[0].Amount,
+			Price:           decimal.NewFromFloat(orders[0].Price),
+			Amount:          decimal.NewFromFloat(orders[0].Amount),
 			Status:          exchange.Cancelled,
 			Completed:       completedTime,
 			Accepted:        unix(orders[0].CreateDate),
-			Fee:             orders[0].Fee,
-			CompletedAmount: orders[0].CompletedAmount,
+			Fee:             decimal.NewFromFloat(orders[0].Fee),
+			CompletedAmount: decimal.NewFromFloat(orders[0].CompletedAmount),
 		})
 	return c.Orders.GetOrderInfo(orderID)
 
@@ -126,7 +127,9 @@ func (c *Client) CancelMarket(symbol string) ([]exchange.Order, error) {
 }
 
 // Buy place buy order
-func (c *Client) Buy(symbol string, price, amount float64) (orderID int, err error) {
+func (c *Client) Buy(symbol string, fprice, famount float64) (orderID int, err error) {
+	price := decimal.NewFromFloat(fprice)
+	amount := decimal.NewFromFloat(famount)
 	var order = exchange.Order{
 		Submitted: time.Now(),
 		Market:    symbol,
@@ -154,7 +157,9 @@ func (c *Client) Buy(symbol string, price, amount float64) (orderID int, err err
 }
 
 // Sell place sell order
-func (c *Client) Sell(symbol string, price, amount float64) (orderID int, err error) {
+func (c *Client) Sell(symbol string, fprice, famount float64) (orderID int, err error) {
+	price := decimal.NewFromFloat(fprice)
+	amount := decimal.NewFromFloat(famount)
 	var order = exchange.Order{
 		Submitted: time.Now(),
 		Market:    symbol,
@@ -163,7 +168,7 @@ func (c *Client) Sell(symbol string, price, amount float64) (orderID int, err er
 		Type:      exchange.Sell,
 		Status:    exchange.Submitted,
 	}
-	orderID, err = c.createOrder(symbol, price, amount, "sell")
+	orderID, err = c.createOrder(symbol, fprice, famount, "sell")
 	if err != nil {
 		return
 	}
