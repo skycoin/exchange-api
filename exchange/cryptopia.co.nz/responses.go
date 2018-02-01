@@ -40,10 +40,6 @@ func (r *balance) UnmarshalJSON(b []byte) error {
 	var result = make(balance)
 
 	for _, v := range tmp {
-		asFloat := func(dec decimal.Decimal) float64 {
-			res, _ := obj.Float64()
-			return res
-		}
 		result[strings.ToUpper(v.Symbol)] = fmt.Sprintf("Total: %s Available: %s Unconfirmed: %s Held: %s Pending: %s",
 			v.Total.StringFixed(8),
 			v.Available.StringFixed(8),
