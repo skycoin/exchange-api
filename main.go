@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
+	"github.com/shopspring/decimal"
 	"github.com/skycoin/exchange-api/db"
 	"github.com/skycoin/exchange-api/exchange"
 	"github.com/skycoin/exchange-api/exchange/c2cx.com"
@@ -152,7 +153,7 @@ var cryptopiaHandlers = map[string]rpc.HandlerFunc{
 		if pid, err := rpc.GetStringParam(params, "payment_id"); err == nil {
 			paymentid = &pid
 		}
-		result, err := cryptopia.SubmitWithdraw(env["key"], env["secret"], currency, addr, paymentid, amount)
+		result, err := cryptopia.SubmitWithdraw(env["key"], env["secret"], currency, addr, paymentid, decimal.NewFromFloat(amount))
 		if err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InternalError, err)
 		}
