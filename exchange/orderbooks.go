@@ -3,6 +3,8 @@ package exchange
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 // Orderbooks provides functionality for managing OrderBook
@@ -15,8 +17,8 @@ type Orderbooks interface {
 
 // MarketOrder is a one order in stock
 type MarketOrder struct {
-	Price  float64 `json:"price"`
-	Volume float64 `json:"volume"`
+	Price  decimal.Decimal `json:"price"`
+	Volume decimal.Decimal `json:"volume"`
 }
 
 // MarketRecord represents orderbook for one market

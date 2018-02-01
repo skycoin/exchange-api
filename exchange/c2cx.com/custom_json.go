@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strconv"
 
+	"github.com/shopspring/decimal"
 	"github.com/skycoin/exchange-api/exchange"
 )
 
@@ -57,7 +58,7 @@ func (r *Orderbook) UnmarshalJSON(b []byte) error {
 	}
 
 	r.Timestamp, err = strconv.Atoi(v.Timestamp)
-	var vals = make([][2]float64, 0)
+	var vals = make([][2]decimal.Decimal, 0)
 	err = json.Unmarshal(v.Bids, &vals)
 	if err != nil {
 		return err

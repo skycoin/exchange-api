@@ -206,14 +206,14 @@ func (c *Client) updateOrderbook() {
 		)
 		for i, k := range v.Buy {
 			bids[i] = exchange.MarketOrder{
-				Price:  k.Price,
-				Volume: k.Volume,
+				Price:  decimal.NewFromFloat(k.Price),
+				Volume: decimal.NewFromFloat(k.Volume),
 			}
 		}
 		for i, k := range v.Sell {
 			asks[i] = exchange.MarketOrder{
-				Price:  k.Price,
-				Volume: k.Volume,
+				Price:  decimal.NewFromFloat(k.Price),
+				Volume: decimal.NewFromFloat(k.Volume),
 			}
 		}
 		c.Orderbooks.Update(v.Label, bids, asks)
