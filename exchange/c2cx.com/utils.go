@@ -2,7 +2,9 @@ package c2cx
 
 import (
 	"bytes"
-	"crypto/md5"
+
+	// the following is nolinted because it's part of c2cx' authentication scheme
+	"crypto/md5" // nolint: gas
 	"encoding/json"
 	"fmt"
 	"io"
@@ -24,7 +26,7 @@ func sign(secret string, params url.Values) string {
 		paramString += "secretKey=" + secret
 	}
 
-	sum := md5.Sum([]byte(paramString))
+	sum := md5.Sum([]byte(paramString)) // nolint: gas
 	return strings.ToUpper(fmt.Sprintf("%x", sum))
 }
 

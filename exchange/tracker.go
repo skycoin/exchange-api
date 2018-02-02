@@ -1,7 +1,7 @@
 package exchange
 
 import (
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
 	"strings"
@@ -210,6 +210,6 @@ func hash(order Order) int {
 	binary.BigEndian.PutUint64(buf[8:16], price)
 	buf = append(buf, order.Accepted.String()...)
 	buf = append(buf, order.Type...)
-	hash := md5.Sum(buf[:])
+	hash := sha256.Sum256(buf[:])
 	return int(binary.BigEndian.Uint64(hash[0:8]))
 }

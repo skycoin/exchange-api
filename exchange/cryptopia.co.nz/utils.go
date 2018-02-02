@@ -3,7 +3,9 @@ package cryptopia
 import (
 	"bytes"
 	"crypto/hmac"
-	"crypto/md5"
+
+	// the following is nolinted because it's part of cryptopia's authentication scheme
+	"crypto/md5" // nolint: gas
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
@@ -115,7 +117,7 @@ func sign(secret []byte, key, uri, nonce string, params []byte) []byte {
 	return signer.Sum(nil)
 }
 func prepare(key, uri, nonce string, params []byte) []byte {
-	hash := md5.Sum(params)
+	hash := md5.Sum(params) // nolint: gas
 	encodedParams := base64.StdEncoding.EncodeToString(hash[:])
 	var signData []byte
 	signData = append(signData, key...)
