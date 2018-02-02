@@ -3,9 +3,9 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
+	"github.com/shopspring/decimal"
 	"github.com/skycoin/exchange-api/exchange/cryptopia.co.nz"
 	"github.com/urfave/cli"
 )
@@ -22,9 +22,9 @@ func submitWithdrawCMD() cli.Command {
 			}
 			var (
 				err    error
-				amount float64
+				amount decimal.Decimal
 			)
-			if amount, err = strconv.ParseFloat(c.Args().Get(2), 64); err != nil {
+			if amount, err = decimal.NewFromString(c.Args().Get(2)); err != nil {
 				return err
 			}
 			var params = map[string]interface{}{

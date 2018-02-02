@@ -1,7 +1,11 @@
 package cli
 
-import "github.com/skycoin/exchange-api/exchange"
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/shopspring/decimal"
+	"github.com/skycoin/exchange-api/exchange"
+)
 
 func orderShort(order exchange.Order) string {
 	var r = map[string]interface{}{
@@ -53,34 +57,22 @@ func orderbookFull(orderbook exchange.MarketRecord) string {
 
 func orderbookShort(orderbook exchange.MarketRecord) string {
 	var (
-		averageBuyPrice  float64
-		averageSellPrice float64
-		totalBuyVolume   float64
-		totalSellVolume  float64
+		averageBuyPrice  decimal.Decimal
+		averageSellPrice decimal.Decimal
+		totalBuyVolume   decimal.Decimal
+		totalSellVolume  decimal.Decimal
 	)
 	for _, v := range orderbook.Bids {
-		if v.Price == 0 {
-			continue
-		}
-		totalBuyVolume += v.Volume
-
+		totalBuyVolume = totalBuyVolume.Add(v.Volume)
 	}
 	for _, v := range orderbook.Bids {
-		if v.Price == 0 {
-			continue
-		}
-		averageBuyPrice += v.Price * (v.Volume / totalBuyVolume)
+		averageBuyPrice = averageBuyPrice.Add(v.Price.Mul(v.Volume.Div(totalBuyVolume)))
 	}
 	for _, v := range orderbook.Asks {
-		if v.Price == 0 {
-			continue
-		}
-		totalSellVolume += v.Volume
-
+		totalSellVolume = totalSellVolume.Add(v.Volume)
 	}
 	for _, v := range orderbook.Asks {
-
-		averageSellPrice += v.Price * (v.Volume / totalSellVolume)
+		averageSellPrice = averageSellPrice.Add(v.Price.Mul(v.Volume.Div(totalSellVolume)))
 	}
 	var representation = map[string]interface{}{
 		"timestamp":          orderbook.Timestamp,

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/shopspring/decimal"
 	"github.com/skycoin/exchange-api/exchange"
 )
 
@@ -168,14 +169,14 @@ func Test_defaulthandler_Executed(t *testing.T) {
 
 type ex struct{}
 
-func (ex) Buy(string, float64, float64) (int, error)     { return 1, nil }
-func (ex) Sell(string, float64, float64) (int, error)    { return 2, nil }
-func (ex) Cancel(int) (exchange.Order, error)            { return exchange.Order{}, nil }
-func (ex) CancelMarket(string) ([]exchange.Order, error) { return []exchange.Order{}, nil }
-func (ex) CancelAll() ([]exchange.Order, error)          { return []exchange.Order{}, nil }
-func (ex) Executed() []int                               { return []int{} }
-func (ex) Completed() []int                              { return []int{} }
-func (ex) GetBalance(string) (string, error)             { return "You has 21 * 10e9 BTC", nil }
-func (ex) OrderDetails(int) (exchange.Order, error)      { return exchange.Order{}, nil }
-func (ex) OrderStatus(int) (string, error)               { return exchange.Completed, nil }
-func (ex) Orderbook() exchange.Orderbooks                { return nil }
+func (ex) Buy(string, decimal.Decimal, decimal.Decimal) (int, error)  { return 1, nil }
+func (ex) Sell(string, decimal.Decimal, decimal.Decimal) (int, error) { return 2, nil }
+func (ex) Cancel(int) (exchange.Order, error)                         { return exchange.Order{}, nil }
+func (ex) CancelMarket(string) ([]exchange.Order, error)              { return []exchange.Order{}, nil }
+func (ex) CancelAll() ([]exchange.Order, error)                       { return []exchange.Order{}, nil }
+func (ex) Executed() []int                                            { return []int{} }
+func (ex) Completed() []int                                           { return []int{} }
+func (ex) GetBalance(string) (string, error)                          { return "You has 21 * 10e9 BTC", nil }
+func (ex) OrderDetails(int) (exchange.Order, error)                   { return exchange.Order{}, nil }
+func (ex) OrderStatus(int) (string, error)                            { return exchange.Completed, nil }
+func (ex) Orderbook() exchange.Orderbooks                             { return nil }

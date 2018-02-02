@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/skycoin/exchange-api/exchange"
 	"github.com/shopspring/decimal"
+	"github.com/skycoin/exchange-api/exchange"
 )
 
 type response struct {

@@ -2,6 +2,7 @@ package c2cx
 
 import (
 	"testing"
+
 	"github.com/shopspring/decimal"
 )
 

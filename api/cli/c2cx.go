@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 
+	"github.com/shopspring/decimal"
 	c2cx "github.com/skycoin/exchange-api/exchange/c2cx.com"
 	"github.com/urfave/cli"
 )
@@ -10,10 +11,10 @@ import (
 func sumbitTradeCMD() cli.Command {
 	var name = "submittrade"
 	var (
-		pricetype string
-		ordertype string
-		takeprofit string
-		stoploss string
+		pricetype    string
+		ordertype    string
+		takeprofit   string
+		stoploss     string
 		triggerprice string
 	)
 	return cli.Command{
@@ -25,8 +26,8 @@ func sumbitTradeCMD() cli.Command {
 				return errInvalidInput
 			}
 			var (
-				symbol        string
-				price, amount decimal.Decimal
+				symbol                             string
+				price, amount                      decimal.Decimal
 				stopLoss, takeProfit, triggerPrice decimal.Decimal
 			)
 			if stopLoss, err := decimal.NewFromString(stoploss); err != nil {

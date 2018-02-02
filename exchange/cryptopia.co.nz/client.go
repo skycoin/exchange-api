@@ -103,9 +103,7 @@ func (c *Client) CancelMarket(symbol string) ([]exchange.Order, error) {
 }
 
 // Buy places buy order
-func (c *Client) Buy(symbol string, frate, famount float64) (int, error) {
-	rate := decimal.NewFromFloat(frate)
-	amount := decimal.NewFromFloat(famount)
+func (c *Client) Buy(symbol string, rate, amount decimal.Decimal) (int, error) {
 	var order = exchange.Order{
 		Submitted: time.Now(),
 		Type:      exchange.Buy,
@@ -132,9 +130,7 @@ func (c *Client) Buy(symbol string, frate, famount float64) (int, error) {
 }
 
 // Sell places sell order
-func (c *Client) Sell(symbol string, frate, famount float64) (int, error) {
-	rate := decimal.NewFromFloat(frate)
-	amount := decimal.NewFromFloat(famount)
+func (c *Client) Sell(symbol string, rate, amount decimal.Decimal) (int, error) {
 	var order = exchange.Order{
 		Submitted: time.Now(),
 		Type:      exchange.Sell,

@@ -143,7 +143,7 @@ var cryptopiaHandlers = map[string]rpc.HandlerFunc{
 		if err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
 		}
-		amount, err := rpc.GetFloatParam(params, "amount")
+		amount, err := rpc.GetDecimalParam(params, "amount")
 		if err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
 		}
@@ -153,7 +153,7 @@ var cryptopiaHandlers = map[string]rpc.HandlerFunc{
 		if pid, err := rpc.GetStringParam(params, "payment_id"); err == nil {
 			paymentid = &pid
 		}
-		result, err := cryptopia.SubmitWithdraw(env["key"], env["secret"], currency, addr, paymentid, decimal.NewFromFloat(amount))
+		result, err := cryptopia.SubmitWithdraw(env["key"], env["secret"], currency, addr, paymentid, amount)
 		if err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InternalError, err)
 		}

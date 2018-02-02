@@ -2,8 +2,8 @@ package c2cx
 
 import (
 	"github.com/pkg/errors"
-	"github.com/skycoin/exchange-api/exchange"
 	"github.com/shopspring/decimal"
+	"github.com/skycoin/exchange-api/exchange"
 )
 
 // Markets is all supported markets

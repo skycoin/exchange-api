@@ -31,10 +31,10 @@ func Test_convert(t *testing.T) {
 		{
 			in: Order{
 				OrderID:         1,
-				Amount:          1.0,
-				Price:           1.0,
-				Fee:             0.01,
-				CompletedAmount: 0,
+				Amount:          decimal.NewFromFloat(1.0),
+				Price:           decimal.NewFromFloat(1.0),
+				Fee:             decimal.NewFromFloat(0.01),
+				CompletedAmount: decimal.NewFromFloat(0.0),
 
 				Status:     statuses[exchange.Opened],
 				Type:       exchange.Buy,
@@ -55,10 +55,10 @@ func Test_convert(t *testing.T) {
 		{
 			in: Order{
 				OrderID:         2,
-				Amount:          1.0,
-				Price:           1.0,
-				Fee:             0.01,
-				CompletedAmount: 0.5,
+				Amount:          decimal.NewFromFloat(1.0),
+				Price:           decimal.NewFromFloat(1.0),
+				Fee:             decimal.NewFromFloat(0.01),
+				CompletedAmount: decimal.NewFromFloat(0.5),
 
 				Status:     statuses[exchange.Partial],
 				Type:       exchange.Buy,
@@ -79,10 +79,10 @@ func Test_convert(t *testing.T) {
 		{
 			in: Order{
 				OrderID:         3,
-				Amount:          1.0,
-				Price:           1.0,
-				Fee:             0.01,
-				CompletedAmount: 1.0,
+				Amount:          decimal.NewFromFloat(1.0),
+				Price:           decimal.NewFromFloat(1.0),
+				Fee:             decimal.NewFromFloat(0.01),
+				CompletedAmount: decimal.NewFromFloat(1.0),
 
 				Status:     statuses[exchange.Completed],
 				Type:       exchange.Buy,
@@ -103,10 +103,10 @@ func Test_convert(t *testing.T) {
 		{
 			in: Order{
 				OrderID:         4,
-				Amount:          1.0,
-				Price:           1.0,
-				Fee:             0.01,
-				CompletedAmount: 0.7,
+				Amount:          decimal.NewFromFloat(1.0),
+				Price:           decimal.NewFromFloat(1.0),
+				Fee:             decimal.NewFromFloat(0.01),
+				CompletedAmount: decimal.NewFromFloat(0.7),
 
 				Status:     statuses[exchange.Cancelled],
 				Type:       exchange.Buy,

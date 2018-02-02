@@ -46,28 +46,6 @@ func GetIntParam(params map[string]interface{}, key string) (value int, err erro
 	return 0, errParamNotFound
 }
 
-// GetFloatParam extract float64 params from request params
-func GetFloatParam(params map[string]interface{}, key string) (value float64, err error) {
-	if v, ok := params[key]; ok {
-		if value, ok = v.(float64); ok {
-			return value, nil
-		}
-		return 0, errInvalidType
-	}
-	return 0, errParamNotFound
-}
-
-// GetFloatParam extract float64 params from request params
-func GetFloatParam(params map[string]interface{}, key string) (value float64, err error) {
-	if v, ok := params[key]; ok {
-		if value, ok = v.(float64); ok {
-			return value, nil
-		}
-		return 0, errInvalidType
-	}
-	return 0, errParamNotFound
-}
-
 // GetDecimalParam extract string param from request params
 func GetDecimalParam(params map[string]interface{}, key string) (value decimal.Decimal, err error) {
 	if v, ok := params[key]; ok {

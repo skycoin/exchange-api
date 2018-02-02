@@ -64,13 +64,13 @@ func (c *Client) Cancel(orderID int) (exchange.Order, error) {
 	c.Orders.UpdateOrder(
 		exchange.Order{
 			OrderID:         orderID,
-			Price:           decimal.NewFromFloat(orders[0].Price),
-			Amount:          decimal.NewFromFloat(orders[0].Amount),
+			Price:           orders[0].Price,
+			Amount:          orders[0].Amount,
 			Status:          exchange.Cancelled,
 			Completed:       completedTime,
 			Accepted:        unix(orders[0].CreateDate),
-			Fee:             decimal.NewFromFloat(orders[0].Fee),
-			CompletedAmount: decimal.NewFromFloat(orders[0].CompletedAmount),
+			Fee:             orders[0].Fee,
+			CompletedAmount: orders[0].CompletedAmount,
 		})
 	return c.Orders.GetOrderInfo(orderID)
 
@@ -127,9 +127,7 @@ func (c *Client) CancelMarket(symbol string) ([]exchange.Order, error) {
 }
 
 // Buy place buy order
-func (c *Client) Buy(symbol string, fprice, famount float64) (orderID int, err error) {
-	price := decimal.NewFromFloat(fprice)
-	amount := decimal.NewFromFloat(famount)
+func (c *Client) Buy(symbol string, price, amount decimal.Decimal) (orderID int, err error) {
 	var order = exchange.Order{
 		Submitted: time.Now(),
 		Market:    symbol,
@@ -157,9 +155,7 @@ func (c *Client) Buy(symbol string, fprice, famount float64) (orderID int, err e
 }
 
 // Sell place sell order
-func (c *Client) Sell(symbol string, fprice, famount float64) (orderID int, err error) {
-	price := decimal.NewFromFloat(fprice)
-	amount := decimal.NewFromFloat(famount)
+func (c *Client) Sell(symbol string, price, amount decimal.Decimal) (orderID int, err error) {
 	var order = exchange.Order{
 		Submitted: time.Now(),
 		Market:    symbol,

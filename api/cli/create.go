@@ -2,8 +2,8 @@ package cli
 
 import (
 	"fmt"
-	"strconv"
 
+	"github.com/shopspring/decimal"
 	"github.com/urfave/cli"
 )
 
@@ -20,13 +20,13 @@ func buyCMD() cli.Command {
 			var (
 				err           error
 				symbol        string
-				price, amount float64
+				price, amount decimal.Decimal
 			)
 			symbol = c.Args().Get(0)
-			if price, err = strconv.ParseFloat(c.Args().Get(1), 64); err != nil {
+			if price, err = decimal.NewFromString(c.Args().Get(1)); err != nil {
 				return err
 			}
-			if amount, err = strconv.ParseFloat(c.Args().Get(2), 64); err != nil {
+			if amount, err = decimal.NewFromString(c.Args().Get(2)); err != nil {
 				return err
 			}
 			var params = map[string]interface{}{
@@ -58,13 +58,13 @@ func sellCMD() cli.Command {
 			var (
 				err           error
 				symbol        string
-				price, amount float64
+				price, amount decimal.Decimal
 			)
 			symbol = c.Args().Get(0)
-			if price, err = strconv.ParseFloat(c.Args().Get(1), 64); err != nil {
+			if price, err = decimal.NewFromString(c.Args().Get(1)); err != nil {
 				return err
 			}
-			if amount, err = strconv.ParseFloat(c.Args().Get(2), 64); err != nil {
+			if amount, err = decimal.NewFromString(c.Args().Get(2)); err != nil {
 				return err
 			}
 			var params = map[string]interface{}{

@@ -11,14 +11,14 @@ import (
 type orderJSON struct {
 	Amount          decimal.Decimal `json:"amount"`
 	AvgPrice        decimal.Decimal `json:"avgPrice"`
-	CompletedAmount string  `json:"completedAmount"`
+	CompletedAmount string          `json:"completedAmount"`
 	Fee             decimal.Decimal `json:"fee"`
-	CreateDate      int64   `json:"createDate"`
-	CompleteDate    int64   `json:"completeDate,omitempty"`
-	OrderID         int     `json:"orderId"`
+	CreateDate      int64           `json:"createDate"`
+	CompleteDate    int64           `json:"completeDate,omitempty"`
+	OrderID         int             `json:"orderId"`
 	Price           decimal.Decimal `json:"price"`
-	Status          int     `json:"status"`
-	Type            string  `json:"type"`
+	Status          int             `json:"status"`
+	Type            string          `json:"type"`
 }
 
 // UnmarshalJSON implements json.Unmarshaler
