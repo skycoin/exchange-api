@@ -11,6 +11,11 @@ import (
 	"github.com/skycoin/exchange-api/exchange"
 )
 
+const (
+	allName    = "all"
+	marketName = "market"
+)
+
 func orderInfoCMD() cli.Command {
 	name := "info"
 	return cli.Command{
@@ -70,7 +75,7 @@ func orderStatusCMD() cli.Command {
 }
 
 func completedAllCMD() cli.Command {
-	name := "all"
+	name := allName
 	var short bool
 	return cli.Command{
 		Name:  name,
@@ -97,7 +102,9 @@ func completedAllCMD() cli.Command {
 				if err != nil {
 					continue
 				}
-				err = json.Unmarshal(resp, &order)
+				if err = json.Unmarshal(resp, &order); err != nil {
+					panic(err)
+				}
 				if short {
 					fmt.Println(orderShort(order))
 				} else {
@@ -113,7 +120,7 @@ func completedAllCMD() cli.Command {
 }
 
 func completedMarketCMD() cli.Command {
-	name := "market"
+	name := marketName
 	var short bool
 	return cli.Command{
 		Name:      name,
@@ -142,7 +149,9 @@ func completedMarketCMD() cli.Command {
 				if err != nil {
 					continue
 				}
-				err = json.Unmarshal(resp, &order)
+				if err = json.Unmarshal(resp, &order); err != nil {
+					panic(err)
+				}
 				if order.Market != market {
 					continue
 				}
@@ -161,7 +170,7 @@ func completedMarketCMD() cli.Command {
 }
 
 func executedAllCMD() cli.Command {
-	name := "all"
+	name := allName
 	var short bool
 	return cli.Command{
 		Name:  name,
@@ -188,7 +197,9 @@ func executedAllCMD() cli.Command {
 				if err != nil {
 					continue
 				}
-				err = json.Unmarshal(resp, &order)
+				if err = json.Unmarshal(resp, &order); err != nil {
+					panic(err)
+				}
 				if short {
 					fmt.Println(orderShort(order))
 				} else {
@@ -203,7 +214,7 @@ func executedAllCMD() cli.Command {
 	}
 }
 func executedMarketCMD() cli.Command {
-	name := "market"
+	name := marketName
 	var short bool
 	return cli.Command{
 		Name:      name,
@@ -232,7 +243,9 @@ func executedMarketCMD() cli.Command {
 				if err != nil {
 					continue
 				}
-				err = json.Unmarshal(resp, &order)
+				if err = json.Unmarshal(resp, &order); err != nil {
+					panic(err)
+				}
 				if order.Market != market {
 					continue
 				}

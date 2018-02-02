@@ -6,15 +6,13 @@ import (
 	"github.com/skycoin/exchange-api/exchange"
 )
 
-var (
+const (
 	key    = "23a69c51c746446e819b213ef3841920"
 	secret = "poPwm3OQGOb85L0Zf3DL4TtgLPc2OpxZg9n8G7Sv2po="
 )
 
 func TestRequestSignature(t *testing.T) {
 	var (
-		key    = "23a69c51c746446e819b213ef3841920"
-		secret = "poPwm3OQGOb85L0Zf3DL4TtgLPc2OpxZg9n8G7Sv2po="
 		nonce  = "3"
 		requrl = apiroot
 	)

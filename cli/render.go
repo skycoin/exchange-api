@@ -45,12 +45,18 @@ func orderFull(order exchange.Order) string {
 		r["completed_at"] = order.Completed
 		r["fee"] = order.Fee
 	}
-	str, _ := json.MarshalIndent(r, "", "    ")
+	str, err := json.MarshalIndent(r, "", "    ")
+	if err != nil {
+		panic(err)
+	}
 	return string(str)
 }
 
 func orderbookFull(orderbook exchange.MarketRecord) string {
-	str, _ := json.MarshalIndent(orderbook, "", "    ")
+	str, err := json.MarshalIndent(orderbook, "", "    ")
+	if err != nil {
+		panic(err)
+	}
 	return string(str)
 }
 
@@ -91,6 +97,9 @@ func orderbookShort(orderbook exchange.MarketRecord) string {
 		"total_sell_volume":  totalSellVolume,
 		"total_buy_volume":   totalBuyVolume,
 	}
-	str, _ := json.MarshalIndent(representation, "", "    ")
+	str, err := json.MarshalIndent(representation, "", "    ")
+	if err != nil {
+		panic(err)
+	}
 	return string(str)
 }

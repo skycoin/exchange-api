@@ -88,8 +88,8 @@ func normalize(sym string) (string, error) {
 }
 
 func unix(unix int64) time.Time {
-	var secs = int64(unix / 10e2)
-	var nanos = int64((unix % 10e2) * 10e5)
+	var secs = unix / 10e2
+	var nanos = (unix % 10e2) * 10e5
 	return time.Unix(secs, nanos)
 }
 
@@ -105,7 +105,11 @@ func readResponse(r io.ReadCloser) (*response, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer r.Close()
+	defer func() {
+		if err := r.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	if tmp.Fail != nil {
 		return nil, errors.New(string(tmp.Fail))
 	}

@@ -38,7 +38,9 @@ func (s *Server) Handler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		respData, _ := json.Marshal(resp)
-		w.Write(respData)
+		if _, err = w.Write(respData); err != nil {
+			return
+		}
 		w.Header().Add("Content-Type", "application/json")
 		return
 	}
@@ -54,8 +56,16 @@ func (s *Server) Start(addr string, stop chan struct{}) {
 	}
 	l, _ := net.Listen("tcp", addr)
 	log.Printf("Starting server %s\n", addr)
-	go http.Serve(l, s)
-	defer l.Close()
+	go func() {
+		if err := http.Serve(l, s); err != nil {
+			panic(err)
+		}
+	}()
+	defer func() {
+		if err := l.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	<-stop
 	log.Println("Server stopped")
 

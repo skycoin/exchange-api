@@ -87,7 +87,11 @@ func readResponse(r io.ReadCloser) (*response, error) {
 		return nil, err
 	}
 	//ioutil.WriteFile(fmt.Sprintf("responses/response%d.json", incr), b, os.ModePerm)
-	defer r.Close()
+	defer func() {
+		if err = r.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	b = bytes.TrimPrefix(b, []byte("\xef\xbb\xbf"))
 	var resp response
 	err = json.Unmarshal(b, &resp)
@@ -105,7 +109,9 @@ func encodeValues(vals map[string]interface{}) []byte {
 func sign(secret []byte, key, uri, nonce string, params []byte) []byte {
 	signer := hmac.New(sha256.New, secret)
 	data := prepare(key, uri, nonce, params)
-	signer.Write(data[:])
+	if _, err := signer.Write(data[:]); err != nil {
+		panic(err)
+	}
 	return signer.Sum(nil)
 }
 func prepare(key, uri, nonce string, params []byte) []byte {
@@ -130,7 +136,9 @@ func header(key, secret, nonce string, uri url.URL, params []byte) string {
 // nonce creates random string
 func nonce() string {
 	var b [8]byte
-	rand.Read(b[:])
+	if _, err := rand.Read(b[:]); err != nil {
+		panic(err)
+	}
 	return fmt.Sprintf("%x", b[:])
 }
 

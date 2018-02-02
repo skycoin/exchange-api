@@ -66,7 +66,9 @@ func depositCMD() cli.Command {
 				return nil
 			}
 			var addr cryptopia.DepositAddress
-			json.Unmarshal(resp, &addr)
+			if err = json.Unmarshal(resp, &addr); err != nil {
+				return err
+			}
 			str, _ := json.MarshalIndent(addr, "", "    ")
 			fmt.Println(string(str))
 			return nil
