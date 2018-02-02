@@ -10,11 +10,11 @@ import (
 func sumbitTradeCMD() cli.Command {
 	var name = "submittrade"
 	var (
-		pricetype    = new(string)
-		ordertype    = new(string)
-		takeprofit   = new(float64)
-		stoploss     = new(float64)
-		triggerprice = new(float64)
+		pricetype string
+		ordertype string
+		takeprofit string
+		stoploss string
+		triggerprice string
 	)
 	return cli.Command{
 		Name:      name,
@@ -26,8 +26,18 @@ func sumbitTradeCMD() cli.Command {
 			}
 			var (
 				symbol        string
-				price, amount float64
+				price, amount decimal.Decimal
+				stopLoss, takeProfit, triggerPrice decimal.Decimal
 			)
+			if stopLoss, err := decimal.NewFromString(stoploss); err != nil {
+				return err
+			}
+			if takeProfit, err := decimal.NewFromString(takeprofit); err != nil {
+				return err
+			}
+			if triggerPrice, err := decimal.NewFromString(triggerprice); err != nil {
+				return err
+			}
 			var params = map[string]interface{}{
 				"price_type_id": pricetype,
 				"order_type":    ordertype,
@@ -35,9 +45,9 @@ func sumbitTradeCMD() cli.Command {
 				"price":         price,
 				"amount":        amount,
 				"advanced": c2cx.AdvancedOrderParams{
-					StopLoss:     *stoploss,
-					TakeProfit:   *takeprofit,
-					TriggerPrice: *triggerprice,
+					StopLoss:     stopLoss,
+					TakeProfit:   takeProfit,
+					TriggerPrice: triggerPrice,
 				},
 			}
 			resp, err := rpcRequest("submit_trade", params)
@@ -51,23 +61,23 @@ func sumbitTradeCMD() cli.Command {
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:        "pricetype",
-				Destination: pricetype,
+				Destination: &pricetype,
 			},
 			cli.StringFlag{
 				Name:        "type",
-				Destination: ordertype,
+				Destination: &ordertype,
 			},
-			cli.Float64Flag{
+			cli.StringFlag{
 				Name:        "takeprofit",
-				Destination: takeprofit,
+				Destination: &takeprofit,
 			},
-			cli.Float64Flag{
+			cli.StringFlag{
 				Name:        "stoploss",
-				Destination: stoploss,
+				Destination: &stoploss,
 			},
-			cli.Float64Flag{
+			cli.StringFlag{
 				Name:        "triggerprice",
-				Destination: triggerprice,
+				Destination: &triggerprice,
 			},
 		},
 	}

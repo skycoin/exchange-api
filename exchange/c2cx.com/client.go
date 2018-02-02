@@ -168,7 +168,7 @@ func (c *Client) Sell(symbol string, fprice, famount float64) (orderID int, err 
 		Type:      exchange.Sell,
 		Status:    exchange.Submitted,
 	}
-	orderID, err = c.createOrder(symbol, fprice, famount, "sell")
+	orderID, err = c.createOrder(symbol, price, amount, "sell")
 	if err != nil {
 		return
 	}
@@ -178,7 +178,7 @@ func (c *Client) Sell(symbol string, fprice, famount float64) (orderID int, err 
 	return
 }
 
-func (c *Client) createOrder(symbol string, price, quantity float64, Type string) (int, error) {
+func (c *Client) createOrder(symbol string, price, quantity decimal.Decimal, Type string) (int, error) {
 	var err error
 	if symbol, err = normalize(symbol); err != nil {
 		return 0, err

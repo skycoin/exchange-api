@@ -2,6 +2,7 @@ package c2cx
 
 import (
 	"testing"
+	"github.com/shopspring/decimal"
 )
 
 var (
@@ -14,7 +15,7 @@ var (
 )
 
 func TestCreateOrder(t *testing.T) {
-	orderid, err := CreateOrder(key, secret, "CNY/SHL", 0.01, 10, "Buy", PriceTypeLimit, nil)
+	orderid, err := CreateOrder(key, secret, "CNY/SHL", decimal.NewFromFloat(0.01), decimal.NewFromFloat(10.0), "Buy", PriceTypeLimit, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

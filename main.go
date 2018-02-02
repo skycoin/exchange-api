@@ -217,7 +217,7 @@ var c2cxHandlers = map[string]rpc.HandlerFunc{
 			advanced        *c2cx.AdvancedOrderParams
 			priceTypeID     int
 			orderType       string
-			price, quantity float64
+			price, quantity decimal.Decimal
 			market          string
 		)
 		if priceTypeID, err = rpc.GetIntParam(params, "price_type_id"); err != nil {
@@ -229,10 +229,10 @@ var c2cxHandlers = map[string]rpc.HandlerFunc{
 		if market, err = rpc.GetStringParam(params, "market"); err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
 		}
-		if price, err = rpc.GetFloatParam(params, "price"); err != nil {
+		if price, err = rpc.GetDecimalParam(params, "price"); err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
 		}
-		if quantity, err = rpc.GetFloatParam(params, "quantity"); err != nil {
+		if quantity, err = rpc.GetDecimalParam(params, "quantity"); err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
 		}
 		if adv, ok := params["advanced"]; ok {
