@@ -56,7 +56,9 @@ func (r *Orderbook) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	r.Timestamp, err = strconv.Atoi(v.Timestamp)
+	if r.Timestamp, err = strconv.Atoi(v.Timestamp); err != nil {
+		return err
+	}
 	var vals = make([][2]float64, 0)
 	err = json.Unmarshal(v.Bids, &vals)
 	if err != nil {

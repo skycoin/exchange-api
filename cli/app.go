@@ -8,7 +8,7 @@ var endpoint string
 // App is a cli app
 var App = cli.App{
 	Commands: []cli.Command{
-		cli.Command{
+		{
 			Name: "c2cx",
 			Subcommands: []cli.Command{
 				orderCMDs(),
@@ -26,7 +26,7 @@ var App = cli.App{
 				return nil
 			},
 		},
-		cli.Command{
+		{
 			Name: "cryptopia",
 			Subcommands: []cli.Command{
 				orderCMDs(),

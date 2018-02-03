@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
+
 	"github.com/skycoin/exchange-api/db"
 	"github.com/skycoin/exchange-api/exchange"
 	"github.com/skycoin/exchange-api/exchange/c2cx.com"
@@ -88,7 +89,7 @@ func main() {
 
 	var server = rpc.Server{
 		Handlers: map[string]rpc.Wrapper{
-			"cryptopia": rpc.Wrapper{
+			"cryptopia": {
 				Client: cryptopiaClient,
 				Env: map[string]string{
 					"key":    keys.cryptopia.key,
@@ -96,7 +97,7 @@ func main() {
 				},
 				Handlers: cryptopiaHandlers,
 			},
-			"c2cx": rpc.Wrapper{
+			"c2cx": {
 				Client: c2cxClient,
 				Env: map[string]string{
 					"key":    keys.c2cx.key,

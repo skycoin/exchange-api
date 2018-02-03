@@ -28,24 +28,20 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		if err != nil {
 			return resp
 		}
-		for {
-			params, err := DecodeParams(r)
-			if err != nil {
-				resp.Error = makeError(InvalidParams, invalidParamsMsg, nil)
-				break
-			}
-			currency, err := GetStringParam(params, "currency")
-			if err != nil {
-				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
-				break
-			}
-			balance, err := c.GetBalance(currency)
-			if err != nil {
-				resp.Error = makeError(InternalError, internalErrorMsg, err)
-				break
-			}
+		params, err := DecodeParams(r)
+		if err != nil {
+			resp.Error = makeError(InvalidParams, invalidParamsMsg, nil)
+		}
+		currency, err := GetStringParam(params, "currency")
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
+		}
+		balance, err := c.GetBalance(currency)
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InternalError, internalErrorMsg, err)
+		}
+		if err == nil {
 			resp.setBody(balance)
-			break
 		}
 		return resp
 	},
@@ -55,24 +51,20 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		if err != nil {
 			return resp
 		}
-		for {
-			params, err := DecodeParams(r)
-			if err != nil {
-				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
-				break
-			}
-			orderID, err := GetIntParam(params, "orderid")
-			if err != nil {
-				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
-				break
-			}
-			order, err := c.Cancel(orderID)
-			if err != nil {
-				resp.Error = makeError(InternalError, internalErrorMsg, err)
-				break
-			}
+		params, err := DecodeParams(r)
+		if err != nil {
+			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
+		}
+		orderID, err := GetIntParam(params, "orderid")
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
+		}
+		order, err := c.Cancel(orderID)
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InternalError, internalErrorMsg, err)
+		}
+		if err == nil {
 			resp.setBody(order)
-			break
 		}
 		return resp
 	},
@@ -82,20 +74,15 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		if err != nil {
 			return resp
 		}
-		for {
-			_, err = DecodeParams(r)
-			if err != nil && err != errEmptyParams {
-				resp.Error = makeError(ParseError, parseErrorMsg, err)
-				break
-			}
-			orders, err := c.CancelAll()
-			if err != nil {
-				resp.Error = makeError(InternalError, internalErrorMsg, err)
-				break
-			}
-			resp.setBody(orders)
-			break
+		_, err = DecodeParams(r)
+		if err != nil && err != errEmptyParams {
+			resp.Error = makeError(ParseError, parseErrorMsg, err)
 		}
+		orders, err := c.CancelAll()
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InternalError, internalErrorMsg, err)
+		}
+		resp.setBody(orders)
 		return resp
 	},
 	// cancel_market params: {"symbol": string}
@@ -104,24 +91,20 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		if err != nil {
 			return resp
 		}
-		for {
-			params, err := DecodeParams(r)
-			if err != nil {
-				resp.Error = makeError(ParseError, parseErrorMsg, err)
-				break
-			}
-			symbol, err := GetStringParam(params, "symbol")
-			if err != nil {
-				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
-				break
-			}
-			orders, err := c.CancelMarket(symbol)
-			if err != nil {
-				resp.Error = makeError(InternalError, internalErrorMsg, err)
-				break
-			}
+		params, err := DecodeParams(r)
+		if err != nil {
+			resp.Error = makeError(ParseError, parseErrorMsg, err)
+		}
+		symbol, err := GetStringParam(params, "symbol")
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
+		}
+		orders, err := c.CancelMarket(symbol)
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InternalError, internalErrorMsg, err)
+		}
+		if err == nil {
 			resp.setBody(orders)
-			break
 		}
 		return resp
 	},
@@ -131,36 +114,29 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		if err != nil {
 			return resp
 		}
-		for {
-			params, err := DecodeParams(r)
-			if err != nil {
-				resp.Error = makeError(ParseError, parseErrorMsg, err)
-				break
-			}
-			symbol, err := GetStringParam(params, "symbol")
-			if err != nil {
-				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
-				break
-			}
-			rate, err := GetFloatParam(params, "price")
-			if err != nil {
-				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
-				break
-			}
-			amount, err := GetFloatParam(params, "amount")
-			if err != nil {
-				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
-				break
-			}
-			orderID, err := c.Buy(symbol, rate, amount)
-			if err != nil {
-				resp.Error = makeError(InternalError, internalErrorMsg, err)
-				break
-			}
-			resp.setBody(orderID)
-			break
+		params, err := DecodeParams(r)
+		if err != nil {
+			resp.Error = makeError(ParseError, parseErrorMsg, err)
 		}
-
+		symbol, err := GetStringParam(params, "symbol")
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
+		}
+		rate, err := GetFloatParam(params, "price")
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
+		}
+		amount, err := GetFloatParam(params, "amount")
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
+		}
+		orderID, err := c.Buy(symbol, rate, amount)
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InternalError, internalErrorMsg, err)
+		}
+		if err == nil {
+			resp.setBody(orderID)
+		}
 		return resp
 	},
 	// sell params: {"symbol": string, "rate": float64, "amount": float64}
@@ -169,36 +145,29 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		if err != nil {
 			return resp
 		}
-		for {
-			params, err := DecodeParams(r)
-			if err != nil {
-				resp.Error = makeError(ParseError, parseErrorMsg, err)
-				break
-			}
-			symbol, err := GetStringParam(params, "symbol")
-			if err != nil {
-				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
-				break
-			}
-			rate, err := GetFloatParam(params, "price")
-			if err != nil {
-				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
-				break
-			}
-			amount, err := GetFloatParam(params, "amount")
-			if err != nil {
-				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
-				break
-			}
-			orderID, err := c.Sell(symbol, rate, amount)
-			if err != nil {
-				resp.Error = makeError(InternalError, internalErrorMsg, err)
-				break
-			}
-			resp.setBody(orderID)
-			break
+		params, err := DecodeParams(r)
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(ParseError, parseErrorMsg, err)
 		}
-
+		symbol, err := GetStringParam(params, "symbol")
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
+		}
+		rate, err := GetFloatParam(params, "price")
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
+		}
+		amount, err := GetFloatParam(params, "amount")
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
+		}
+		orderID, err := c.Sell(symbol, rate, amount)
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InternalError, internalErrorMsg, err)
+		}
+		if err == nil {
+			resp.setBody(orderID)
+		}
 		return resp
 	},
 	// order_info params: {"orderid": int}
@@ -207,23 +176,20 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		if err != nil {
 			return resp
 		}
-		for {
-			params, err := DecodeParams(r)
-			if err != nil {
-				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
-				break
-			}
-			orderID, err := GetIntParam(params, "orderid")
-			if err != nil {
-				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
-			}
-			order, err := c.OrderDetails(orderID)
-			if err != nil {
-				resp.Error = makeError(InternalError, internalErrorMsg, err)
-				break
-			}
+		params, err := DecodeParams(r)
+		if err != nil {
+			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
+		}
+		orderID, err := GetIntParam(params, "orderid")
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
+		}
+		order, err := c.OrderDetails(orderID)
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InternalError, internalErrorMsg, err)
+		}
+		if err == nil {
 			resp.setBody(order)
-			break
 		}
 		return resp
 	},
@@ -233,23 +199,20 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		if err != nil {
 			return resp
 		}
-		for {
-			params, err := DecodeParams(r)
-			if err != nil {
-				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
-				break
-			}
-			orderID, err := GetIntParam(params, "orderid")
-			if err != nil {
-				resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
-			}
-			order, err := c.OrderStatus(orderID)
-			if err != nil {
-				resp.Error = makeError(InternalError, internalErrorMsg, err)
-				break
-			}
+		params, err := DecodeParams(r)
+		if err != nil {
+			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
+		}
+		orderID, err := GetIntParam(params, "orderid")
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
+		}
+		order, err := c.OrderStatus(orderID)
+		if err != nil && resp.Error == nil {
+			resp.Error = makeError(InternalError, internalErrorMsg, err)
+		}
+		if err == nil {
 			resp.setBody(order)
-			break
 		}
 		return resp
 	},

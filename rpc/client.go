@@ -11,7 +11,7 @@ import (
 
 // Do does request to given addr and endpoint
 func Do(addr, endpoint string, r Request) (*Response, error) {
-	c          := http.Client{}
+	c := http.Client{}
 	requestURI := url.URL{}
 
 	requestURI.Host = addr
@@ -26,7 +26,11 @@ func Do(addr, endpoint string, r Request) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err = resp.Body.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("reesponse status code %d", resp.StatusCode)
 	}

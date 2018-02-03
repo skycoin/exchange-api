@@ -1,7 +1,7 @@
 package exchange
 
 import (
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
 	"strings"
@@ -23,7 +23,7 @@ type Orders interface {
 
 // Errors that might happens in order processing
 var (
-	ErrInvalidStatus = fmt.Errorf("invalid order status, availible statuses: %s, %s, %s, %s, %s",
+	ErrInvalidStatus = fmt.Errorf("invalid order status, available statuses: %s, %s, %s, %s, %s",
 		Submitted, Opened, Partial, Completed, Cancelled)
 	ErrExist       = errors.New("order with given orderid already exist")
 	ErrZeroOrderID = errors.New("order with zero orderID does not allowed")
@@ -46,7 +46,7 @@ func (t *tracker) GetOpened() (orders []int) {
 	for _, v := range t.opened {
 		orders = append(orders, v.OrderID)
 	}
-	return
+	return orders
 }
 
 func (t *tracker) GetCompleted() (orders []int) {
@@ -54,7 +54,7 @@ func (t *tracker) GetCompleted() (orders []int) {
 	for _, v := range t.completed {
 		orders = append(orders, v.OrderID)
 	}
-	return
+	return orders
 }
 
 func (t *tracker) GetOrderInfo(orderid int) (Order, error) {
@@ -210,6 +210,6 @@ func hash(order Order) int {
 	binary.BigEndian.PutUint64(buf[8:16], price)
 	buf = append(buf, order.Accepted.String()...)
 	buf = append(buf, order.Type...)
-	hash := md5.Sum(buf[:])
+	hash := sha256.Sum256(buf[:])
 	return int(binary.BigEndian.Uint64(hash[0:8]))
 }

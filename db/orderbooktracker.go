@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/go-redis/redis"
+
 	"github.com/skycoin/exchange-api/exchange"
 )
 
@@ -28,8 +29,6 @@ func (t *orderbooktracker) Update(sym string, Bids []exchange.MarketOrder, Asks 
 		return
 	}
 	t.db.HSet(t.hash, normalize(sym), data)
-	return
-
 }
 
 // Get gets information about stock

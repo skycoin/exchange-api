@@ -18,11 +18,11 @@ func validateRequest(r Request) (resp Response, err error) {
 		return resp, resp.Error
 	}
 	resp.ID = (*r.ID)
-	return
+	return resp, err
 }
 
 // DecodeParams extract params from request to map[string]interface{}
-// You need explictly vaildate all params, that needed for you
+// You need explicitly vaildate all params, that needed for you
 func DecodeParams(r Request) (map[string]interface{}, error) {
 	if r.Params == nil {
 		return nil, errEmptyParams
@@ -72,8 +72,10 @@ var errInvalidType = errors.New("invalid param type")
 
 // MakeErrorResponse creates error response
 func MakeErrorResponse(r Request, errortype int, err error) Response {
-	errorcode := 0
-	errormsg  := ""
+	var (
+		errorcode int
+		errormsg  string
+	)
 	switch errortype {
 	case InvalidParams:
 		errorcode = InvalidParams

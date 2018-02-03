@@ -34,8 +34,6 @@ type Client struct {
 	// Stop stops updating
 	// After sending to this, you need to restart Client.Update()
 	Stop chan struct{}
-
-	prevUpdate time.Time
 }
 
 // Cancel cancels order with given orderID
@@ -62,7 +60,7 @@ func (c *Client) Cancel(orderID int) (exchange.Order, error) {
 	} else {
 		completedTime = time.Now()
 	}
-	c.Orders.UpdateOrder(
+	err = c.Orders.UpdateOrder(
 		exchange.Order{
 			OrderID:         orderID,
 			Price:           orders[0].Price,
@@ -73,6 +71,9 @@ func (c *Client) Cancel(orderID int) (exchange.Order, error) {
 			Fee:             orders[0].Fee,
 			CompletedAmount: orders[0].CompletedAmount,
 		})
+	if err != nil {
+		return exchange.Order{}, err
+	}
 	return c.Orders.GetOrderInfo(orderID)
 
 }
@@ -152,7 +153,7 @@ func (c *Client) Buy(symbol string, price, amount float64) (orderID int, err err
 	order.Accepted = convert(orders[0]).Accepted
 	order.OrderID = orderID
 	err = c.Orders.Push(order)
-	return
+	return orderID, err
 }
 
 // Sell place sell order
@@ -172,7 +173,7 @@ func (c *Client) Sell(symbol string, price, amount float64) (orderID int, err er
 	order.OrderID = orderID
 	err = c.Orders.Push(order)
 
-	return
+	return orderID, err
 }
 
 func (c *Client) createOrder(symbol string, price, quantity float64, Type string) (int, error) {

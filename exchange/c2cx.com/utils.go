@@ -2,7 +2,9 @@ package c2cx
 
 import (
 	"bytes"
-	"crypto/md5"
+
+	// the following is nolinted because it's part of c2cx' authentication scheme
+	"crypto/md5" // nolint: gas
 	"encoding/json"
 	"fmt"
 	"io"
@@ -24,7 +26,7 @@ func sign(secret string, params url.Values) string {
 		paramString += "secretKey=" + secret
 	}
 
-	sum := md5.Sum([]byte(paramString))
+	sum := md5.Sum([]byte(paramString)) // nolint: gas
 	return strings.ToUpper(fmt.Sprintf("%x", sum))
 }
 
@@ -88,8 +90,8 @@ func normalize(sym string) (string, error) {
 }
 
 func unix(unix int64) time.Time {
-	var secs = int64(unix / 10e2)
-	var nanos = int64((unix % 10e2) * 10e5)
+	var secs = unix / 10e2
+	var nanos = (unix % 10e2) * 10e5
 	return time.Unix(secs, nanos)
 }
 
@@ -105,7 +107,11 @@ func readResponse(r io.ReadCloser) (*response, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer r.Close()
+	defer func() {
+		if err := r.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	if tmp.Fail != nil {
 		return nil, errors.New(string(tmp.Fail))
 	}

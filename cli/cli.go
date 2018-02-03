@@ -9,12 +9,13 @@ import (
 	"github.com/skycoin/exchange-api/rpc"
 )
 
-var errRPC = errors.New("RPC request failed")
-var errInvalidResponse = errors.New("unexpected response format")
 var errInvalidInput = errors.New("invalid input params")
 
 func reqID() *string {
-	v, _ := rand.Int(rand.Reader, new(big.Int).SetInt64(1<<62))
+	v, err := rand.Int(rand.Reader, new(big.Int).SetInt64(1<<62))
+	if err != nil {
+		panic(err)
+	}
 	str := v.String()
 	return &str
 }

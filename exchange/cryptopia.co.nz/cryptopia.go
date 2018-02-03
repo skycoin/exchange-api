@@ -43,7 +43,7 @@ type CurrencyInfo struct {
 	ListingStatus        string  `json:"ListingStatus"`
 }
 
-// GetCurrencies gets all availible currencies from exchange
+// GetCurrencies gets all available currencies from exchange
 func GetCurrencies() ([]CurrencyInfo, error) {
 	return getCurrencies()
 }
@@ -67,7 +67,7 @@ type TradepairInfo struct {
 	MaximumPrice     float64 `json:"MaximumPrice"`
 }
 
-// GetTradepairs gets all availible tradepairs from exchange
+// GetTradepairs gets all available tradepairs from exchange
 func GetTradepairs() ([]TradepairInfo, error) {
 	return getTradePairs()
 }

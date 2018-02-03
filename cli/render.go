@@ -10,7 +10,10 @@ func orderShort(order exchange.Order) string {
 		"price":   order.Price,
 		"amount":  order.Amount,
 	}
-	str, _ := json.MarshalIndent(r, "", "    ")
+	str, err := json.MarshalIndent(r, "", "    ")
+	if err != nil {
+		panic(err)
+	}
 	return string(str)
 }
 
@@ -42,20 +45,26 @@ func orderFull(order exchange.Order) string {
 		r["completed_at"] = order.Completed
 		r["fee"] = order.Fee
 	}
-	str, _ := json.MarshalIndent(r, "", "    ")
+	str, err := json.MarshalIndent(r, "", "    ")
+	if err != nil {
+		panic(err)
+	}
 	return string(str)
 }
 
 func orderbookFull(orderbook exchange.MarketRecord) string {
-	str, _ := json.MarshalIndent(orderbook, "", "    ")
+	str, err := json.MarshalIndent(orderbook, "", "    ")
+	if err != nil {
+		panic(err)
+	}
 	return string(str)
 }
 
 func orderbookShort(orderbook exchange.MarketRecord) string {
-	averageBuyPrice  := 0.0
+	averageBuyPrice := 0.0
 	averageSellPrice := 0.0
-	totalBuyVolume   := 0.0
-	totalSellVolume  := 0.0
+	totalBuyVolume := 0.0
+	totalSellVolume := 0.0
 	for _, v := range orderbook.Bids {
 		if v.Price == 0 {
 			continue
@@ -88,6 +97,9 @@ func orderbookShort(orderbook exchange.MarketRecord) string {
 		"total_sell_volume":  totalSellVolume,
 		"total_buy_volume":   totalBuyVolume,
 	}
-	str, _ := json.MarshalIndent(representation, "", "    ")
+	str, err := json.MarshalIndent(representation, "", "    ")
+	if err != nil {
+		panic(err)
+	}
 	return string(str)
 }
