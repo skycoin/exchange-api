@@ -1,8 +1,9 @@
 package c2cx
 
 import (
-	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
+	"fmt"
+
 	"github.com/skycoin/exchange-api/exchange"
 )
 
@@ -47,8 +48,13 @@ type AdvancedOrderParams struct {
 
 // CreateOrder creates new order with given parameters
 // if adv == nil, then isAdvancedOrder will set to zero
+<<<<<<< HEAD
 // availible priceTypeIDs defined below
 func CreateOrder(key, secret string, market string, price, quantity decimal.Decimal, orderType string, priceTypeID int, adv *AdvancedOrderParams) (int, error) {
+=======
+// available priceTypeIDs defined below
+func CreateOrder(key, secret string, market string, price, quantity float64, orderType string, priceTypeID int, adv *AdvancedOrderParams) (int, error) {
+>>>>>>> master
 	var err error
 	if market, err = normalize(market); err != nil {
 		return 0, err
@@ -88,5 +94,5 @@ type Orderbook struct {
 }
 
 func apiError(endpoint, message string) error {
-	return errors.Errorf("c2cx: %s falied, %s", endpoint, message)
+	return fmt.Errorf("c2cx: %s falied, %s", endpoint, message)
 }

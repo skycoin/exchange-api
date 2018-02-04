@@ -1,3 +1,5 @@
+[![GoDoc](https://godoc.org/github.com/skycoin/exchange-api?status.svg)](https://godoc.org/github.com/skycoin/exchange-api)
+[![Build Status](https://travis-ci.org/skycoin/exchange-api.svg?branch=master)](https://travis-ci.org/skycoin/exchange-api)
 
 # Node
  Node is main executable
@@ -16,7 +18,11 @@
   - Getting balance
 
  Node using jsonrpc 2.0 protocol for rpc calls:
- ## RPC methods:
+
+## RPC methods:
+
+More details on the RPC interface are available in [the RPC README file](rpc/readme.md).
+
   - `buy`
   - `sell`
   - `order_info`
@@ -29,10 +35,11 @@
   - `orderbook`
 
   and you can add specific handlers for each exchange
-  api/rpc package contains more documentation - methods, params structures for each call, return values and description for each method
+  rpc package contains more documentation - methods, params structures for each call, return values and description for each method
   rpc endpoints for each exchange are different -  
   http://rpcaddr:rpcport/c2cx and http://rpcaddr:rpcport/cryptopia, respectively 
 # Cli
+
  Cli command structure:  
  `cli <exchange> <command> [subcommand] [params]`  
  Commands tree: 

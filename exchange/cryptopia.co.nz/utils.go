@@ -3,7 +3,9 @@ package cryptopia
 import (
 	"bytes"
 	"crypto/hmac"
-	"crypto/md5"
+
+	// the following is nolinted because it's part of cryptopia's authentication scheme
+	"crypto/md5" // nolint: gas
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
@@ -14,7 +16,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/skycoin/exchange-api/exchange"
 )
 
@@ -33,7 +34,7 @@ func getCurrencyID(currency string) (int, error) {
 		return v.ID, nil
 	}
 
-	return 0, errors.Errorf("Currency %s does not found", currency)
+	return 0, fmt.Errorf("Currency %s does not found", currency)
 }
 
 func updateCaches() error {
@@ -78,7 +79,7 @@ func getMarketID(market string) (int, error) {
 	if v, ok := marketCache[normalize(market)]; ok {
 		return v, nil
 	}
-	return 0, errors.Errorf("TradePair %s does not found", market)
+	return 0, fmt.Errorf("TradePair %s does not found", market)
 }
 
 func readResponse(r io.ReadCloser) (*response, error) {
@@ -88,7 +89,11 @@ func readResponse(r io.ReadCloser) (*response, error) {
 		return nil, err
 	}
 	//ioutil.WriteFile(fmt.Sprintf("responses/response%d.json", incr), b, os.ModePerm)
-	defer r.Close()
+	defer func() {
+		if err = r.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	b = bytes.TrimPrefix(b, []byte("\xef\xbb\xbf"))
 	var resp response
 	err = json.Unmarshal(b, &resp)
@@ -106,11 +111,13 @@ func encodeValues(vals map[string]interface{}) []byte {
 func sign(secret []byte, key, uri, nonce string, params []byte) []byte {
 	signer := hmac.New(sha256.New, secret)
 	data := prepare(key, uri, nonce, params)
-	signer.Write(data[:])
+	if _, err := signer.Write(data[:]); err != nil {
+		panic(err)
+	}
 	return signer.Sum(nil)
 }
 func prepare(key, uri, nonce string, params []byte) []byte {
-	hash := md5.Sum(params)
+	hash := md5.Sum(params) // nolint: gas
 	encodedParams := base64.StdEncoding.EncodeToString(hash[:])
 	var signData []byte
 	signData = append(signData, key...)
@@ -131,7 +138,9 @@ func header(key, secret, nonce string, uri url.URL, params []byte) string {
 // nonce creates random string
 func nonce() string {
 	var b [8]byte
-	rand.Read(b[:])
+	if _, err := rand.Read(b[:]); err != nil {
+		panic(err)
+	}
 	return fmt.Sprintf("%x", b[:])
 }
 

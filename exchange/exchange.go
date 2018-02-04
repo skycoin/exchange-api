@@ -51,7 +51,7 @@ type Client interface {
 	// OrderStatus gets a string representation of order status
 	// possible statuses defined below
 	OrderStatus(int) (string, error)
-	// OrderDetails gets detalied inforamtion about order with given order id
+	// OrderDetails gets detailed information about order with given order id
 	OrderDetails(int) (Order, error)
 	// Orderbook return Orderbooks interface
 	Orderbook() Orderbooks

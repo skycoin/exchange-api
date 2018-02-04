@@ -3,13 +3,14 @@ package cryptopia
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
+	"errors"
 )
 
 type response struct {
@@ -63,7 +64,7 @@ func getCurrencies() ([]CurrencyInfo, error) {
 		return nil, err
 	}
 	if !resp.Success {
-		return nil, errors.Errorf("GetCurrencies failed: %s",
+		return nil, fmt.Errorf("GetCurrencies failed: %s",
 			resp.Message)
 	}
 	var result []CurrencyInfo
@@ -77,7 +78,7 @@ func getTradePairs() ([]TradepairInfo, error) {
 		return nil, err
 	}
 	if !resp.Success {
-		return nil, errors.Errorf("GetTradePairs failed: %s",
+		return nil, fmt.Errorf("GetTradePairs failed: %s",
 			resp.Message)
 	}
 	var result []TradepairInfo
@@ -106,7 +107,7 @@ func getMarkets(baseMarket string, hours int) ([]MarketInfo, error) {
 		return nil, err
 	}
 	if !resp.Success {
-		return nil, errors.Errorf("GetMarkets failed: %s",
+		return nil, fmt.Errorf("GetMarkets failed: %s",
 			resp.Message)
 
 	}
@@ -136,7 +137,7 @@ func getMarket(market string, hours int) (MarketInfo, error) {
 		return result, err
 	}
 	if !resp.Success {
-		return result, errors.Errorf("GetMarket failed: %s, Market: %s",
+		return result, fmt.Errorf("GetMarket failed: %s, Market: %s",
 			resp.Message, market)
 	}
 	return result, json.Unmarshal(resp.Data, &result)
@@ -162,7 +163,7 @@ func getMarketHistory(market string, hours int) ([]MarketHistory, error) {
 		return nil, err
 	}
 	if !resp.Success {
-		return nil, errors.Errorf("GetMarketHistory failed: %s, Market: %s",
+		return nil, fmt.Errorf("GetMarketHistory failed: %s, Market: %s",
 			resp.Message, market)
 	}
 	var result []MarketHistory
@@ -190,7 +191,7 @@ func getMarketOrders(market string, count int) (MarketOrders, error) {
 		return result, err
 	}
 	if !resp.Success {
-		return result, errors.Errorf("GetMarketOrders failed: %s, Market: %s",
+		return result, fmt.Errorf("GetMarketOrders failed: %s, Market: %s",
 			resp.Message, market)
 	}
 
@@ -220,10 +221,10 @@ func getMarketOrderGroups(count int, markets ...string) ([]MarketOrdersWithLabel
 	}
 	resp, err := requestGet("getmarketordergroups", requestParams)
 	if err != nil {
-		return nil, errors.Wrapf(err, "GetMarketOrderGroups failed, markets: %s", strings.Join(markets, " "))
+		return nil, fmt.Errorf("GetMarketOrderGroups failed, markets: %s; original error: %v", strings.Join(markets, " "), err)
 	}
 	if !resp.Success {
-		return nil, errors.Errorf("GetMarketOrderGroups failed: %s, Market: %s",
+		return nil, fmt.Errorf("GetMarketOrderGroups failed: %s, Market: %s",
 			resp.Message, strings.Join(markets, " "))
 	}
 	var result []MarketOrdersWithLabel
@@ -241,7 +242,7 @@ func getBalance(key, secret, nonce, currency string) (string, error) {
 		return "", err
 	}
 	if !resp.Success {
-		return "", errors.Errorf("GetBalance failed: %s, Currency %s Rawdata %s",
+		return "", fmt.Errorf("GetBalance failed: %s, Currency %s Rawdata %s",
 			resp.Message, currency, string(resp.Data))
 	}
 	var result balance
@@ -261,7 +262,7 @@ func getDepositAddress(key, secret, nonce, currency string) (DepositAddress, err
 	var params = make(map[string]interface{})
 	cID, err := getCurrencyID(currency)
 	if err != nil {
-		return result, errors.Errorf("Currency %s does not found", currency)
+		return result, fmt.Errorf("Currency %s does not found", currency)
 	}
 	params["CurrencyId"] = cID
 	resp, err := requestPost("getdepositaddress", key, secret, nonce, params)
@@ -269,7 +270,7 @@ func getDepositAddress(key, secret, nonce, currency string) (DepositAddress, err
 		return result, err
 	}
 	if !resp.Success {
-		return result, errors.Errorf("GetDepositAddress failed: %s, Currency %s",
+		return result, fmt.Errorf("GetDepositAddress failed: %s, Currency %s",
 			resp.Message, currency)
 	}
 
@@ -297,7 +298,7 @@ func getOpenOrders(key, secret, nonce string, market *string, count *int) ([]Ord
 		return nil, err
 	}
 	if !resp.Success {
-		return nil, errors.Errorf("GetOpenOrders failed: %s Market %#v Count %#v",
+		return nil, fmt.Errorf("GetOpenOrders failed: %s Market %#v Count %#v",
 			resp.Message, market, count)
 	}
 	var result []Order
@@ -325,7 +326,7 @@ func getTradeHistory(key, secret, nonce string, market *string, count *int) ([]O
 		return nil, err
 	}
 	if !resp.Success {
-		return nil, errors.Errorf("GetTradeHistory failed: %s Market %s Count %d",
+		return nil, fmt.Errorf("GetTradeHistory failed: %s Market %s Count %d",
 			resp.Message, *market, count)
 	}
 	var result []Order
@@ -337,7 +338,7 @@ func getTradeHistory(key, secret, nonce string, market *string, count *int) ([]O
 func getTransactions(key, secret, nonce, Type string, count int) ([]Transaction, error) {
 	var params = make(map[string]interface{})
 	if Type = strings.Title(Type); Type != TxTypeDeposit && Type != TxTypeWithdraw {
-		return nil, errors.Errorf("Icorrect trasnaction type %s; avalible types: %s %s",
+		return nil, fmt.Errorf("Icorrect trasnaction type %s; avalible types: %s %s",
 			Type, TxTypeDeposit, TxTypeWithdraw)
 	}
 	params["Type"] = Type
@@ -349,7 +350,7 @@ func getTransactions(key, secret, nonce, Type string, count int) ([]Transaction,
 		return nil, err
 	}
 	if !resp.Success {
-		return nil, errors.Errorf("GetTransactions failed: %s Type %s Count %d",
+		return nil, fmt.Errorf("GetTransactions failed: %s Type %s Count %d",
 			resp.Message, Type, count)
 	}
 	var result []Transaction
@@ -371,7 +372,7 @@ func submitTrade(key, secret, nonce, market, Type string, rate, amount decimal.D
 		mID    int
 	)
 	if Type = strings.Title(Type); Type != OfTypeBuy && Type != OfTypeSell {
-		return 0, errors.Errorf("Incorrect offer type %s; avalible types: %s %s",
+		return 0, fmt.Errorf("Incorrect offer type %s; avalible types: %s %s",
 			Type, OfTypeBuy, OfTypeSell)
 	}
 	if mID, err = getMarketID(market); err != nil {
@@ -386,7 +387,7 @@ func submitTrade(key, secret, nonce, market, Type string, rate, amount decimal.D
 		return 0, err
 	}
 	if !resp.Success {
-		return 0, errors.Errorf("SubmitTrade failed: %s, Type %s Market %s Rate %f Amount %f",
+		return 0, fmt.Errorf("SubmitTrade failed: %s, Type %s Market %s Rate %f Amount %f",
 			resp.Message, Type, market, rate, amount)
 	}
 	var result newOrder
@@ -461,7 +462,7 @@ func submitTip(key, secret, nonce, currency string, activeUsers int, amount deci
 		return "", err
 	}
 	if !resp.Success {
-		return "", errors.Errorf("SubmitTip failed: %s",
+		return "", fmt.Errorf("SubmitTip failed: %s",
 			resp.Message)
 	}
 	var result string
@@ -492,7 +493,7 @@ func submitWithdraw(key, secret, nonce, currency, address, paymentid string, amo
 		return 0, err
 	}
 	if !resp.Success {
-		return 0, errors.Errorf("SubmitWithdraw failed: %s, %s %f to %s ",
+		return 0, fmt.Errorf("SubmitWithdraw failed: %s, %s %f to %s ",
 			resp.Message, currency, amount, address)
 	}
 	var result int
@@ -517,7 +518,7 @@ func submitTransfer(key, secret, nonce, currency, username string, amount decima
 		return "", err
 	}
 	if !resp.Success {
-		return "", errors.Errorf("SubmitTransfer failed: %s",
+		return "", fmt.Errorf("SubmitTransfer failed: %s",
 			resp.Message)
 	}
 	var result string

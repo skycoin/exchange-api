@@ -26,7 +26,7 @@ var (
 	}
 )
 
-func requestGet(method string, params url.Values) (*response, error) {
+func requestGet(method string, params url.Values) (*response, error) { // nolint: unparam
 	reqURL := apiroot
 	reqURL.Path += method
 	reqURL.RawQuery = params.Encode()
@@ -90,7 +90,7 @@ func getBalance(key, secret string) (userInfo Balance, err error) {
 		return nil, apiError(endpoint, resp.Message)
 	}
 	err = json.Unmarshal(resp.Data, &userInfo)
-	return
+	return userInfo, err
 }
 
 // Allowed priceTypeID for CreateOrder

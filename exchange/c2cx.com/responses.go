@@ -49,10 +49,10 @@ func (r *Balance) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
-	(*r)["btc"] = fmt.Sprintf("Availible %.8f, frozen %.8f", v.Balance.Btc, v.Frozen.Btc)
-	(*r)["etc"] = fmt.Sprintf("Availible %.8f, frozen %.8f", v.Balance.Etc, v.Frozen.Etc)
-	(*r)["eth"] = fmt.Sprintf("Availible %.8f, frozen %.8f", v.Balance.Eth, v.Frozen.Eth)
-	(*r)["sky"] = fmt.Sprintf("Availible %.8f, frozen %.8f", v.Balance.Sky, v.Frozen.Sky)
-	(*r)["cny"] = fmt.Sprintf("Availible %.8f, frozen %.8f", v.Balance.Cny, v.Frozen.Cny)
+	(*r)["btc"] = fmt.Sprintf("Available %.8f, frozen %.8f", v.Balance.Btc, v.Frozen.Btc)
+	(*r)["etc"] = fmt.Sprintf("Available %.8f, frozen %.8f", v.Balance.Etc, v.Frozen.Etc)
+	(*r)["eth"] = fmt.Sprintf("Available %.8f, frozen %.8f", v.Balance.Eth, v.Frozen.Eth)
+	(*r)["sky"] = fmt.Sprintf("Available %.8f, frozen %.8f", v.Balance.Sky, v.Frozen.Sky)
+	(*r)["cny"] = fmt.Sprintf("Available %.8f, frozen %.8f", v.Balance.Cny, v.Frozen.Cny)
 	return nil
 }

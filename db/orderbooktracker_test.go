@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-redis/redis"
 	"github.com/shopspring/decimal"
+
 	exchange "github.com/skycoin/exchange-api/exchange"
 )
 

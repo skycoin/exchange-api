@@ -1,13 +1,15 @@
 package c2cx
 
 import (
+	"fmt"
 	"log"
 	"time"
 
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
+	"errors"
+
 	"github.com/skycoin/exchange-api/exchange"
 )
 
@@ -33,8 +35,6 @@ type Client struct {
 	// Stop stops updating
 	// After sending to this, you need to restart Client.Update()
 	Stop chan struct{}
-
-	prevUpdate time.Time
 }
 
 // Cancel cancels order with given orderID
@@ -61,7 +61,7 @@ func (c *Client) Cancel(orderID int) (exchange.Order, error) {
 	} else {
 		completedTime = time.Now()
 	}
-	c.Orders.UpdateOrder(
+	err = c.Orders.UpdateOrder(
 		exchange.Order{
 			OrderID:         orderID,
 			Price:           orders[0].Price,
@@ -72,6 +72,9 @@ func (c *Client) Cancel(orderID int) (exchange.Order, error) {
 			Fee:             orders[0].Fee,
 			CompletedAmount: orders[0].CompletedAmount,
 		})
+	if err != nil {
+		return exchange.Order{}, err
+	}
 	return c.Orders.GetOrderInfo(orderID)
 
 }
@@ -120,7 +123,7 @@ func (c *Client) CancelMarket(symbol string) ([]exchange.Order, error) {
 		orders = append(orders, order)
 	}
 	if rejected != nil {
-		return orders, errors.Errorf("this orders does not cancelled: %v", rejected)
+		return orders, fmt.Errorf("this orders does not cancelled: %v", rejected)
 	}
 	return orders, nil
 
@@ -151,7 +154,7 @@ func (c *Client) Buy(symbol string, price, amount decimal.Decimal) (orderID int,
 	order.Accepted = convert(orders[0]).Accepted
 	order.OrderID = orderID
 	err = c.Orders.Push(order)
-	return
+	return orderID, err
 }
 
 // Sell place sell order
@@ -171,7 +174,7 @@ func (c *Client) Sell(symbol string, price, amount decimal.Decimal) (orderID int
 	order.OrderID = orderID
 	err = c.Orders.Push(order)
 
-	return
+	return orderID, err
 }
 
 func (c *Client) createOrder(symbol string, price, quantity decimal.Decimal, Type string) (int, error) {
@@ -220,7 +223,7 @@ func (c *Client) GetBalance(currency string) (string, error) {
 	if v, ok := info[strings.ToLower(currency)]; ok {
 		return v, nil
 	}
-	return "", errors.Errorf("currency %s does not found", currency)
+	return "", fmt.Errorf("currency %s does not found", currency)
 }
 func (c *Client) updateOrderbook() {
 	for _, v := range Markets {

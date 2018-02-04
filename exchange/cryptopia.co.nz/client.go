@@ -3,8 +3,9 @@ package cryptopia
 import (
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
+	"errors"
+
 	"github.com/skycoin/exchange-api/exchange"
 )
 
@@ -22,8 +23,7 @@ type Client struct {
 
 	Stop chan struct{}
 	// Add concurrecny for updating
-	instantOrdersCounter  int
-	activeOrderTradepairs []int
+	instantOrdersCounter int
 }
 
 // Cancel cancels one order by given orderID
@@ -43,8 +43,7 @@ func (c *Client) Cancel(orderID int) (exchange.Order, error) {
 	order := convert(v)
 	order.Status = exchange.Cancelled
 	order.Completed = time.Now()
-	err = c.Orders.UpdateOrder(order)
-	if err != nil {
+	if err = c.Orders.UpdateOrder(order); err != nil {
 		return order, err
 	}
 	return c.Orders.GetOrderInfo(order.OrderID)
@@ -65,7 +64,9 @@ func (c *Client) CancelAll() ([]exchange.Order, error) {
 		order := convert(j)
 		order.Status = exchange.Cancelled
 		order.Completed = time.Now()
-		c.Orders.UpdateOrder(order)
+		if err = c.Orders.UpdateOrder(order); err != nil {
+			return nil, err
+		}
 		cancelled = append(cancelled, v)
 	}
 	result := make([]exchange.Order, len(cancelled))
@@ -92,7 +93,9 @@ func (c *Client) CancelMarket(symbol string) ([]exchange.Order, error) {
 		order := convert(j)
 		order.Status = exchange.Cancelled
 		order.Completed = time.Now()
-		c.Orders.UpdateOrder(order)
+		if err = c.Orders.UpdateOrder(order); err != nil {
+			return nil, err
+		}
 		cancelled = append(cancelled, v)
 	}
 	var result = make([]exchange.Order, len(cancelled))
@@ -166,7 +169,9 @@ func (c *Client) OrderDetails(orderID int) (exchange.Order, error) {
 	if err != nil {
 		return exchange.Order{}, err
 	}
-	c.Orders.UpdateOrder(convert(order))
+	if err = c.Orders.UpdateOrder(convert(order)); err != nil {
+		return exchange.Order{}, err
+	}
 	return c.Orders.GetOrderInfo(orderID)
 }
 
@@ -226,7 +231,9 @@ func (c *Client) updateOrders() {
 		if j.CompletedAmount > 0 {
 			j.Status = exchange.Partial
 		}
-		c.Orders.UpdateOrder(j)
+		if err = c.Orders.UpdateOrder(j); err != nil {
+			panic(err)
+		}
 	}
 	orders, err = getTradeHistory(c.Key, c.Secret, nonce(), nil, &count)
 	if err != nil {
@@ -238,7 +245,9 @@ func (c *Client) updateOrders() {
 			if v.OrderID == orderID {
 				j := convert(v)
 				j.Completed = time.Now()
-				c.Orders.UpdateOrder(j)
+				if err = c.Orders.UpdateOrder(j); err != nil {
+					panic(err)
+				}
 			}
 		}
 	}
