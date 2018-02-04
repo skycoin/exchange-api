@@ -11,11 +11,11 @@ import (
 func sumbitTradeCMD() cli.Command {
 	var name = "submittrade"
 	var (
-		pricetype    string
-		ordertype    string
-		takeprofit   string
-		stoploss     string
-		triggerprice string
+		pricetype       string
+		ordertype       string
+		takeprofitStr   string
+		stoplossStr     string
+		triggerpriceStr string
 	)
 	return cli.Command{
 		Name:      name,
@@ -30,13 +30,13 @@ func sumbitTradeCMD() cli.Command {
 				price, amount                      decimal.Decimal
 				stopLoss, takeProfit, triggerPrice decimal.Decimal
 			)
-			if stopLoss, err := decimal.NewFromString(stoploss); err != nil {
+			if stopLoss, err := decimal.NewFromString(stoplossStr); err != nil {
 				return err
 			}
-			if takeProfit, err := decimal.NewFromString(takeprofit); err != nil {
+			if takeProfit, err := decimal.NewFromString(takeprofitStr); err != nil {
 				return err
 			}
-			if triggerPrice, err := decimal.NewFromString(triggerprice); err != nil {
+			if triggerPrice, err := decimal.NewFromString(triggerpriceStr); err != nil {
 				return err
 			}
 			var params = map[string]interface{}{
@@ -70,15 +70,15 @@ func sumbitTradeCMD() cli.Command {
 			},
 			cli.StringFlag{
 				Name:        "takeprofit",
-				Destination: &takeprofit,
+				Destination: &takeprofitStr,
 			},
 			cli.StringFlag{
 				Name:        "stoploss",
-				Destination: &stoploss,
+				Destination: &stoplossStr,
 			},
 			cli.StringFlag{
 				Name:        "triggerprice",
-				Destination: &triggerprice,
+				Destination: &triggerpriceStr,
 			},
 		},
 	}
