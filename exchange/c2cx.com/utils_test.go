@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
+
 	exchange "github.com/skycoin/exchange-api/exchange"
 )
 

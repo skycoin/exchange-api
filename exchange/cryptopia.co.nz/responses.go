@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/shopspring/decimal"
 	"errors"
+
+	"github.com/shopspring/decimal"
 )
 
 // balance represents balance of all avalible currencies

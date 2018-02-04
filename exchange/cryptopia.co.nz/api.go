@@ -9,8 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/shopspring/decimal"
 	"errors"
+
+	"github.com/shopspring/decimal"
 )
 
 type response struct {

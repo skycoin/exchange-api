@@ -3,8 +3,9 @@ package rpc
 import (
 	"encoding/json"
 
-	"github.com/shopspring/decimal"
 	"errors"
+
+	"github.com/shopspring/decimal"
 )
 
 // validateRequest checks that request has correct jsonrpc version and has id

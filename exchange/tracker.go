@@ -7,8 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/shopspring/decimal"
 	"errors"
+
+	"github.com/shopspring/decimal"
 )
 
 // Orders is interface that provides functionality for order tracking

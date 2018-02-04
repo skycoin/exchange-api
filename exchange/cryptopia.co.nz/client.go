@@ -3,8 +3,9 @@ package cryptopia
 import (
 	"time"
 
-	"github.com/shopspring/decimal"
 	"errors"
+
+	"github.com/shopspring/decimal"
 
 	"github.com/skycoin/exchange-api/exchange"
 )

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/shopspring/decimal"
+
 	"github.com/skycoin/exchange-api/exchange"
 )
 
