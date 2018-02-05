@@ -15,6 +15,12 @@
   version = "v6.8.2"
 
 [[projects]]
+  name = "github.com/shopspring/decimal"
+  packages = ["."]
+  revision = "9ca7f51822d222ae4e246f070f9aad863599bd1a"
+  version = "1.0.0"
+
+[[projects]]
   name = "github.com/urfave/cli"
   packages = ["."]
   revision = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1"
@@ -23,6 +29,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f43be0f8b71c62490712c9c02c0ee443a748014978c16e98f91be1bd92e182bf"
+  inputs-digest = "c9beb428850b1a9dcb33aad64269b9bba2eda1965df918e8c61fd7d275282f20"
   solver-name = "gps-cdcl"
   solver-version = 1
