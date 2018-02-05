@@ -3,6 +3,8 @@ package cryptopia
 import (
 	"testing"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/skycoin/exchange-api/exchange"
 )
 
@@ -28,8 +30,10 @@ func TestSubmitTrade(t *testing.T) {
 	var (
 		key    = "23a69c51c746446e819b213ef3841920"
 		secret = "poPwm3OQGOb85L0Zf3DL4TtgLPc2OpxZg9n8G7Sv2po="
+		rate   = decimal.New(10000, 0)
+		amount = decimal.NewFromFloat(0.00006)
 	)
-	order, err := submitTrade(key, secret, nonce(), "ETH/LTC", exchange.Buy, 10000, 0.00006)
+	order, err := submitTrade(key, secret, nonce(), "ETH/LTC", exchange.Buy, rate, amount)
 	t.Log(order, err)
 	if err != nil {
 		t.Fatal(err)

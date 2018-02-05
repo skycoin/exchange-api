@@ -8,6 +8,8 @@ import (
 
 	"github.com/skycoin/exchange-api/db"
 
+	"github.com/shopspring/decimal"
+
 	exchange "github.com/skycoin/exchange-api/exchange"
 )
 
@@ -23,8 +25,8 @@ var (
 		}, "c2cx"),
 	}
 	orderMarket = "CNY_SHL"
-	orderPrice  = 0.01
-	orderAmount = 10.0
+	orderPrice  decimal.Decimal
+	orderAmount decimal.Decimal
 	orderID     int
 )
 

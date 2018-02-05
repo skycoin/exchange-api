@@ -122,11 +122,11 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		if err != nil && resp.Error == nil {
 			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 		}
-		rate, err := GetFloatParam(params, "price")
+		rate, err := GetDecimalParam(params, "price")
 		if err != nil && resp.Error == nil {
 			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 		}
-		amount, err := GetFloatParam(params, "amount")
+		amount, err := GetDecimalParam(params, "amount")
 		if err != nil && resp.Error == nil {
 			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 		}
@@ -153,11 +153,11 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		if err != nil && resp.Error == nil {
 			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 		}
-		rate, err := GetFloatParam(params, "price")
+		rate, err := GetDecimalParam(params, "price")
 		if err != nil && resp.Error == nil {
 			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 		}
-		amount, err := GetFloatParam(params, "amount")
+		amount, err := GetDecimalParam(params, "amount")
 		if err != nil && resp.Error == nil {
 			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 		}

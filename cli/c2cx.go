@@ -30,14 +30,15 @@ func sumbitTradeCMD() cli.Command {
 				symbol                             string
 				price, amount                      decimal.Decimal
 				stopLoss, takeProfit, triggerPrice decimal.Decimal
+				err                                error
 			)
-			if stopLoss, err := decimal.NewFromString(stoplossStr); err != nil {
+			if stopLoss, err = decimal.NewFromString(stoplossStr); err != nil {
 				return err
 			}
-			if takeProfit, err := decimal.NewFromString(takeprofitStr); err != nil {
+			if takeProfit, err = decimal.NewFromString(takeprofitStr); err != nil {
 				return err
 			}
-			if triggerPrice, err := decimal.NewFromString(triggerpriceStr); err != nil {
+			if triggerPrice, err = decimal.NewFromString(triggerpriceStr); err != nil {
 				return err
 			}
 			var params = map[string]interface{}{

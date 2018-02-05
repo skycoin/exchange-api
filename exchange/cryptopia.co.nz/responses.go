@@ -46,7 +46,7 @@ func (r *balance) UnmarshalJSON(b []byte) error {
 			v.Available.StringFixed(8),
 			v.Unconfirmed.StringFixed(8),
 			v.HeldForTrades.StringFixed(8),
-			v.PendingWithdrawal.StringFixed(8))
+			v.PendingWithdraw.StringFixed(8))
 	}
 	*r = result
 	return nil

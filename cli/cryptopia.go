@@ -7,8 +7,6 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	"github.com/skycoin/exchange-api/exchange/cryptopia.co.nz"
-
 	"github.com/urfave/cli"
 
 	"github.com/skycoin/exchange-api/exchange/cryptopia.co.nz"

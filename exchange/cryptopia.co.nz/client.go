@@ -229,7 +229,7 @@ func (c *Client) updateOrders() {
 	}
 	for _, v := range orders {
 		j := convert(v)
-		if j.CompletedAmount > 0 {
+		if j.CompletedAmount.GreaterThan(decimal.Zero) {
 			j.Status = exchange.Partial
 		}
 		if err = c.Orders.UpdateOrder(j); err != nil {
