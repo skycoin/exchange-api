@@ -28,7 +28,7 @@ func (db *MemoryDb) Get(key string) (*exchange.MarketRecord, error) {
 }
 
 func (db *MemoryDb) Update(sym string, Bids []exchange.MarketOrder, Asks []exchange.MarketOrder) {
-	book := exchange.MarketRecord{
+	book := &exchange.MarketRecord{
 		Symbol:    normalize(sym),
 		Timestamp: time.Now(),
 		Asks:      Asks,

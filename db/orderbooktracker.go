@@ -6,8 +6,7 @@ import (
 )
 
 type orderbooktracker struct {
-	db   OrderDatabase
-	hash string //name of hash where values will be stored
+	db OrderDatabase
 }
 
 func (t *orderbooktracker) Update(sym string, Bids []exchange.MarketOrder, Asks []exchange.MarketOrder) {
@@ -19,7 +18,8 @@ func (t *orderbooktracker) Get(sym string) (*exchange.MarketRecord, error) {
 	return t.db.Get(sym)
 }
 
-// NewOrderbookTracker returns exchange.OrderbookTracker that wraps redis connection
+// NewOrderbookTracker returns exchange.OrderbookTracker
+// that wraps either redis connection or sync.Map
 func NewOrderbookTracker(dbType, dbUrl, hash string) (exchange.Orderbooks, error) {
 	db, err := NewDatabase(dbType, dbUrl, hash)
 
@@ -28,8 +28,7 @@ func NewOrderbookTracker(dbType, dbUrl, hash string) (exchange.Orderbooks, error
 	}
 
 	return &orderbooktracker{
-		db:   db,
-		hash: hash,
+		db: db,
 	}, nil
 }
 
