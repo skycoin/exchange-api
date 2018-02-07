@@ -4,8 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-redis/redis"
-
 	"github.com/skycoin/exchange-api/db"
 	"github.com/skycoin/exchange-api/exchange"
 )
@@ -106,17 +104,21 @@ func TestClientOrderDetails(t *testing.T) {
 }
 
 func TestClientUpdateOrderbook(t *testing.T) {
+	orderBook, err := db.NewOrderbookTracker(db.MEMORY_DATABSE,
+		"",
+		"cryptopia")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	var c = Client{
 		Key: "", Secret: "",
-		Orderbooks: db.NewOrderbookTracker(&redis.Options{
-			Addr: "localhost:6379",
-		}, "cryptopia"),
+		Orderbooks:               orderBook,
 		TrackedBooks:             []string{"LTC/BTC"},
 		OrderbookRefreshInterval: time.Second * 5,
 	}
-	var (
-		err error
-	)
+
 	c.updateOrderbook()
 	if _, err = c.Orderbook().Get("LTC_BTC"); err != nil {
 		t.Fatal(err)
