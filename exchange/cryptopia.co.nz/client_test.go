@@ -109,13 +109,14 @@ func TestClientCompleted(t *testing.T) {
 		t.Fatal("order incompleted")
 	}
 }
-*/
+
 func TestClientOrderDetails(t *testing.T) {
 	info, err := c.OrderDetails(1)
 	if err != nil {
 		t.Fatal(info, err)
 	}
 }
+*/
 
 func TestClientUpdateOrderbook(t *testing.T) {
 	var c = Client{
