@@ -104,7 +104,7 @@ func TestClientOrderDetails(t *testing.T) {
 }
 
 func TestClientUpdateOrderbook(t *testing.T) {
-	orderBook, err := db.NewOrderbookTracker(db.MEMORY_DATABSE,
+	orderBook, err := db.NewOrderbookTracker(db.MemoryDatabase,
 		"",
 		"cryptopia")
 

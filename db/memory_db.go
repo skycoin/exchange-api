@@ -2,16 +2,17 @@ package db
 
 import (
 	"fmt"
-	"github.com/skycoin/exchange-api/exchange"
 	"sync"
 	"time"
+
+	"github.com/skycoin/exchange-api/exchange"
 )
 
-type MemoryDb struct {
+type memoryDb struct {
 	storage sync.Map
 }
 
-func (db *MemoryDb) Get(key string) (*exchange.MarketRecord, error) {
+func (db *memoryDb) Get(key string) (*exchange.MarketRecord, error) {
 	val, ok := db.storage.Load(normalize(key))
 
 	if !ok {
@@ -27,7 +28,7 @@ func (db *MemoryDb) Get(key string) (*exchange.MarketRecord, error) {
 	return record, nil
 }
 
-func (db *MemoryDb) Update(sym string, Bids []exchange.MarketOrder, Asks []exchange.MarketOrder) {
+func (db *memoryDb) Update(sym string, Bids []exchange.MarketOrder, Asks []exchange.MarketOrder) {
 	book := &exchange.MarketRecord{
 		Symbol:    normalize(sym),
 		Timestamp: time.Now(),

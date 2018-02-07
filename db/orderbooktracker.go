@@ -1,8 +1,9 @@
 package db
 
 import (
-	"github.com/skycoin/exchange-api/exchange"
 	"strings"
+
+	"github.com/skycoin/exchange-api/exchange"
 )
 
 type orderbooktracker struct {
@@ -20,9 +21,9 @@ func (t *orderbooktracker) Get(sym string) (*exchange.MarketRecord, error) {
 
 // NewOrderbookTracker returns exchange.OrderbookTracker
 // that wraps either redis connection or sync.Map
-// For in-memory tracker dbUrl and hash are optional parameters
-func NewOrderbookTracker(dbType, dbUrl, hash string) (exchange.Orderbooks, error) {
-	db, err := NewDatabase(dbType, dbUrl, hash)
+// For in-memory tracker dbURL and hash are optional parameters
+func NewOrderbookTracker(dbType, dbURL, hash string) (exchange.Orderbooks, error) {
+	db, err := NewDatabase(dbType, dbURL, hash)
 
 	if err != nil {
 		return nil, err

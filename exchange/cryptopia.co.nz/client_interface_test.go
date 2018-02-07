@@ -12,7 +12,7 @@ import (
 func TestClientInit(t *testing.T) {
 	var c exchange.Client
 
-	orderBook, err := db.NewOrderbookTracker(db.MEMORY_DATABSE,
+	orderBook, err := db.NewOrderbookTracker(db.MemoryDatabase,
 		"",
 		"cryptopia")
 

@@ -2,17 +2,19 @@ package db
 
 import (
 	"encoding/json"
-	"github.com/go-redis/redis"
-	"github.com/skycoin/exchange-api/exchange"
 	"time"
+
+	"github.com/go-redis/redis"
+
+	"github.com/skycoin/exchange-api/exchange"
 )
 
-type RedisDb struct {
+type redisDb struct {
 	storage *redis.Client
 	hash    string
 }
 
-func (db *RedisDb) Get(key string) (*exchange.MarketRecord, error) {
+func (db *redisDb) Get(key string) (*exchange.MarketRecord, error) {
 	result := db.storage.HGet(db.hash, normalize(key))
 	if err := result.Err(); err != nil {
 		return nil, err
@@ -31,7 +33,7 @@ func (db *RedisDb) Get(key string) (*exchange.MarketRecord, error) {
 	return &r, nil
 }
 
-func (db *RedisDb) Update(sym string, Bids []exchange.MarketOrder, Asks []exchange.MarketOrder) {
+func (db *redisDb) Update(sym string, Bids []exchange.MarketOrder, Asks []exchange.MarketOrder) {
 	book := exchange.MarketRecord{
 		Symbol:    normalize(sym),
 		Timestamp: time.Now(),

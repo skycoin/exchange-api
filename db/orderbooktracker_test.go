@@ -34,16 +34,16 @@ func TestRecord_MarshalJSON_UnmarshalJSON(t *testing.T) {
 func Test_orderbooktracker_UpdateSym(t *testing.T) {
 	testCases := []struct {
 		dbType string
-		dbUrl  string
+		dbURL  string
 		hash   string
 	}{
 		{
-			REDIS_DATABASE,
+			RedisDatabase,
 			"localhost:6379",
 			"test",
 		},
 		{
-			MEMORY_DATABSE,
+			MemoryDatabase,
 			"",
 			"test",
 		},
@@ -51,7 +51,7 @@ func Test_orderbooktracker_UpdateSym(t *testing.T) {
 
 	for _, test := range testCases {
 		orderBookTracker, err := NewOrderbookTracker(test.dbType,
-			test.dbUrl,
+			test.dbURL,
 			test.hash)
 
 		if err != nil {
