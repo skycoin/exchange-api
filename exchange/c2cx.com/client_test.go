@@ -7,7 +7,6 @@ import (
 	"github.com/skycoin/exchange-api/db"
 
 	exchange "github.com/skycoin/exchange-api/exchange"
-
 )
 
 var (
@@ -15,7 +14,6 @@ var (
 	orderPrice  = 0.01
 	orderAmount = 10.0
 	orderID     int
-
 )
 
 func newClient() (*Client, error) {
@@ -30,7 +28,7 @@ func newClient() (*Client, error) {
 		Secret:                   secret,
 		OrdersRefreshInterval:    time.Second * 5,
 		OrderbookRefreshInterval: time.Second * 5,
-		Orders: exchange.NewTracker(),
+		Orders:     exchange.NewTracker(),
 		Orderbooks: orderBookDatabase,
 	}
 
@@ -50,6 +48,7 @@ func TestClientCreateOrder(t *testing.T) {
 		t.Error(err)
 	}
 }
+
 func TestClientUpdateOrders(t *testing.T) {
 	cl, err := newClient()
 
@@ -60,6 +59,7 @@ func TestClientUpdateOrders(t *testing.T) {
 	cl.updateOrders()
 	cl.updateOrderbook()
 }
+
 func TestClientGetExecuted(t *testing.T) {
 	cl, err := newClient()
 
