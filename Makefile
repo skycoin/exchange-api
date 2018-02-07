@@ -3,15 +3,17 @@
 
 PACKAGES = $(shell ./packages.sh)
 
+AVAILABLE_TAGS = $(shell ./available-tags.sh)
+
 exchange-api-server:
 	go run cmd/exchange-api-server/exchange-api-server.go ${ARGS}
 
 test:
-	go test ./cli/... -timeout=1m -cover
-	go test ./cmd/... -timeout=1m -cover
-	go test ./db/... -timeout=1m -cover
-	go test ./exchange/... -timeout=1m -cover
-	go test ./rpc/... -timeout=1m -cover
+	go test ./rpc/... -timeout=1m -cover -tags "${AVAILABLE_TAGS}"
+	go test ./cli/... -timeout=1m -cover -tags "${AVAILABLE_TAGS}"
+	go test ./cmd/... -timeout=1m -cover -tags "${AVAILABLE_TAGS}"
+	go test ./db/... -timeout=1m -cover -tags "${AVAILABLE_TAGS}"
+	go test ./exchange/... -timeout=1m -cover -tags "${AVAILABLE_TAGS}"
 
 lint: ## Run linters. Use make install-linters first.
 	vendorcheck ./...

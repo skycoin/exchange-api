@@ -1,15 +1,24 @@
+// +build cryptopia_integration_test
+
 package cryptopia
 
 import (
+	"os"
 	"testing"
 
 	"github.com/skycoin/exchange-api/exchange"
 )
 
-const (
-	key    = "23a69c51c746446e819b213ef3841920"
-	secret = "poPwm3OQGOb85L0Zf3DL4TtgLPc2OpxZg9n8G7Sv2po="
-)
+var key, secret = func() (key string, secret string) {
+	var found bool
+	if key, found = os.LookupEnv("CRYPTOPIA_TEST_KEY"); found {
+		if secret, found = os.LookupEnv("CRYPTOPIA_TEST_SECRET"); found {
+			return
+		}
+		panic("Cryptopia secret not provided")
+	}
+	panic("Cryptopia key not provided")
+}()
 
 func TestRequestSignature(t *testing.T) {
 	var (

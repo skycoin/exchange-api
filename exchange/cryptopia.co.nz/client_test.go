@@ -1,6 +1,10 @@
+// +build redis_integration_test
+// +build cryptopia_integration_test
+
 package cryptopia
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -10,9 +14,17 @@ import (
 	"github.com/skycoin/exchange-api/exchange"
 )
 
+var redisAddr = func() string {
+	res, found := os.LookupEnv("REDIS_TEST_ADDR")
+	if !found {
+		panic("redis test address not provided")
+	}
+	return res
+}()
+
 var c = Client{
-	Key:                      "23a69c51c746446e819b213ef3841920",
-	Secret:                   "poPwm3OQGOb85L0Zf3DL4TtgLPc2OpxZg9n8G7Sv2po",
+	Key:                      key,
+	Secret:                   secret,
 	Orders:                   exchange.NewTracker(),
 	OrdersRefreshInterval:    time.Millisecond * 500,
 	OrderbookRefreshInterval: time.Second * 5,
@@ -109,7 +121,7 @@ func TestClientUpdateOrderbook(t *testing.T) {
 	var c = Client{
 		Key: "", Secret: "",
 		Orderbooks: db.NewOrderbookTracker(&redis.Options{
-			Addr: "localhost:6379",
+			Addr: redisAddr,
 		}, "cryptopia"),
 		TrackedBooks:             []string{"LTC/BTC"},
 		OrderbookRefreshInterval: time.Second * 5,

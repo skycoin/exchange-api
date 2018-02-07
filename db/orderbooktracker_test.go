@@ -1,6 +1,9 @@
+// +build redis_integration_test
+
 package db
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -10,6 +13,14 @@ import (
 
 	exchange "github.com/skycoin/exchange-api/exchange"
 )
+
+var redisAddr = func() string {
+	res, found := os.LookupEnv("REDIS_TEST_ADDR")
+	if !found {
+		panic("redis test address not provided")
+	}
+	return res
+}()
 
 func TestRecord_MarshalJSON_UnmarshalJSON(t *testing.T) {
 	var r = exchange.MarketRecord{
@@ -36,7 +47,7 @@ func TestRecord_MarshalJSON_UnmarshalJSON(t *testing.T) {
 func Test_orderbooktracker_UpdateSym(t *testing.T) {
 	var tr = orderbooktracker{
 		db: redis.NewClient(&redis.Options{
-			Addr: "localhost:6379",
+			Addr: redisAddr,
 		}),
 		hash: "test",
 	}

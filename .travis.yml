@@ -10,5 +10,9 @@ install:
   - go get -t ./...
   - make install-linters
 
+env:
+  global:
+    - REDIS_TEST_ADDR=localhost:6379
+
 script:
   - make check

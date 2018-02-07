@@ -1,6 +1,10 @@
+// +build c2cx_integration_test
+// +build redis_integration_test
+
 package c2cx
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -11,6 +15,14 @@ import (
 	exchange "github.com/skycoin/exchange-api/exchange"
 )
 
+var redisAddr = func() string {
+	res, found := os.LookupEnv("REDIS_TEST_ADDR")
+	if !found {
+		panic("redis test address not provided")
+	}
+	return res
+}()
+
 var (
 	cl = Client{
 		Key:                      key,
@@ -19,7 +31,7 @@ var (
 		OrderbookRefreshInterval: time.Second * 5,
 		Orders: exchange.NewTracker(),
 		Orderbooks: db.NewOrderbookTracker(&redis.Options{
-			Addr: "localhost:6379",
+			Addr: redisAddr,
 		}, "c2cx"),
 	}
 	orderMarket = "CNY_SHL"
