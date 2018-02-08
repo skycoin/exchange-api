@@ -50,8 +50,8 @@ func GetIntParam(params map[string]interface{}, key string) (value int, err erro
 // GetDecimalParam extract string param from request params
 func GetDecimalParam(params map[string]interface{}, key string) (value decimal.Decimal, err error) {
 	if v, ok := params[key]; ok {
-		if data, ok := v.(json.RawMessage); ok {
-			err = json.Unmarshal(data, &value)
+		if data, ok := v.(string); ok {
+			err = json.Unmarshal([]byte(data), &value)
 			return value, err
 		}
 		return value, errInvalidType

@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-redis/redis"
 	"github.com/shopspring/decimal"
 
 	"github.com/skycoin/exchange-api/db"
@@ -43,10 +42,13 @@ var (
 )
 
 func main() {
-	var dbaddr = flag.String("db", "localhost:6379", "Redis address")
-	var srvaddr = flag.String("srv", "localhost:12345", "RPC listener address")
-	var cryptopiaKey = flag.String("cryptopia", "", "key and secret joined \":\"")
-	var c2cxKey = flag.String("c2cx", "", "c2cx key and secret joined \":\"")
+	var (
+		dbType       = flag.String("dbType", "memory", "Type of database memory or redis")
+		dbAddr       = flag.String("db", "localhost:6379", "Redis address")
+		srvaddr      = flag.String("srv", "localhost:12345", "RPC listener address")
+		cryptopiaKey = flag.String("cryptopia", "", "key and secret joined \":\"")
+		c2cxKey      = flag.String("c2cx", "", "c2cx key and secret joined \":\"")
+	)
 	flag.Parse()
 
 	vals := strings.SplitN(*cryptopiaKey, ":", 2)
@@ -64,23 +66,31 @@ func main() {
 	keys.c2cx.key = vals[0]
 	keys.c2cx.secret = vals[1]
 
+	cryptopiaOrderBook, err := db.NewOrderbookTracker(*dbType, *dbAddr, "cryptopia")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	cryptopiaClient = &cryptopia.Client{
-		Key:    keys.cryptopia.key,
-		Secret: keys.cryptopia.secret,
-		Orders: exchange.NewTracker(),
-		Orderbooks: db.NewOrderbookTracker(&redis.Options{
-			Addr: *dbaddr,
-		}, "cryptopia"),
+		Key:                      keys.cryptopia.key,
+		Secret:                   keys.cryptopia.secret,
+		Orders:                   exchange.NewTracker(),
+		Orderbooks:               cryptopiaOrderBook,
 		OrderbookRefreshInterval: time.Second * 5,
 		OrdersRefreshInterval:    time.Second * 5,
 	}
+
+	c2xcOrderBook, err := db.NewOrderbookTracker(*dbType, *dbAddr, "c2cx")
+
+	if err != nil {
+		log.Fatal(err)
+	}
 	c2cxClient = &c2cx.Client{
-		Key:    keys.c2cx.key,
-		Secret: keys.c2cx.secret,
-		Orders: exchange.NewTracker(),
-		Orderbooks: db.NewOrderbookTracker(&redis.Options{
-			Addr: *dbaddr,
-		}, "c2cx"),
+		Key:                      keys.c2cx.key,
+		Secret:                   keys.c2cx.secret,
+		Orders:                   exchange.NewTracker(),
+		Orderbooks:               c2xcOrderBook,
 		OrderbookRefreshInterval: time.Second * 5,
 		OrdersRefreshInterval:    time.Second * 5,
 	}
@@ -216,12 +226,12 @@ var c2cxHandlers = map[string]rpc.HandlerFunc{
 		}
 		var (
 			advanced        *c2cx.AdvancedOrderParams
-			priceTypeID     int
+			priceTypeID     string
 			orderType       string
 			price, quantity decimal.Decimal
 			market          string
 		)
-		if priceTypeID, err = rpc.GetIntParam(params, "price_type_id"); err != nil {
+		if priceTypeID, err = rpc.GetStringParam(params, "price_type_id"); err != nil {
 			return rpc.MakeErrorResponse(r, rpc.InvalidParams, err)
 		}
 		if orderType, err = rpc.GetStringParam(params, "order_type"); err != nil {

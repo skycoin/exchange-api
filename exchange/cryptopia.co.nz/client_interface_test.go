@@ -1,30 +1,48 @@
+// +build cryptopia_integration_test
+
 package cryptopia_test
 
 import (
+	"os"
 	"testing"
 	"time"
-
-	"github.com/go-redis/redis"
 
 	"github.com/skycoin/exchange-api/db"
 	"github.com/skycoin/exchange-api/exchange"
 	cryptopia "github.com/skycoin/exchange-api/exchange/cryptopia.co.nz"
 )
 
+var key, secret = func() (key string, secret string) {
+	var found bool
+	if key, found = os.LookupEnv("CRYPTOPIA_TEST_KEY"); found {
+		if secret, found = os.LookupEnv("CRYPTOPIA_TEST_SECRET"); found {
+			return
+		}
+		panic("Cryptopia secret not provided")
+	}
+	panic("Cryptopia key not provided")
+}()
+
 func TestClientInit(t *testing.T) {
 	var c exchange.Client
 
+	orderBook, err := db.NewOrderbookTracker(db.MemoryDatabase,
+		"",
+		"cryptopia")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	var client = cryptopia.Client{
-		Key:                      "23a69c51c746446e819b213ef3841920",
-		Secret:                   "poPwm3OQGOb85L0Zf3DL4TtgLPc2OpxZg9n8G7Sv2po=",
+		Key:                      key,
+		Secret:                   secret,
 		OrdersRefreshInterval:    time.Second * 5,
 		OrderbookRefreshInterval: time.Second * 1,
 		Stop:         make(chan struct{}),
 		TrackedBooks: []string{"LTC/BTC", "SKY/DOGE"},
 		Orders:       exchange.NewTracker(),
-		Orderbooks: db.NewOrderbookTracker(&redis.Options{
-			Addr: "localhost:6379",
-		}, "cryptopia_test"),
+		Orderbooks:   orderBook,
 	}
 	go client.Update()
 	c = &client

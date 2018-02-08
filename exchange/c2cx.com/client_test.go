@@ -1,69 +1,87 @@
+// +build c2cx_integration_test
+
 package c2cx
 
 import (
+	"errors"
 	"testing"
 	"time"
 
-	"github.com/go-redis/redis"
-
 	"github.com/skycoin/exchange-api/db"
-
-	"github.com/shopspring/decimal"
 
 	exchange "github.com/skycoin/exchange-api/exchange"
 )
 
-var (
-	cl = Client{
+func TestClientOperations(t *testing.T) {
+	orderBookDatabase, err := db.NewOrderbookTracker("memory", "c2cx", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cl := Client{
 		Key:                      key,
 		Secret:                   secret,
 		OrdersRefreshInterval:    time.Second * 5,
 		OrderbookRefreshInterval: time.Second * 5,
-		Orders: exchange.NewTracker(),
-		Orderbooks: db.NewOrderbookTracker(&redis.Options{
-			Addr: "localhost:6379",
-		}, "c2cx"),
+		Orders:     exchange.NewTracker(),
+		Orderbooks: orderBookDatabase,
 	}
-	orderMarket = "CNY_SHL"
-	orderPrice  decimal.Decimal
-	orderAmount decimal.Decimal
-	orderID     int
-)
 
-func TestClientCreateOrder(t *testing.T) {
-	var err error
-	orderID, err = cl.Buy(orderMarket, orderPrice, orderAmount)
+	// verifying we've got enough SKY to play with
+	availSky, err := availableSKY()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if availSky < orderAmount {
+		t.Fatal(errors.New("Test wallet doesn't have enough SKY"))
+	}
+
+	// creating an order
+	orderId, err := cl.Sell(orderMarket, orderPrice, orderAmount)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("updateOrdersOrderbook", func(t *testing.T) {
+		cl.updateOrders()
+		cl.updateOrderbook()
+	})
+
+	t.Run("GetExecuted", func(t *testing.T) {
+		orderIds := cl.Executed()
+		for _, v := range orderIds {
+			if v == orderId {
+				return
+			}
+		}
+		t.Errorf("couldn't locate order #%d", orderId)
+	})
+
+	t.Run("GetCompletedFirstPass", func(t *testing.T) {
+		orderIds := cl.Completed()
+		for _, v := range orderIds {
+			if v == orderId {
+				t.Errorf("order #%d shouldn't have completed", orderId)
+			}
+		}
+		return
+	})
+
+	// finally cleanup our order
+	_, err = cl.Cancel(orderId)
 	if err != nil {
 		t.Error(err)
 	}
-}
-func TestClientUpdateOrders(t *testing.T) {
-	cl.updateOrders()
-	cl.updateOrderbook()
-}
-func TestClientGetExecuted(t *testing.T) {
-	orders := cl.Executed()
-	if len(orders) != 1 {
-		t.Error("placed order not found in tracker", len(orders), orders)
-	}
-	if orders[0] != orderID {
-		t.Errorf("want %d orderID, expected %d", orderID, orders[0])
-	}
-}
 
-func TestClientGetCompleted(t *testing.T) {
-	orders := cl.Completed()
-	if len(orders) > 0 {
-		t.Error("it should not contains completed orders")
-	}
-}
-
-func TestClientCancelMarket(t *testing.T) {
-	_, err := cl.Cancel(orderID)
-	if err != nil {
-		t.Error(err)
-	}
-	if len(cl.Orders.GetCompleted()) != 1 {
-		t.Error("it should have one completed order")
-	}
+	// and confirm it shows up in completed
+	t.Run("GetCompletedSecondPass", func(t *testing.T) {
+		orderIds := cl.Completed()
+		for _, v := range orderIds {
+			if v == orderId {
+				return
+			}
+		}
+		t.Errorf("couldn't locate order #%d", orderId)
+	})
 }

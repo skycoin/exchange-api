@@ -53,7 +53,7 @@ func (c *Client) Cancel(orderID int) (exchange.Order, error) {
 		return exchange.Order{}, err
 	}
 	if len(orders) != 1 {
-		return exchange.Order{}, errors.New("order does not found")
+		return exchange.Order{}, errors.New("order was not found")
 	}
 	var completedTime time.Time
 	log.Println(orders[0].CompleteDate)
@@ -80,7 +80,7 @@ func (c *Client) Cancel(orderID int) (exchange.Order, error) {
 
 }
 
-// CancelAll cancels all executed orders, that was created using this cilent
+// CancelAll cancels all executed orders, that was created using this client
 func (c *Client) CancelAll() ([]exchange.Order, error) {
 	var (
 		orderids = c.Orders.GetOpened()

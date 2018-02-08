@@ -6,6 +6,8 @@ import (
 
 	"github.com/shopspring/decimal"
 
+	"reflect"
+
 	"github.com/skycoin/exchange-api/exchange"
 )
 
@@ -37,9 +39,25 @@ func Test_defaulthandler_Cancel(t *testing.T) {
 	if resp.Error != nil {
 		t.Error(resp.Error)
 	}
-	want := "{\"orderid\":0,\"type\":\"\",\"market\":\"\",\"amount\":0,\"price\":0,\"submitted_at\":-6795364578871,\"fee\":0,\"completed_amount\":0,\"status\":\"\",\"accepted_at\":-6795364578871,\"completed_at\":-6795364578871}"
-	if string(resp.Result) != want {
-		t.Fatalf("want: %s, expected: %s", want, resp.Result)
+	want := map[string]interface{}{
+		"orderid":          float64(0),
+		"type":             "",
+		"market":           "",
+		"amount":           "0",
+		"price":            "0",
+		"submitted_at":     float64(-6795364578871),
+		"fee":              "0",
+		"completed_amount": "0",
+		"status":           "",
+		"accepted_at":      float64(-6795364578871),
+		"completed_at":     float64(-6795364578871),
+	}
+	var parsed map[string]interface{}
+	if err := json.Unmarshal(resp.Result, &parsed); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(want, parsed) {
+		t.Fatalf("expected: %v, received: %v", want, parsed)
 	}
 }
 func Test_defaulthandler_CancelAll(t *testing.T) {
@@ -55,7 +73,7 @@ func Test_defaulthandler_CancelAll(t *testing.T) {
 		t.Error(resp.Error)
 	}
 	if string(resp.Result) != want {
-		t.Fatalf("want: %s, expected: %s", want, resp.Result)
+		t.Fatalf("expected: %s, received: %s", want, resp.Result)
 	}
 }
 func Test_defaulthandler_CancelMarket(t *testing.T) {
@@ -71,12 +89,12 @@ func Test_defaulthandler_CancelMarket(t *testing.T) {
 	}
 	want := "[]"
 	if string(resp.Result) != want {
-		t.Fatalf("want: %s, expected: %s", want, resp.Result)
+		t.Fatalf("expected: %s, received: %s", want, resp.Result)
 	}
 }
 func Test_defaulthandler_Buy(t *testing.T) {
 	req := Request{
-		Params:  json.RawMessage("{\"symbol\":\"BTC/LTC\",\"rate\":1.0,\"amount\":1.1}"),
+		Params:  json.RawMessage("{\"symbol\":\"BTC/LTC\",\"price\":\"1.0\",\"amount\":\"1.1\"}"),
 		Method:  "/",
 		ID:      new(string),
 		JSONRPC: JSONRPC,
@@ -86,12 +104,12 @@ func Test_defaulthandler_Buy(t *testing.T) {
 		t.Error(resp.Error)
 	}
 	if string(resp.Result) != "1" {
-		t.Fatalf("want: 1, exepected: %s", resp.Result)
+		t.Fatalf("expected: 1, received: %s", resp.Result)
 	}
 }
 func Test_defaulthandler_Sell(t *testing.T) {
 	req := Request{
-		Params:  json.RawMessage("{\"symbol\":\"BTC/LTC\",\"rate\":1.0,\"amount\":1.1}"),
+		Params:  json.RawMessage("{\"symbol\":\"BTC/LTC\",\"price\":\"1.0\",\"amount\":\"1.1\"}"),
 		Method:  "/",
 		ID:      new(string),
 		JSONRPC: JSONRPC,
@@ -101,7 +119,7 @@ func Test_defaulthandler_Sell(t *testing.T) {
 		t.Error(resp.Error)
 	}
 	if string(resp.Result) != "2" {
-		t.Fatalf("want: 2, exepected: %s", resp.Result)
+		t.Fatalf("expected: 2, received: %s", resp.Result)
 	}
 }
 func Test_defaulthandler_OrderDetails(t *testing.T) {
@@ -112,12 +130,28 @@ func Test_defaulthandler_OrderDetails(t *testing.T) {
 		JSONRPC: JSONRPC,
 	}
 	resp := defaultHandlers["order_info"](req, client)
-	want := "{\"orderid\":0,\"type\":\"\",\"market\":\"\",\"amount\":0,\"price\":0,\"submitted_at\":-6795364578871,\"fee\":0,\"completed_amount\":0,\"status\":\"\",\"accepted_at\":-6795364578871,\"completed_at\":-6795364578871}"
 	if resp.Error != nil {
 		t.Error(resp.Error)
 	}
-	if string(resp.Result) != want {
-		t.Fatalf("want: %s, expected: %s", want, resp.Result)
+	want := map[string]interface{}{
+		"orderid":          float64(0),
+		"type":             "",
+		"market":           "",
+		"amount":           "0",
+		"price":            "0",
+		"submitted_at":     float64(-6795364578871),
+		"fee":              "0",
+		"completed_amount": "0",
+		"status":           "",
+		"accepted_at":      float64(-6795364578871),
+		"completed_at":     float64(-6795364578871),
+	}
+	var parsed map[string]interface{}
+	if err := json.Unmarshal(resp.Result, &parsed); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(want, parsed) {
+		t.Fatalf("expected: %v, received: %v", want, parsed)
 	}
 }
 func Test_defaulthandler_OrderStatus(t *testing.T) {
@@ -132,7 +166,7 @@ func Test_defaulthandler_OrderStatus(t *testing.T) {
 		t.Error(resp.Error)
 	}
 	if string(resp.Result) != "\"completed\"" {
-		t.Fatalf("want: \"Completed\", expected: %s", resp.Result)
+		t.Fatalf("expected: \"Completed\", received: %s", resp.Result)
 	}
 }
 func Test_defaulthandler_Completed(t *testing.T) {
@@ -148,7 +182,7 @@ func Test_defaulthandler_Completed(t *testing.T) {
 		t.Error(resp.Error)
 	}
 	if string(resp.Result) != want {
-		t.Fatalf("want %s, expected: %s", want, resp.Result)
+		t.Fatalf("expected %s, received: %s", want, resp.Result)
 	}
 }
 func Test_defaulthandler_Executed(t *testing.T) {
@@ -164,7 +198,7 @@ func Test_defaulthandler_Executed(t *testing.T) {
 		t.Error(resp.Error)
 	}
 	if string(resp.Result) != want {
-		t.Fatalf("want: %s, expected: %s", want, resp.Result)
+		t.Fatalf("expected: %s, received: %s", want, resp.Result)
 	}
 }
 

@@ -1,10 +1,10 @@
+// +build cryptopia_integration_test
+
 package cryptopia
 
 import (
 	"testing"
 	"time"
-
-	"github.com/go-redis/redis"
 
 	"github.com/shopspring/decimal"
 
@@ -13,8 +13,8 @@ import (
 )
 
 var c = Client{
-	Key:                      "23a69c51c746446e819b213ef3841920",
-	Secret:                   "poPwm3OQGOb85L0Zf3DL4TtgLPc2OpxZg9n8G7Sv2po",
+	Key:                      key,
+	Secret:                   secret,
 	Orders:                   exchange.NewTracker(),
 	OrdersRefreshInterval:    time.Millisecond * 500,
 	OrderbookRefreshInterval: time.Second * 5,
@@ -101,26 +101,31 @@ func TestClientCompleted(t *testing.T) {
 		t.Fatal("order incompleted")
 	}
 }
-*/
+
 func TestClientOrderDetails(t *testing.T) {
 	info, err := c.OrderDetails(1)
 	if err != nil {
 		t.Fatal(info, err)
 	}
 }
+*/
 
 func TestClientUpdateOrderbook(t *testing.T) {
+	orderBook, err := db.NewOrderbookTracker(db.MemoryDatabase,
+		"",
+		"cryptopia")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	var c = Client{
 		Key: "", Secret: "",
-		Orderbooks: db.NewOrderbookTracker(&redis.Options{
-			Addr: "localhost:6379",
-		}, "cryptopia"),
+		Orderbooks:               orderBook,
 		TrackedBooks:             []string{"LTC/BTC"},
 		OrderbookRefreshInterval: time.Second * 5,
 	}
-	var (
-		err error
-	)
+
 	c.updateOrderbook()
 	if _, err = c.Orderbook().Get("LTC_BTC"); err != nil {
 		t.Fatal(err)
