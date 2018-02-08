@@ -1,6 +1,9 @@
  #### cryptopia.co.nz API wrapper
- This package wraps cryptopia.co.nz API and implements exchange.Client interface 
- ## Public API functions: 
+ This package wraps cryptopia.co.nz API and implements exchange.Client interface
+
+ [![GoDoc](https://godoc.org/github.com/skycoin/exchange-api/exchange/cryptopia.co.nz?status.svg)](https://https://godoc.org/github.com/skycoin/exchange-api/exchange/cryptopia.co.nz)
+
+ ## Public API functions:
   * GetCurrencies
   * GetTradepairs
   * GetMarket

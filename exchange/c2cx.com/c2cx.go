@@ -1,3 +1,4 @@
+// Package c2cx provides api methods methods for communication with c2cx exchange
 package c2cx
 
 import (

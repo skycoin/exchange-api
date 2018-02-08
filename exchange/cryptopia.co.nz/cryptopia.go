@@ -1,3 +1,4 @@
+// Package cryptopia provides api methods for communicating with cryptopia exchange
 package cryptopia
 
 import "time"
