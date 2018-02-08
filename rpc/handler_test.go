@@ -74,7 +74,7 @@ func Test_defaulthandler_CancelMarket(t *testing.T) {
 }
 func Test_defaulthandler_Buy(t *testing.T) {
 	req := Request{
-		Params:  json.RawMessage("{\"symbol\":\"BTC/LTC\",\"rate\":1.0,\"amount\":1.1}"),
+		Params:  json.RawMessage("{\"symbol\":\"BTC/LTC\",\"price\":1.0,\"amount\":1.1}"),
 		Method:  "/",
 		ID:      new(string),
 		JSONRPC: JSONRPC,
@@ -89,7 +89,7 @@ func Test_defaulthandler_Buy(t *testing.T) {
 }
 func Test_defaulthandler_Sell(t *testing.T) {
 	req := Request{
-		Params:  json.RawMessage("{\"symbol\":\"BTC/LTC\",\"rate\":1.0,\"amount\":1.1}"),
+		Params:  json.RawMessage("{\"symbol\":\"BTC/LTC\",\"price\":1.0,\"amount\":1.1}"),
 		Method:  "/",
 		ID:      new(string),
 		JSONRPC: JSONRPC,

@@ -1,6 +1,9 @@
+// +build cryptopia_integration_test
+
 package cryptopia_test
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -8,6 +11,17 @@ import (
 	"github.com/skycoin/exchange-api/exchange"
 	cryptopia "github.com/skycoin/exchange-api/exchange/cryptopia.co.nz"
 )
+
+var key, secret = func() (key string, secret string) {
+	var found bool
+	if key, found = os.LookupEnv("CRYPTOPIA_TEST_KEY"); found {
+		if secret, found = os.LookupEnv("CRYPTOPIA_TEST_SECRET"); found {
+			return
+		}
+		panic("Cryptopia secret not provided")
+	}
+	panic("Cryptopia key not provided")
+}()
 
 func TestClientInit(t *testing.T) {
 	var c exchange.Client
@@ -21,8 +35,8 @@ func TestClientInit(t *testing.T) {
 	}
 
 	var client = cryptopia.Client{
-		Key:                      "23a69c51c746446e819b213ef3841920",
-		Secret:                   "poPwm3OQGOb85L0Zf3DL4TtgLPc2OpxZg9n8G7Sv2po=",
+		Key:                      key,
+		Secret:                   secret,
 		OrdersRefreshInterval:    time.Second * 5,
 		OrderbookRefreshInterval: time.Second * 1,
 		Stop:         make(chan struct{}),

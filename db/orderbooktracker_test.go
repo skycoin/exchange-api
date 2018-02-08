@@ -1,6 +1,7 @@
 package db
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -8,6 +9,8 @@ import (
 
 	exchange "github.com/skycoin/exchange-api/exchange"
 )
+
+var redisAddr, testingRedis = os.LookupEnv("REDIS_TEST_ADDR")
 
 func TestRecord_MarshalJSON_UnmarshalJSON(t *testing.T) {
 	var r = exchange.MarketRecord{
@@ -31,6 +34,7 @@ func TestRecord_MarshalJSON_UnmarshalJSON(t *testing.T) {
 		t.Fatal("results isnt equal")
 	}
 }
+
 func Test_orderbooktracker_UpdateSym(t *testing.T) {
 	testCases := []struct {
 		dbType string
@@ -39,7 +43,7 @@ func Test_orderbooktracker_UpdateSym(t *testing.T) {
 	}{
 		{
 			RedisDatabase,
-			"localhost:6379",
+			redisAddr,
 			"test",
 		},
 		{
@@ -50,32 +54,33 @@ func Test_orderbooktracker_UpdateSym(t *testing.T) {
 	}
 
 	for _, test := range testCases {
-		orderBookTracker, err := NewOrderbookTracker(test.dbType,
-			test.dbURL,
-			test.hash)
+		if test.dbType != RedisDatabase || testingRedis {
+			orderBookTracker, err := NewOrderbookTracker(test.dbType,
+				test.dbURL,
+				test.hash)
 
-		if err != nil {
-			t.Fatal(err)
-		}
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		var r = exchange.MarketRecord{
-			Timestamp: time.Now(),
-			Symbol:    "BTC/LTC",
-			Bids:      []exchange.MarketOrder{{Price: 1, Volume: 1}},
-			Asks:      []exchange.MarketOrder{{Price: 1, Volume: 1}},
+			var r = exchange.MarketRecord{
+				Timestamp: time.Now(),
+				Symbol:    "BTC/LTC",
+				Bids:      []exchange.MarketOrder{{Price: 1, Volume: 1}},
+				Asks:      []exchange.MarketOrder{{Price: 1, Volume: 1}},
+			}
+			orderBookTracker.Update(
+				"BTC/LTC",
+				[]exchange.MarketOrder{{Price: 1, Volume: 1}},
+				[]exchange.MarketOrder{{Price: 1, Volume: 1}},
+			)
+			rec, err := orderBookTracker.Get("BTC/LTC")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if rec.Symbol != r.Symbol || !reflect.DeepEqual(r.Asks, rec.Asks) || !reflect.DeepEqual(r.Bids, rec.Bids) {
+				t.Fatal("records isnt equals")
+			}
 		}
-		orderBookTracker.Update(
-			"BTC/LTC",
-			[]exchange.MarketOrder{{Price: 1, Volume: 1}},
-			[]exchange.MarketOrder{{Price: 1, Volume: 1}},
-		)
-		rec, err := orderBookTracker.Get("BTC/LTC")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if rec.Symbol != r.Symbol || !reflect.DeepEqual(r.Asks, rec.Asks) || !reflect.DeepEqual(r.Bids, rec.Bids) {
-			t.Fatal("records isnt equals")
-		}
-
 	}
 }

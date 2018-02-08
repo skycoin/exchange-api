@@ -54,7 +54,10 @@ func (s *Server) Start(addr string, stop chan struct{}) {
 	for k := range s.Handlers {
 		s.mux.HandleFunc("/"+k, s.Handler)
 	}
-	l, _ := net.Listen("tcp", addr)
+	l, err := net.Listen("tcp", addr)
+	if err != nil {
+		panic(err)
+	}
 	log.Printf("Starting server %s\n", addr)
 	go func() {
 		if err := http.Serve(l, s); err != nil {

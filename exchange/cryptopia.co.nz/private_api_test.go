@@ -1,23 +1,34 @@
+// +build cryptopia_integration_test
+
 package cryptopia
 
 import (
+	"os"
 	"testing"
 
 	"github.com/skycoin/exchange-api/exchange"
 )
 
-const (
-	key    = "23a69c51c746446e819b213ef3841920"
-	secret = "poPwm3OQGOb85L0Zf3DL4TtgLPc2OpxZg9n8G7Sv2po="
-)
+var key, secret = func() (key string, secret string) {
+	var found bool
+	if key, found = os.LookupEnv("CRYPTOPIA_TEST_KEY"); found {
+		if secret, found = os.LookupEnv("CRYPTOPIA_TEST_SECRET"); found {
+			return
+		}
+		panic("Cryptopia secret not provided")
+	}
+	panic("Cryptopia key not provided")
+}()
 
 func TestRequestSignature(t *testing.T) {
 	var (
+		key    = "abababababababababababababababab"
+		secret = "YWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWI="
 		nonce  = "3"
 		requrl = apiroot
 	)
 	requrl.Path += "getbalance"
-	var want = "amx 23a69c51c746446e819b213ef3841920:VTUkpXJ8Cl2VfoRXH6qaPK887Ejy58UC2mPEwB80w2M=:3"
+	var want = "amx abababababababababababababababab:QRB4yf+QkSxxzPg6JLDeNFdAsTu24wpiDozHNQZ3Jkc=:3"
 	if expected := header(key, secret, nonce, requrl, []byte("{}")); want != expected {
 		t.Fatal("invalid request signature")
 	}
@@ -25,11 +36,7 @@ func TestRequestSignature(t *testing.T) {
 
 // Works
 func TestSubmitTrade(t *testing.T) {
-	var (
-		key    = "23a69c51c746446e819b213ef3841920"
-		secret = "poPwm3OQGOb85L0Zf3DL4TtgLPc2OpxZg9n8G7Sv2po="
-	)
-	order, err := submitTrade(key, secret, nonce(), "ETH/LTC", exchange.Buy, 10000, 0.00006)
+	order, err := submitTrade(key, secret, nonce(), "SKY/BTC", exchange.Buy, 0.0005, 10)
 	t.Log(order, err)
 	if err != nil {
 		t.Fatal(err)
