@@ -21,7 +21,7 @@ var (
 	apiroot    = url.URL{
 		Scheme: "https",
 		Host:   "api.c2cx.com",
-		Path:   "/rest/",
+		Path:   "/v1/",
 	}
 )
 
@@ -80,7 +80,7 @@ func getOrderbook(symbol string) (*Orderbook, error) {
 // return value is a map[string]string
 // all keys should be a lowercase
 func getBalance(key, secret string) (userInfo Balance, err error) {
-	var endpoint = "getuserinfo" // for new api it should be getbalance
+	var endpoint = "getbalance"
 	resp, err := requestPost(endpoint, key, secret, nil)
 	if err != nil {
 		return nil, err
@@ -94,21 +94,21 @@ func getBalance(key, secret string) (userInfo Balance, err error) {
 
 // Allowed priceTypeID for CreateOrder
 const (
-	PriceTypeLimit  = 1
-	PriceTypeMarket = 2
+	PriceTypeLimit  = "limit"
+	PriceTypeMarket = "market"
 )
 
 // createOrder creates order with given orderType and parameters
 // advanced is a advanced options for order creation
 // if advanced is nil, isAdvancedOrder sets to zero, else advanced will be used as advanced options
-func createOrder(key, secret string, market string, price, quantity float64, orderType string, priceTypeID int, advanced *AdvancedOrderParams) (int, error) {
+func createOrder(key, secret string, market string, price, quantity float64, orderType string, priceTypeID string, advanced *AdvancedOrderParams) (int, error) {
 	var (
 		params = url.Values{
 			"symbol":      []string{market},
 			"price":       []string{strconv.FormatFloat(price, 'f', -1, 64)},
 			"quantity":    []string{strconv.FormatFloat(quantity, 'f', -1, 64)},
 			"orderType":   []string{orderType},
-			"priceTypeId": []string{strconv.Itoa(priceTypeID)},
+			"priceTypeId": []string{priceTypeID},
 		}
 		endpoint = "createorder"
 	)

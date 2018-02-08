@@ -48,7 +48,7 @@ type AdvancedOrderParams struct {
 // CreateOrder creates new order with given parameters
 // if adv == nil, then isAdvancedOrder will set to zero
 // available priceTypeIDs defined below
-func CreateOrder(key, secret string, market string, price, quantity float64, orderType string, priceTypeID int, adv *AdvancedOrderParams) (int, error) {
+func CreateOrder(key, secret string, market string, price, quantity float64, orderType string, priceTypeID string, adv *AdvancedOrderParams) (int, error) {
 	var err error
 	if market, err = normalize(market); err != nil {
 		return 0, err
