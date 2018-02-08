@@ -1,18 +1,11 @@
 language: go
 
 go:
-    - 1.9
-
-services:
-  - redis-server
+  - 1.9
 
 install:
   - go get -t ./...
   - make install-linters
-
-env:
-  global:
-    - REDIS_TEST_ADDR=localhost:6379
 
 script:
   - make check
