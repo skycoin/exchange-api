@@ -10,6 +10,19 @@ import (
 	"github.com/skycoin/exchange-api/exchange"
 )
 
+// Allowed priceTypeID for CreateOrder
+const (
+	PriceTypeLimit  = "limit"
+	PriceTypeMarket = "market"
+
+	getOrderBookEndpoint     = "getorderbook"
+	getBalanceEndpoint       = "getbalance"
+	createOrderEndpoint      = "createorder"
+	getOrderInfoEndpoint     = "getorderinfo"
+	cancelOrderEndpoint      = "cancelorder"
+	getOrderByStatusEndpoint = "getorderbystatus"
+)
+
 type response struct {
 	Code    int             `json:"code"`
 	Message string          `json:"message"`
@@ -56,20 +69,19 @@ func requestPost(method, key, secret string, params url.Values) (*response, erro
 // This method does not required API key and signing
 func getOrderbook(symbol string) (*Orderbook, error) {
 	var (
-		params   = url.Values{}
-		endpoint = "getorderbook"
-		err      error
+		params = url.Values{}
+		err    error
 	)
 	if symbol, err = normalize(symbol); err != nil {
 		return nil, err
 	}
 	params.Add("symbol", symbol)
-	resp, err := requestGet(endpoint, params)
+	resp, err := requestGet(getOrderBookEndpoint, params)
 	if err != nil {
 		return nil, err
 	}
-	if resp.Code != 200 {
-		return nil, apiError(endpoint, resp.Message)
+	if resp.Code != http.StatusOK {
+		return nil, apiError(getOrderBookEndpoint, resp.Message)
 	}
 	var result Orderbook
 	return &result, json.Unmarshal(resp.Data, &result)
@@ -80,23 +92,17 @@ func getOrderbook(symbol string) (*Orderbook, error) {
 // return value is a map[string]string
 // all keys should be a lowercase
 func getBalance(key, secret string) (userInfo Balance, err error) {
-	var endpoint = "getbalance"
-	resp, err := requestPost(endpoint, key, secret, nil)
+
+	resp, err := requestPost(getBalanceEndpoint, key, secret, nil)
 	if err != nil {
 		return nil, err
 	}
-	if resp.Code != 200 {
-		return nil, apiError(endpoint, resp.Message)
+	if resp.Code != http.StatusOK {
+		return nil, apiError(getBalanceEndpoint, resp.Message)
 	}
 	err = json.Unmarshal(resp.Data, &userInfo)
 	return userInfo, err
 }
-
-// Allowed priceTypeID for CreateOrder
-const (
-	PriceTypeLimit  = "limit"
-	PriceTypeMarket = "market"
-)
 
 // createOrder creates order with given orderType and parameters
 // advanced is a advanced options for order creation
@@ -110,7 +116,6 @@ func createOrder(key, secret string, market string, price, quantity float64, ord
 			"orderType":   []string{orderType},
 			"priceTypeId": []string{priceTypeID},
 		}
-		endpoint = "createorder"
 	)
 	if advanced != nil {
 		params.Add("isAdvancedOrder", "1")
@@ -126,12 +131,12 @@ func createOrder(key, secret string, market string, price, quantity float64, ord
 	} else {
 		params.Add("isAdvancedOrder", "0")
 	}
-	resp, err := requestPost(endpoint, key, secret, params)
+	resp, err := requestPost(createOrderEndpoint, key, secret, params)
 	if err != nil {
 		return 0, err
 	}
-	if resp.Code != 200 {
-		return 0, apiError(endpoint, resp.Message)
+	if resp.Code != http.StatusOK {
+		return 0, apiError(createOrderEndpoint, resp.Message)
 	}
 	var orderid newOrder
 	err = json.Unmarshal(resp.Data, &orderid)
@@ -149,17 +154,16 @@ func getOrderinfo(key, secret string, symbol string, orderID int, page *int) (or
 			"orderId": []string{strconv.Itoa(orderID)},
 			"symbol":  []string{symbol},
 		}
-		endpoint = "getorderinfo"
 	)
 	if page != nil {
 		params.Add("page", strconv.Itoa(*page))
 	}
-	resp, err := requestPost(endpoint, key, secret, params)
+	resp, err := requestPost(getOrderInfoEndpoint, key, secret, params)
 	if err != nil {
 		return nil, err
 	}
-	if resp.Code != 200 {
-		return nil, apiError(endpoint, resp.Message)
+	if resp.Code != http.StatusOK {
+		return nil, apiError(getOrderInfoEndpoint, resp.Message)
 	}
 	// if we're requesting a specific order, c2cx returns a single object, not an array
 	if orderID != -1 {
@@ -176,14 +180,13 @@ func cancelOrder(key, secret string, orderID int) (err error) {
 		params = url.Values{
 			"orderId": []string{strconv.Itoa(orderID)},
 		}
-		endpoint = "cancelorder"
 	)
-	resp, err := requestPost(endpoint, key, secret, params)
+	resp, err := requestPost(cancelOrderEndpoint, key, secret, params)
 	if err != nil {
 		return err
 	}
-	if resp.Code != 200 {
-		return apiError(endpoint, resp.Message)
+	if resp.Code != http.StatusOK {
+		return apiError(cancelOrderEndpoint, resp.Message)
 	}
 	return nil
 }
@@ -209,17 +212,16 @@ func getOrderByStatus(key, secret, symbol, status string, interval int) (orders 
 			"symbol": []string{symbol},
 			"status": []string{strconv.Itoa(statuses[status])},
 		}
-		endpoint = "getorderbystatus"
 	)
 	if interval > 0 {
 		params.Add("interval", strconv.Itoa(interval))
 	}
-	resp, err := requestPost(endpoint, key, secret, params)
+	resp, err := requestPost(getOrderByStatusEndpoint, key, secret, params)
 	if err != nil {
 		return nil, err
 	}
-	if resp.Code != 200 {
-		return nil, apiError(endpoint, resp.Message)
+	if resp.Code != http.StatusOK {
+		return nil, apiError(getOrderByStatusEndpoint, resp.Message)
 	}
 	return orders, json.Unmarshal(resp.Data, &orders)
 }
