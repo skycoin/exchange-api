@@ -6,8 +6,9 @@
  Node needs exchange API key and secret in format: "key:secret" for initilaize client,
  client is interface that handles major methods of each exchange  
 
- -srv flag define rpc addres for bind  
- -db flag define redis address  
+ -srv flag define rpc addres for bind
+ - dbType type of database used for order book - redis or in memory
+ -db flag define database url
 
  Client functionality: 
   - Place buy and sell orders

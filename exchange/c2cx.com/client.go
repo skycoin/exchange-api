@@ -78,7 +78,7 @@ func (c *Client) Cancel(orderID int) (exchange.Order, error) {
 
 }
 
-// CancelAll cancels all executed orders, that was created using this cilent
+// CancelAll cancels all executed orders, that was created using this client
 func (c *Client) CancelAll() ([]exchange.Order, error) {
 	var (
 		orderids = c.Orders.GetOpened()

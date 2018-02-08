@@ -1,26 +1,14 @@
-// +build redis_integration_test
 // +build cryptopia_integration_test
 
 package cryptopia
 
 import (
-	"os"
 	"testing"
 	"time"
-
-	"github.com/go-redis/redis"
 
 	"github.com/skycoin/exchange-api/db"
 	"github.com/skycoin/exchange-api/exchange"
 )
-
-var redisAddr = func() string {
-	res, found := os.LookupEnv("REDIS_TEST_ADDR")
-	if !found {
-		panic("redis test address not provided")
-	}
-	return res
-}()
 
 var c = Client{
 	Key:                      key,
@@ -119,17 +107,21 @@ func TestClientOrderDetails(t *testing.T) {
 */
 
 func TestClientUpdateOrderbook(t *testing.T) {
+	orderBook, err := db.NewOrderbookTracker(db.MemoryDatabase,
+		"",
+		"cryptopia")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	var c = Client{
 		Key: "", Secret: "",
-		Orderbooks: db.NewOrderbookTracker(&redis.Options{
-			Addr: redisAddr,
-		}, "cryptopia"),
+		Orderbooks:               orderBook,
 		TrackedBooks:             []string{"LTC/BTC"},
 		OrderbookRefreshInterval: time.Second * 5,
 	}
-	var (
-		err error
-	)
+
 	c.updateOrderbook()
 	if _, err = c.Orderbook().Get("LTC_BTC"); err != nil {
 		t.Fatal(err)

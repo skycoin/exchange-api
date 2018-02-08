@@ -1,39 +1,27 @@
 // +build c2cx_integration_test
-// +build redis_integration_test
 
 package c2cx
 
 import (
 	"errors"
-	"os"
 	"testing"
 	"time"
-
-	"github.com/go-redis/redis"
 
 	"github.com/skycoin/exchange-api/db"
 
 	exchange "github.com/skycoin/exchange-api/exchange"
 )
 
-var redisAddr = func() string {
-	res, found := os.LookupEnv("REDIS_TEST_ADDR")
-	if !found {
-		panic("redis test address not provided")
-	}
-	return res
-}()
-
 func TestClientOperations(t *testing.T) {
+	orderBookDatabase, err := db.NewOrderbookTracker("memory", "c2cx", "")
+
 	cl := Client{
 		Key:                      key,
 		Secret:                   secret,
 		OrdersRefreshInterval:    time.Second * 5,
 		OrderbookRefreshInterval: time.Second * 5,
-		Orders: exchange.NewTracker(),
-		Orderbooks: db.NewOrderbookTracker(&redis.Options{
-			Addr: redisAddr,
-		}, "c2cx"),
+		Orders:     exchange.NewTracker(),
+		Orderbooks: orderBookDatabase,
 	}
 
 	// verifying we've got enough SKY to play with
@@ -41,6 +29,7 @@ func TestClientOperations(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if availSky < orderAmount {
 		t.Fatal(errors.New("Test wallet doesn't have enough SKY"))
 	}
@@ -48,7 +37,7 @@ func TestClientOperations(t *testing.T) {
 	// creating an order
 	orderId, err := cl.Sell(orderMarket, orderPrice, orderAmount)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	t.Run("updateOrdersOrderbook", func(t *testing.T) {
