@@ -4,6 +4,7 @@
 package c2cx
 
 import (
+	"errors"
 	"os"
 	"testing"
 	"time"
@@ -23,8 +24,8 @@ var redisAddr = func() string {
 	return res
 }()
 
-var (
-	cl = Client{
+func TestClientOperations(t *testing.T) {
+	cl := Client{
 		Key:                      key,
 		Secret:                   secret,
 		OrdersRefreshInterval:    time.Second * 5,
@@ -34,46 +35,61 @@ var (
 			Addr: redisAddr,
 		}, "c2cx"),
 	}
-	orderMarket = "CNY_SHL"
-	orderPrice  = 0.01
-	orderAmount = 10.0
-	orderID     int
-)
 
-func TestClientCreateOrder(t *testing.T) {
-	var err error
-	orderID, err = cl.Buy(orderMarket, orderPrice, orderAmount)
+	// verifying we've got enough SKY to play with
+	availSky, err := availableSKY()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if availSky < orderAmount {
+		t.Fatal(errors.New("Test wallet doesn't have enough SKY"))
+	}
+
+	// creating an order
+	orderId, err := cl.Sell(orderMarket, orderPrice, orderAmount)
 	if err != nil {
 		t.Error(err)
 	}
-}
-func TestClientUpdateOrders(t *testing.T) {
-	cl.updateOrders()
-	cl.updateOrderbook()
-}
-func TestClientGetExecuted(t *testing.T) {
-	orders := cl.Executed()
-	if len(orders) != 1 {
-		t.Error("placed order not found in tracker", len(orders), orders)
-	}
-	if orders[0] != orderID {
-		t.Errorf("want %d orderID, expected %d", orderID, orders[0])
-	}
-}
 
-func TestClientGetCompleted(t *testing.T) {
-	orders := cl.Completed()
-	if len(orders) > 0 {
-		t.Error("it should not contains completed orders")
-	}
-}
+	t.Run("updateOrdersOrderbook", func(t *testing.T) {
+		cl.updateOrders()
+		cl.updateOrderbook()
+	})
 
-func TestClientCancelMarket(t *testing.T) {
-	_, err := cl.Cancel(orderID)
+	t.Run("GetExecuted", func(t *testing.T) {
+		orderIds := cl.Executed()
+		for _, v := range orderIds {
+			if v == orderId {
+				return
+			}
+		}
+		t.Errorf("couldn't locate order #%d", orderId)
+	})
+
+	t.Run("GetCompletedFirstPass", func(t *testing.T) {
+		orderIds := cl.Completed()
+		for _, v := range orderIds {
+			if v == orderId {
+				t.Errorf("order #%d shouldn't have completed", orderId)
+			}
+		}
+		return
+	})
+
+	// finally cleanup our order
+	_, err = cl.Cancel(orderId)
 	if err != nil {
 		t.Error(err)
 	}
-	if len(cl.Orders.GetCompleted()) != 1 {
-		t.Error("it should have one completed order")
-	}
+
+	// and confirm it shows up in completed
+	t.Run("GetCompletedSecondPass", func(t *testing.T) {
+		orderIds := cl.Completed()
+		for _, v := range orderIds {
+			if v == orderId {
+				return
+			}
+		}
+		t.Errorf("couldn't locate order #%d", orderId)
+	})
 }

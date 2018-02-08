@@ -161,6 +161,11 @@ func getOrderinfo(key, secret string, symbol string, orderID int, page *int) (or
 	if resp.Code != 200 {
 		return nil, apiError(endpoint, resp.Message)
 	}
+	// if we're requesting a specific order, c2cx returns a single object, not an array
+	if orderID != -1 {
+		orders = make([]Order, 1)
+		return orders, json.Unmarshal(resp.Data, &(orders[0]))
+	}
 	return orders, json.Unmarshal(resp.Data, &orders)
 }
 

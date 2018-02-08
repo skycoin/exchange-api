@@ -3,10 +3,10 @@
 package c2cx
 
 import (
-	"os"
-	"testing"
 	"encoding/json"
 	"errors"
+	"os"
+	"testing"
 )
 
 var key, secret = func() (key string, secret string) {
@@ -19,6 +19,15 @@ var key, secret = func() (key string, secret string) {
 	}
 	panic("C2CX key not provided")
 }()
+
+const (
+	// declaring these as globals so client_test can test with the same params
+	orderMarket = "BTC_SKY"
+	orderPrice  = 0.5 // 0.5 btc/sky? I like that price!
+	orderAmount = 1.2
+	orderType   = "Sell"
+	priceTypeId = PriceTypeLimit
+)
 
 func TestGetUserInfo(t *testing.T) {
 	b, err := GetBalance(key, secret)
@@ -40,7 +49,7 @@ type balanceJSONEntry struct {
 
 type balanceJSON struct {
 	Balance balanceJSONEntry `json:balance`
-	Frozen balanceJSONEntry `json:balance`
+	Frozen  balanceJSONEntry `json:balance`
 }
 
 func availableSKY() (float64, error) {
@@ -58,30 +67,23 @@ func availableSKY() (float64, error) {
 }
 
 func TestOrderManipulation(t *testing.T) {
-	// initial order params
-	market := "BTC_SKY"
-	quantity := 1.2
-	price := 0.5
-	orderType := "Sell"
-	priceTypeId := PriceTypeLimit
-
 	// confirming we have enough SKY to experiment with
 	availSky, err := availableSKY()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if availSky < quantity {
+	if availSky < orderAmount {
 		t.Fatal(errors.New("Test wallet doesn't have enough SKY"))
 	}
 
 	// placing test order
-	orderId, err := CreateOrder(key, secret, market, price, quantity, orderType, priceTypeId, nil)
+	orderId, err := CreateOrder(key, secret, orderMarket, orderPrice, orderAmount, orderType, priceTypeId, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	t.Run("GetOrderInfo", func(t *testing.T) {
-		orders, err := GetOrderInfo(key, secret, market, -1, nil)
+		orders, err := GetOrderInfo(key, secret, orderMarket, -1, nil)
 		if err != nil {
 			t.Fatal(err)
 		}

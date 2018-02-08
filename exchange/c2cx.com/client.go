@@ -51,7 +51,7 @@ func (c *Client) Cancel(orderID int) (exchange.Order, error) {
 		return exchange.Order{}, err
 	}
 	if len(orders) != 1 {
-		return exchange.Order{}, errors.New("order does not found")
+		return exchange.Order{}, errors.New("order was not found")
 	}
 	var completedTime time.Time
 	log.Println(orders[0].CompleteDate)
