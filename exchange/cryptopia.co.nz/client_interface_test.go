@@ -4,8 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-redis/redis"
-
 	"github.com/skycoin/exchange-api/db"
 	"github.com/skycoin/exchange-api/exchange"
 	cryptopia "github.com/skycoin/exchange-api/exchange/cryptopia.co.nz"
@@ -13,6 +11,14 @@ import (
 
 func TestClientInit(t *testing.T) {
 	var c exchange.Client
+
+	orderBook, err := db.NewOrderbookTracker(db.MemoryDatabase,
+		"",
+		"cryptopia")
+
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	var client = cryptopia.Client{
 		Key:                      "23a69c51c746446e819b213ef3841920",
@@ -22,9 +28,7 @@ func TestClientInit(t *testing.T) {
 		Stop:         make(chan struct{}),
 		TrackedBooks: []string{"LTC/BTC", "SKY/DOGE"},
 		Orders:       exchange.NewTracker(),
-		Orderbooks: db.NewOrderbookTracker(&redis.Options{
-			Addr: "localhost:6379",
-		}, "cryptopia_test"),
+		Orderbooks:   orderBook,
 	}
 	go client.Update()
 	c = &client
