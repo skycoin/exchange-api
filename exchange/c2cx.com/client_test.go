@@ -14,6 +14,9 @@ import (
 
 func TestClientOperations(t *testing.T) {
 	orderBookDatabase, err := db.NewOrderbookTracker("memory", "c2cx", "")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	cl := Client{
 		Key:                      key,
