@@ -188,7 +188,7 @@ func cancelOrder(key, secret string, orderID int) (err error) {
 	return nil
 }
 
-// statuses is a possible statusees of order
+// statuses is a possible statuses of order
 var statuses = map[string]int{
 	exchange.Opened:    2,
 	exchange.Partial:   3,
