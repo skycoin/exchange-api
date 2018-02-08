@@ -49,10 +49,10 @@ func (r *Balance) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
-	(*r)["btc"] = fmt.Sprintf("Available %.8f, frozen %.8f", v.Balance.Btc, v.Frozen.Btc)
-	(*r)["etc"] = fmt.Sprintf("Available %.8f, frozen %.8f", v.Balance.Etc, v.Frozen.Etc)
-	(*r)["eth"] = fmt.Sprintf("Available %.8f, frozen %.8f", v.Balance.Eth, v.Frozen.Eth)
-	(*r)["sky"] = fmt.Sprintf("Available %.8f, frozen %.8f", v.Balance.Sky, v.Frozen.Sky)
-	(*r)["cny"] = fmt.Sprintf("Available %.8f, frozen %.8f", v.Balance.Cny, v.Frozen.Cny)
+	(*r)["btc"] = fmt.Sprintf("Available %s, frozen %s", v.Balance.Btc.StringFixed(8), v.Frozen.Btc.StringFixed(8))
+	(*r)["etc"] = fmt.Sprintf("Available %s, frozen %s", v.Balance.Etc.StringFixed(8), v.Frozen.Etc.StringFixed(8))
+	(*r)["eth"] = fmt.Sprintf("Available %s, frozen %s", v.Balance.Eth.StringFixed(8), v.Frozen.Eth.StringFixed(8))
+	(*r)["sky"] = fmt.Sprintf("Available %s, frozen %s", v.Balance.Sky.StringFixed(8), v.Frozen.Sky.StringFixed(8))
+	(*r)["cny"] = fmt.Sprintf("Available %s, frozen %s", v.Balance.Cny.StringFixed(8), v.Frozen.Cny.StringFixed(8))
 	return nil
 }

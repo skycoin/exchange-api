@@ -388,8 +388,8 @@ func submitTrade(key, secret, nonce, market, Type string, rate, amount decimal.D
 		return 0, err
 	}
 	if !resp.Success {
-		return 0, fmt.Errorf("SubmitTrade failed: %s, Type %s Market %s Rate %f Amount %f",
-			resp.Message, Type, market, rate, amount)
+		return 0, fmt.Errorf("SubmitTrade failed: %s, Type %s Market %s Rate %s Amount %s",
+			resp.Message, Type, market, rate.String(), amount.String())
 	}
 	var result newOrder
 	err = json.Unmarshal(resp.Data, &result)
@@ -494,8 +494,8 @@ func submitWithdraw(key, secret, nonce, currency, address, paymentid string, amo
 		return 0, err
 	}
 	if !resp.Success {
-		return 0, fmt.Errorf("SubmitWithdraw failed: %s, %s %f to %s ",
-			resp.Message, currency, amount, address)
+		return 0, fmt.Errorf("SubmitWithdraw failed: %s, %s %s to %s ",
+			resp.Message, currency, amount.String(), address)
 	}
 	var result int
 	return result, json.Unmarshal(resp.Data, &result)
