@@ -12,14 +12,6 @@ import (
 
 var redisAddr, testingRedis = os.LookupEnv("REDIS_TEST_ADDR")
 
-//func() string {
-//	res, found := os.LookupEnv("REDIS_TEST_ADDR")
-//	if !found {
-//		panic("redis test address not provided")
-//	}
-//	return res
-//}()
-
 func TestRecord_MarshalJSON_UnmarshalJSON(t *testing.T) {
 	var r = exchange.MarketRecord{
 		Timestamp: time.Unix(1499202345, 0),
