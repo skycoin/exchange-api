@@ -4,6 +4,8 @@ package c2cx
 import (
 	"fmt"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/skycoin/exchange-api/exchange"
 )
 
@@ -41,15 +43,15 @@ func CancelOrder(key, secret string, orderID int) error {
 
 // AdvancedOrderParams is extended parameters, that can be used for set stoploss, takeprofit and trigger price
 type AdvancedOrderParams struct {
-	TakeProfit   float64 `json:"take_profit"`
-	StopLoss     float64 `json:"stop_loss"`
-	TriggerPrice float64 `json:"trigger_price"`
+	TakeProfit   decimal.Decimal `json:"take_profit"`
+	StopLoss     decimal.Decimal `json:"stop_loss"`
+	TriggerPrice decimal.Decimal `json:"trigger_price"`
 }
 
 // CreateOrder creates new order with given parameters
 // if adv == nil, then isAdvancedOrder will set to zero
 // available priceTypeIDs defined below
-func CreateOrder(key, secret string, market string, price, quantity float64, orderType string, priceTypeID string, adv *AdvancedOrderParams) (int, error) {
+func CreateOrder(key, secret string, market string, price, quantity decimal.Decimal, orderType string, priceTypeID string, adv *AdvancedOrderParams) (int, error) {
 	var err error
 	if market, err = normalize(market); err != nil {
 		return 0, err
@@ -69,14 +71,14 @@ func GetOrderbook(symbol string) (Orderbook, error) {
 
 // Order represents all information about order
 type Order struct {
-	Amount          float64
-	AvgPrice        float64
-	CompletedAmount float64
-	Fee             float64
+	Amount          decimal.Decimal
+	AvgPrice        decimal.Decimal
+	CompletedAmount decimal.Decimal
+	Fee             decimal.Decimal
 	CreateDate      int64
 	CompleteDate    int64
 	OrderID         int
-	Price           float64
+	Price           decimal.Decimal
 	Status          int
 	Type            string
 }

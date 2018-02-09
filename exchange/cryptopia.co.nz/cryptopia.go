@@ -1,7 +1,11 @@
 // Package cryptopia provides api methods for communicating with cryptopia exchange
 package cryptopia
 
-import "time"
+import (
+	"time"
+
+	"github.com/shopspring/decimal"
+)
 
 // Order types, buy or sell
 const (
@@ -29,19 +33,19 @@ var (
 
 //CurrencyInfo represents currency info
 type CurrencyInfo struct {
-	ID                   int     `json:"Id"`
-	Name                 string  `json:"Name"`
-	Symbol               string  `json:"Symbol"`
-	Algorithm            string  `json:"Algorithm"`
-	WithdrawFee          float64 `json:"WithdrawFee"`
-	MinWithdraw          float64 `json:"MinWithdraw"`
-	MinBaseTrade         float64 `json:"MinBaseTrade"`
-	IsTipEnabled         bool    `json:"IsTipEnabled"`
-	MinTip               float64 `json:"MinTip"`
-	DepositConfirmations int     `json:"DepositConfirmations"`
-	Status               string  `json:"Status"`
-	StatusMessage        string  `json:"StatusMessage"`
-	ListingStatus        string  `json:"ListingStatus"`
+	ID                   int             `json:"Id"`
+	Name                 string          `json:"Name"`
+	Symbol               string          `json:"Symbol"`
+	Algorithm            string          `json:"Algorithm"`
+	WithdrawFee          decimal.Decimal `json:"WithdrawFee"`
+	MinWithdraw          decimal.Decimal `json:"MinWithdraw"`
+	MinBaseTrade         decimal.Decimal `json:"MinBaseTrade"`
+	IsTipEnabled         bool            `json:"IsTipEnabled"`
+	MinTip               decimal.Decimal `json:"MinTip"`
+	DepositConfirmations int             `json:"DepositConfirmations"`
+	Status               string          `json:"Status"`
+	StatusMessage        string          `json:"StatusMessage"`
+	ListingStatus        string          `json:"ListingStatus"`
 }
 
 // GetCurrencies gets all available currencies from exchange
@@ -51,21 +55,21 @@ func GetCurrencies() ([]CurrencyInfo, error) {
 
 // TradepairInfo represents tradepair info
 type TradepairInfo struct {
-	ID               int     `json:"Id"`
-	Label            string  `json:"Label"`
-	Currency         string  `json:"Currency"`
-	Symbol           string  `json:"Symbol"`
-	BaseCurrency     string  `json:"BaseCurrency"`
-	BaseSymbol       string  `json:"BaseSymbol"`
-	Status           string  `json:"Status"`
-	StatusMessage    string  `json:"StatusMessage"`
-	TradeFee         float64 `json:"TradeFee"`
-	MinimumTrade     float64 `json:"MinimumTrade"`
-	MaximumTrade     float64 `json:"MaximumTrade"`
-	MinimumBaseTrade float64 `json:"MinimumBaseTrade"`
-	MaximumBaseTrade float64 `json:"MaximumBaseTrade"`
-	MinimumPrice     float64 `json:"MinimumPrice"`
-	MaximumPrice     float64 `json:"MaximumPrice"`
+	ID               int             `json:"Id"`
+	Label            string          `json:"Label"`
+	Currency         string          `json:"Currency"`
+	Symbol           string          `json:"Symbol"`
+	BaseCurrency     string          `json:"BaseCurrency"`
+	BaseSymbol       string          `json:"BaseSymbol"`
+	Status           string          `json:"Status"`
+	StatusMessage    string          `json:"StatusMessage"`
+	TradeFee         decimal.Decimal `json:"TradeFee"`
+	MinimumTrade     decimal.Decimal `json:"MinimumTrade"`
+	MaximumTrade     decimal.Decimal `json:"MaximumTrade"`
+	MinimumBaseTrade decimal.Decimal `json:"MinimumBaseTrade"`
+	MaximumBaseTrade decimal.Decimal `json:"MaximumBaseTrade"`
+	MinimumPrice     decimal.Decimal `json:"MinimumPrice"`
+	MaximumPrice     decimal.Decimal `json:"MaximumPrice"`
 }
 
 // GetTradepairs gets all available tradepairs from exchange
@@ -75,22 +79,22 @@ func GetTradepairs() ([]TradepairInfo, error) {
 
 // MarketInfo represents market info
 type MarketInfo struct {
-	TradePairID    int     `json:"TradePairId"`
-	Label          string  `json:"Label"`
-	AskPrice       float64 `json:"AskPrice"`
-	BidPrice       float64 `json:"BidPrice"`
-	Low            float64 `json:"Low"`
-	High           float64 `json:"High"`
-	Volume         float64 `json:"Volume"`
-	LastPrice      float64 `json:"LastPrice"`
-	BuyVolume      float64 `json:"BuyVolume"`
-	SellVolume     float64 `json:"SellVolume"`
-	Change         float64 `json:"Change"`
-	Open           float64 `json:"Open"`
-	Close          float64 `json:"Close"`
-	BaseVolume     float64 `json:"BaseVolume"`
-	BaseBuyVolume  float64 `json:"BaseBuyVolume"`
-	BaseSellVolume float64 `json:"BaseSellVolume"`
+	TradePairID    int             `json:"TradePairId"`
+	Label          string          `json:"Label"`
+	AskPrice       decimal.Decimal `json:"AskPrice"`
+	BidPrice       decimal.Decimal `json:"BidPrice"`
+	Low            decimal.Decimal `json:"Low"`
+	High           decimal.Decimal `json:"High"`
+	Volume         decimal.Decimal `json:"Volume"`
+	LastPrice      decimal.Decimal `json:"LastPrice"`
+	BuyVolume      decimal.Decimal `json:"BuyVolume"`
+	SellVolume     decimal.Decimal `json:"SellVolume"`
+	Change         decimal.Decimal `json:"Change"`
+	Open           decimal.Decimal `json:"Open"`
+	Close          decimal.Decimal `json:"Close"`
+	BaseVolume     decimal.Decimal `json:"BaseVolume"`
+	BaseBuyVolume  decimal.Decimal `json:"BaseBuyVolume"`
+	BaseSellVolume decimal.Decimal `json:"BaseSellVolume"`
 }
 
 // GetMarkets gets all market by specifying baseMarket
@@ -120,11 +124,11 @@ type MarketOrders struct {
 
 // MarketOrder represents a single order info
 type MarketOrder struct {
-	TradePairID int     `json:"TradePairId"`
-	Label       string  `json:"Label"`
-	Price       float64 `json:"Price"`
-	Volume      float64 `json:"Volume"`
-	Total       float64 `json:"Total"`
+	TradePairID int             `json:"TradePairId"`
+	Label       string          `json:"Label"`
+	Price       decimal.Decimal `json:"Price"`
+	Volume      decimal.Decimal `json:"Volume"`
+	Total       decimal.Decimal `json:"Total"`
 }
 
 // GetMarketOrders returns orderbook for given market
@@ -151,13 +155,13 @@ func GetMarketOrderGroups(count int, markets ...string) ([]MarketOrdersWithLabel
 
 // MarketHistory represents market history
 type MarketHistory struct {
-	TradePairID int     `json:"TradePairId"`
-	Label       string  `json:"Label"`
-	Type        string  `json:"Type"`
-	Price       float64 `json:"Price"`
-	Amount      float64 `json:"Amount"`
-	Total       float64 `json:"Total"`
-	Timestamp   int     `json:"Timestamp"`
+	TradePairID int             `json:"TradePairId"`
+	Label       string          `json:"Label"`
+	Type        string          `json:"Type"`
+	Price       decimal.Decimal `json:"Price"`
+	Amount      decimal.Decimal `json:"Amount"`
+	Total       decimal.Decimal `json:"Total"`
+	Timestamp   int             `json:"Timestamp"`
 }
 
 // GetMarketHistory returns completed orders in given market for given time
@@ -206,16 +210,16 @@ const (
 
 // Transaction represents a single transaction, deposit or withdraw
 type Transaction struct {
-	ID            int     `json:"Id"`
-	Currency      string  `json:"Currency"`
-	TxID          string  `json:"TxId"`
-	Type          string  `json:"Type"`
-	Amount        float64 `json:"Amount"`
-	Fee           float64 `json:"Fee"`
-	Status        string  `json:"Status"`
-	Confirmations int     `json:"Confirmations"`
-	Timestamp     string  `json:"TimeStamp"`
-	Address       *string `json:"Address,omitempty"`
+	ID            int             `json:"Id"`
+	Currency      string          `json:"Currency"`
+	TxID          string          `json:"TxId"`
+	Type          string          `json:"Type"`
+	Amount        decimal.Decimal `json:"Amount"`
+	Fee           decimal.Decimal `json:"Fee"`
+	Status        string          `json:"Status"`
+	Confirmations int             `json:"Confirmations"`
+	Timestamp     string          `json:"TimeStamp"`
+	Address       *string         `json:"Address,omitempty"`
 }
 
 // GetTransactions gets count transactions with given type
@@ -242,18 +246,18 @@ type Order struct {
 	Market      string
 	Type        string
 
-	Rate      float64
-	Amount    float64
-	Total     float64
-	Fee       float64
-	Remaining float64
+	Rate      decimal.Decimal
+	Amount    decimal.Decimal
+	Total     decimal.Decimal
+	Fee       decimal.Decimal
+	Remaining decimal.Decimal
 
 	Timestamp time.Time
 }
 
 // SubmitTrade creates new trade offer, if order instantly executed, it returns ErrInstant
 // Trade types defined below
-func SubmitTrade(key, secret string, market, Type string, rate, amount float64) (int, error) {
+func SubmitTrade(key, secret string, market, Type string, rate, amount decimal.Decimal) (int, error) {
 	return submitTrade(key, secret, nonce(), market, Type, rate, amount)
 }
 
@@ -273,13 +277,13 @@ func CancelTrade(key, secret string, Type string, tradepair *string, orderID *in
 }
 
 // SubmitTip is useless
-func SubmitTip(key, secret string, currency string, activeUsers int, amount float64) (string, error) {
+func SubmitTip(key, secret string, currency string, activeUsers int, amount decimal.Decimal) (string, error) {
 	return submitTip(key, secret, nonce(), currency, activeUsers, amount)
 }
 
 // SubmitWithdraw creates withdraw request
 // paymentid needs only for currencies, based on CryptoNight
-func SubmitWithdraw(key, secret string, currency, address string, paymentid *string, amount float64) (int, error) {
+func SubmitWithdraw(key, secret string, currency, address string, paymentid *string, amount decimal.Decimal) (int, error) {
 	if paymentid != nil {
 		return submitWithdraw(key, secret, nonce(), currency, address, *paymentid, amount)
 	}
@@ -287,6 +291,6 @@ func SubmitWithdraw(key, secret string, currency, address string, paymentid *str
 }
 
 // SubmitTransfer transfer funds to another user
-func SubmitTransfer(key, secret string, currency, username string, amount float64) (string, error) {
+func SubmitTransfer(key, secret string, currency, username string, amount decimal.Decimal) (string, error) {
 	return submitTransfer(key, secret, nonce(), currency, username, amount)
 }

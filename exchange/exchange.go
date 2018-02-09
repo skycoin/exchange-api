@@ -1,6 +1,10 @@
 package exchange
 
-import "time"
+import (
+	"time"
+
+	"github.com/shopspring/decimal"
+)
 
 // Order types
 const (
@@ -12,14 +16,14 @@ const (
 type Order struct {
 	Type      string
 	Market    string
-	Amount    float64
-	Price     float64
+	Amount    decimal.Decimal
+	Price     decimal.Decimal
 	Submitted time.Time
 
 	//Mutable fields
 	OrderID         int
-	Fee             float64
-	CompletedAmount float64
+	Fee             decimal.Decimal
+	CompletedAmount decimal.Decimal
 	Status          string
 	Accepted        time.Time
 	Completed       time.Time
@@ -37,9 +41,9 @@ type Client interface {
 	// GetBalance gets a information about balance in a string format, depends of exchange representation format
 	GetBalance(string) (string, error)
 	// Buy places buy order
-	Buy(string, float64, float64) (int, error)
+	Buy(string, decimal.Decimal, decimal.Decimal) (int, error)
 	// Sell places sell order
-	Sell(string, float64, float64) (int, error)
+	Sell(string, decimal.Decimal, decimal.Decimal) (int, error)
 	// Completed gets completed orders
 	Completed() []int
 	// Executed gets opened orders

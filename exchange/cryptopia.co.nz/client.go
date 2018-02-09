@@ -5,6 +5,8 @@ import (
 
 	"errors"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/skycoin/exchange-api/exchange"
 )
 
@@ -105,7 +107,7 @@ func (c *Client) CancelMarket(symbol string) ([]exchange.Order, error) {
 }
 
 // Buy places buy order
-func (c *Client) Buy(symbol string, rate, amount float64) (int, error) {
+func (c *Client) Buy(symbol string, rate, amount decimal.Decimal) (int, error) {
 	var order = exchange.Order{
 		Submitted: time.Now(),
 		Type:      exchange.Buy,
@@ -132,7 +134,7 @@ func (c *Client) Buy(symbol string, rate, amount float64) (int, error) {
 }
 
 // Sell places sell order
-func (c *Client) Sell(symbol string, rate, amount float64) (int, error) {
+func (c *Client) Sell(symbol string, rate, amount decimal.Decimal) (int, error) {
 	var order = exchange.Order{
 		Submitted: time.Now(),
 		Type:      exchange.Sell,
@@ -227,7 +229,7 @@ func (c *Client) updateOrders() {
 	}
 	for _, v := range orders {
 		j := convert(v)
-		if j.CompletedAmount > 0 {
+		if j.CompletedAmount.GreaterThan(decimal.Zero) {
 			j.Status = exchange.Partial
 		}
 		if err = c.Orders.UpdateOrder(j); err != nil {

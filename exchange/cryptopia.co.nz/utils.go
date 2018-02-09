@@ -152,6 +152,6 @@ func convert(order Order) exchange.Order {
 		Amount:          order.Amount,
 		Accepted:        order.Timestamp,
 		Fee:             order.Fee,
-		CompletedAmount: order.Total - order.Remaining,
+		CompletedAmount: order.Total.Sub(order.Remaining),
 	}
 }

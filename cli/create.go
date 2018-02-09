@@ -2,8 +2,8 @@ package cli
 
 import (
 	"fmt"
-	"strconv"
 
+	"github.com/shopspring/decimal"
 	"github.com/urfave/cli"
 )
 
@@ -18,15 +18,15 @@ func buyCMD() cli.Command {
 				return errInvalidInput
 			}
 			var (
-				err    error
-				price  float64
-				amount float64
+				err           error
+				symbol        string
+				price, amount decimal.Decimal
 			)
-			symbol := c.Args().Get(0)
-			if price, err = strconv.ParseFloat(c.Args().Get(1), 64); err != nil {
+			symbol = c.Args().Get(0)
+			if price, err = decimal.NewFromString(c.Args().Get(1)); err != nil {
 				return err
 			}
-			if amount, err = strconv.ParseFloat(c.Args().Get(2), 64); err != nil {
+			if amount, err = decimal.NewFromString(c.Args().Get(2)); err != nil {
 				return err
 			}
 			params := map[string]interface{}{
@@ -56,15 +56,15 @@ func sellCMD() cli.Command {
 				return errInvalidInput
 			}
 			var (
-				err    error
-				price  float64
-				amount float64
+				err           error
+				symbol        string
+				price, amount decimal.Decimal
 			)
-			symbol := c.Args().Get(0)
-			if price, err = strconv.ParseFloat(c.Args().Get(1), 64); err != nil {
+			symbol = c.Args().Get(0)
+			if price, err = decimal.NewFromString(c.Args().Get(1)); err != nil {
 				return err
 			}
-			if amount, err = strconv.ParseFloat(c.Args().Get(2), 64); err != nil {
+			if amount, err = decimal.NewFromString(c.Args().Get(2)); err != nil {
 				return err
 			}
 			params := map[string]interface{}{

@@ -108,7 +108,7 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		}
 		return resp
 	},
-	// buy params: {"symbol": string; "rate": float64, "amount": float64}
+	// buy params: {"symbol": string; "rate": decimal.Decimal, "amount": decimal.Decimal}
 	"buy": func(r Request, c exchange.Client) Response {
 		resp, err := validateRequest(r)
 		if err != nil {
@@ -122,11 +122,11 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		if err != nil && resp.Error == nil {
 			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 		}
-		rate, err := GetFloatParam(params, "price")
+		rate, err := GetDecimalParam(params, "price")
 		if err != nil && resp.Error == nil {
 			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 		}
-		amount, err := GetFloatParam(params, "amount")
+		amount, err := GetDecimalParam(params, "amount")
 		if err != nil && resp.Error == nil {
 			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 		}
@@ -139,7 +139,7 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		}
 		return resp
 	},
-	// sell params: {"symbol": string, "rate": float64, "amount": float64}
+	// sell params: {"symbol": string, "rate": decimal.Decimal, "amount": decimal.Decimal}
 	"sell": func(r Request, c exchange.Client) Response {
 		resp, err := validateRequest(r)
 		if err != nil {
@@ -153,11 +153,11 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		if err != nil && resp.Error == nil {
 			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 		}
-		rate, err := GetFloatParam(params, "price")
+		rate, err := GetDecimalParam(params, "price")
 		if err != nil && resp.Error == nil {
 			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 		}
-		amount, err := GetFloatParam(params, "amount")
+		amount, err := GetDecimalParam(params, "amount")
 		if err != nil && resp.Error == nil {
 			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
 		}

@@ -7,28 +7,31 @@ import (
 	"time"
 
 	"errors"
+
+	"github.com/shopspring/decimal"
 )
 
 // balance represents balance of all avalible currencies
 type balance map[string]string
 
+type currency struct {
+	CurrencyID      int             `json:"CurrencyId"`
+	Symbol          string          `json:"Symbol"`
+	Total           decimal.Decimal `json:"Total"`
+	Available       decimal.Decimal `json:"Available"`
+	Unconfirmed     decimal.Decimal `json:"Unconfirmed"`
+	HeldForTrades   decimal.Decimal `json:"HeldForTrades"`
+	PendingWithdraw decimal.Decimal `json:"PendingWithdraw"`
+	Address         string          `json:"Address"`
+	BaseAddress     string          `json:"BaseAddress"`
+	Status          string          `json:"Status"`
+	StatusMessage   string          `json:"StatusMessage"`
+}
+
 // UnmarshalJSON implements json.Unmarshaler interface
 func (r *balance) UnmarshalJSON(b []byte) error {
 	if r == nil {
 		(*r) = make(map[string]string)
-	}
-	type currency struct {
-		CurrencyID      int     `json:"CurrencyId"`
-		Symbol          string  `json:"Symbol"`
-		Total           float64 `json:"Total"`
-		Available       float64 `json:"Available"`
-		Unconfirmed     float64 `json:"Unconfirmed"`
-		HeldForTrades   float64 `json:"HeldForTrades"`
-		PendingWithdraw float64 `json:"PendingWithdraw"`
-		Address         string  `json:"Address"`
-		BaseAddress     string  `json:"BaseAddress"`
-		Status          string  `json:"Status"`
-		StatusMessage   string  `json:"StatusMessage"`
 	}
 
 	var tmp = make([]currency, 0)
@@ -36,9 +39,14 @@ func (r *balance) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	var result = make(balance)
+
 	for _, v := range tmp {
-		result[strings.ToUpper(v.Symbol)] = fmt.Sprintf("Total: %.8f Available: %.8f Unconfirmed: %.8f Held: %.8f Pending: %.8f",
-			v.Total, v.Available, v.Unconfirmed, v.HeldForTrades, v.PendingWithdraw)
+		result[strings.ToUpper(v.Symbol)] = fmt.Sprintf("Total: %s Available: %s Unconfirmed: %s Held: %s Pending: %s",
+			v.Total.StringFixed(8),
+			v.Available.StringFixed(8),
+			v.Unconfirmed.StringFixed(8),
+			v.HeldForTrades.StringFixed(8),
+			v.PendingWithdraw.StringFixed(8))
 	}
 	*r = result
 	return nil
@@ -53,22 +61,26 @@ type newOrder struct {
 	FilledOrders []int `json:"FilledOrders,omitempty"`
 }
 
+type orderJSON struct {
+	OrderID     *int   `json:"OrderId,omitempty"`
+	TradeID     *int   `json:"TradeId,omitempty"`
+	TradePairID int    `json:"TradePairId"`
+	Market      string `json:"Market"`
+	Type        string `json:"Type"`
+
+	Rate      decimal.Decimal `json:"Rate"`
+	Amount    decimal.Decimal `json:"Amount"`
+	Total     decimal.Decimal `json:"Total"`
+	Fee       decimal.Decimal `json:"Fee,omitempty"`
+	Remaining decimal.Decimal `json:"Remaining,omitempty"`
+
+	Timestamp string `json:"TimeStamp"`
+}
+
 // UnmarshalJSON implements an json.Unmarshaler interface
 func (order *Order) UnmarshalJSON(b []byte) error {
 	var (
-		tmp = struct {
-			OrderID     *int    `json:"OrderId,omitempty"`
-			TradeID     *int    `json:"TradeId,omitempty"`
-			TradePairID int     `json:"TradePairId"`
-			Market      string  `json:"Market"`
-			Type        string  `json:"Type"`
-			Rate        float64 `json:"Rate"`
-			Amount      float64 `json:"Amount"`
-			Total       float64 `json:"Total"`
-			Fee         float64 `json:"Fee,omitempty"`
-			Remaining   float64 `json:"Remaining,omitempty"`
-			Timestamp   string  `json:"TimeStamp"`
-		}{}
+		tmp     = orderJSON{}
 		orderID int
 		ts      time.Time
 	)

@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/skycoin/exchange-api/db"
 	"github.com/skycoin/exchange-api/exchange"
 )
@@ -56,7 +58,8 @@ func TestClientCancelAll(t *testing.T) {
 	}
 }
 func TestClientBuy(t *testing.T) {
-	order, err := c.Buy("LTC/BTC", 1, 1)
+	one := decimal.New(1, 0)
+	order, err := c.Buy("LTC/BTC", one, one)
 	if err == nil {
 		t.Log("order successfully created")
 		if order == 0 {
@@ -65,7 +68,8 @@ func TestClientBuy(t *testing.T) {
 	}
 }
 func TestClientSell(t *testing.T) {
-	order, err := c.Sell("LTC/BTC", 1, 1)
+	one := decimal.New(1, 0)
+	order, err := c.Sell("LTC/BTC", one, one)
 	if err == nil {
 		t.Log("order successfully created")
 		if order == 0 {

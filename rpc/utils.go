@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 
 	"errors"
+
+	"github.com/shopspring/decimal"
 )
 
 // validateRequest checks that request has correct jsonrpc version and has id
@@ -43,6 +45,18 @@ func GetIntParam(params map[string]interface{}, key string) (value int, err erro
 		return 0, errInvalidType
 	}
 	return 0, errParamNotFound
+}
+
+// GetDecimalParam extract string param from request params
+func GetDecimalParam(params map[string]interface{}, key string) (value decimal.Decimal, err error) {
+	if v, ok := params[key]; ok {
+		if data, ok := v.(string); ok {
+			err = json.Unmarshal([]byte(data), &value)
+			return value, err
+		}
+		return value, errInvalidType
+	}
+	return value, errParamNotFound
 }
 
 // GetFloatParam extract float64 params from request params

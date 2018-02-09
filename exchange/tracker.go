@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"errors"
+
+	"github.com/shopspring/decimal"
 )
 
 // Orders is interface that provides functionality for order tracking
@@ -137,16 +139,15 @@ func (t *tracker) UpdateOrder(order Order) error {
 func update(exist, upd Order) Order {
 	var (
 		zerotime   = time.Time{}
-		zerofloat  = float64(0)
 		zerostring = ""
 	)
-	if upd.CompletedAmount != zerofloat {
+	if !upd.CompletedAmount.Equal(decimal.Zero) {
 		exist.CompletedAmount = upd.CompletedAmount
 	}
 	if upd.Status != zerostring {
 		exist.Status = upd.Status
 	}
-	if upd.Fee != zerofloat {
+	if !upd.Fee.Equal(decimal.Zero) {
 		exist.Fee = upd.Fee
 	}
 	if upd.Accepted != zerotime {
@@ -203,8 +204,8 @@ func hash(order Order) int {
 	order = truncate(order)
 	var (
 		buf    = make([]byte, 8*2)
-		amount = uint64(order.Amount * 10e8)
-		price  = uint64(order.Price * 10e8)
+		amount = uint64(order.Amount.Mul(decimal.New(10, 8)).IntPart())
+		price  = uint64(order.Price.Mul(decimal.New(10, 8)).IntPart())
 	)
 	binary.BigEndian.PutUint64(buf[0:8], amount)
 	binary.BigEndian.PutUint64(buf[8:16], price)

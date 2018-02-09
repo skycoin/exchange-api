@@ -7,6 +7,8 @@ import (
 	"errors"
 	"os"
 	"testing"
+
+	"github.com/shopspring/decimal"
 )
 
 var key, secret = func() (key string, secret string) {
@@ -23,8 +25,8 @@ var key, secret = func() (key string, secret string) {
 const (
 	// declaring these as globals so client_test can test with the same params
 	orderMarket = "BTC_SKY"
-	orderPrice  = 0.5 // 0.5 btc/sky? I like that price!
-	orderAmount = 1.2
+	orderPrice  = decimal.NewFromFloat(0.5) // 0.5 btc/sky? I like that price!
+	orderAmount = decimal.NewFromFloat(1.2)
 	orderType   = "Sell"
 	priceTypeId = PriceTypeLimit
 )

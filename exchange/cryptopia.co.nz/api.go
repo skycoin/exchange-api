@@ -10,6 +10,8 @@ import (
 	"strings"
 
 	"errors"
+
+	"github.com/shopspring/decimal"
 )
 
 type response struct {
@@ -364,7 +366,7 @@ const (
 )
 
 // submitTrade submits a new trade offer
-func submitTrade(key, secret, nonce, market, Type string, rate, amount float64) (int, error) {
+func submitTrade(key, secret, nonce, market, Type string, rate, amount decimal.Decimal) (int, error) {
 	var (
 		params = make(map[string]interface{})
 		err    error
@@ -386,8 +388,8 @@ func submitTrade(key, secret, nonce, market, Type string, rate, amount float64) 
 		return 0, err
 	}
 	if !resp.Success {
-		return 0, fmt.Errorf("SubmitTrade failed: %s, Type %s Market %s Rate %f Amount %f",
-			resp.Message, Type, market, rate, amount)
+		return 0, fmt.Errorf("SubmitTrade failed: %s, Type %s Market %s Rate %s Amount %s",
+			resp.Message, Type, market, rate.String(), amount.String())
 	}
 	var result newOrder
 	err = json.Unmarshal(resp.Data, &result)
@@ -441,7 +443,7 @@ func cancelTrade(key, secret, nonce string, Type string, TradePair *string, orde
 }
 
 // SubmitTip submits a tip to Trollbox
-func submitTip(key, secret, nonce, currency string, activeUsers int, amount float64) (string, error) {
+func submitTip(key, secret, nonce, currency string, activeUsers int, amount decimal.Decimal) (string, error) {
 	var (
 		params = make(map[string]interface{})
 		cID    int
@@ -470,7 +472,7 @@ func submitTip(key, secret, nonce, currency string, activeUsers int, amount floa
 
 // SubmitWithdraw submits a withdrawal request. If address does not exists in you AddressBook, it will fail
 // paymentid will be used only for currencies, based of CryptoNote algorhitm
-func submitWithdraw(key, secret, nonce, currency, address, paymentid string, amount float64) (int, error) {
+func submitWithdraw(key, secret, nonce, currency, address, paymentid string, amount decimal.Decimal) (int, error) {
 	var (
 		params = make(map[string]interface{})
 		err    error
@@ -492,15 +494,15 @@ func submitWithdraw(key, secret, nonce, currency, address, paymentid string, amo
 		return 0, err
 	}
 	if !resp.Success {
-		return 0, fmt.Errorf("SubmitWithdraw failed: %s, %s %f to %s ",
-			resp.Message, currency, amount, address)
+		return 0, fmt.Errorf("SubmitWithdraw failed: %s, %s %s to %s ",
+			resp.Message, currency, amount.String(), address)
 	}
 	var result int
 	return result, json.Unmarshal(resp.Data, &result)
 }
 
 // submitTransfer submit a transfer funds to another user
-func submitTransfer(key, secret, nonce, currency, username string, amount float64) (string, error) {
+func submitTransfer(key, secret, nonce, currency, username string, amount decimal.Decimal) (string, error) {
 	var (
 		params = make(map[string]interface{})
 		err    error

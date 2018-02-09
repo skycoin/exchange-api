@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 func TestOrder_jsonMarshaler(t *testing.T) {
@@ -14,10 +16,10 @@ func TestOrder_jsonMarshaler(t *testing.T) {
 		Status:          Completed,
 		Type:            Buy,
 		Market:          "BTC/LTC",
-		Price:           2250.01,
-		Amount:          10,
-		CompletedAmount: 2250,
-		Fee:             0.1,
+		Price:           decimal.NewFromFloat(2250.01),
+		Amount:          decimal.NewFromFloat(10.0),
+		CompletedAmount: decimal.NewFromFloat(2250.0),
+		Fee:             decimal.NewFromFloat(0.1),
 		Accepted:        testtime,
 		Submitted:       testtime,
 		Completed:       testtime,

@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/skycoin/exchange-api/exchange"
 )
 
@@ -107,26 +109,26 @@ func getBalance(key, secret string) (userInfo Balance, err error) {
 // createOrder creates order with given orderType and parameters
 // advanced is a advanced options for order creation
 // if advanced is nil, isAdvancedOrder sets to zero, else advanced will be used as advanced options
-func createOrder(key, secret string, market string, price, quantity float64, orderType string, priceTypeID string, advanced *AdvancedOrderParams) (int, error) {
+func createOrder(key, secret string, market string, price, quantity decimal.Decimal, orderType string, priceTypeID string, advanced *AdvancedOrderParams) (int, error) {
 	var (
 		params = url.Values{
 			"symbol":      []string{market},
-			"price":       []string{strconv.FormatFloat(price, 'f', -1, 64)},
-			"quantity":    []string{strconv.FormatFloat(quantity, 'f', -1, 64)},
+			"price":       []string{price.String()},
+			"quantity":    []string{quantity.String()},
 			"orderType":   []string{orderType},
 			"priceTypeId": []string{priceTypeID},
 		}
 	)
 	if advanced != nil {
 		params.Add("isAdvancedOrder", "1")
-		if advanced.StopLoss != 0 {
-			params.Add("stopLoss", strconv.FormatFloat(advanced.StopLoss, 'f', -1, 64))
+		if !advanced.StopLoss.Equal(decimal.Zero) {
+			params.Add("stopLoss", advanced.StopLoss.String())
 		}
-		if advanced.TakeProfit != 0 {
-			params.Add("takeProfit", strconv.FormatFloat(advanced.TakeProfit, 'f', -1, 64))
+		if !advanced.TakeProfit.Equal(decimal.Zero) {
+			params.Add("takeProfit", advanced.TakeProfit.String())
 		}
-		if advanced.TriggerPrice != 0 {
-			params.Add("triggerPrice", strconv.FormatFloat(advanced.TriggerPrice, 'f', -1, 64))
+		if !advanced.TriggerPrice.Equal(decimal.Zero) {
+			params.Add("triggerPrice", advanced.TriggerPrice.String())
 		}
 	} else {
 		params.Add("isAdvancedOrder", "0")

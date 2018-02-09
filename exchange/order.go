@@ -3,21 +3,25 @@ package exchange
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 type orderInternal struct {
-	OrderID   int     `json:"orderid"`
-	Type      string  `json:"type"`
-	Market    string  `json:"market"`
-	Amount    float64 `json:"amount"`
-	Price     float64 `json:"price"`
-	Submitted int64   `json:"submitted_at"`
+	OrderID   int    `json:"orderid"`
+	Type      string `json:"type"`
+	Market    string `json:"market"`
+	Submitted int64  `json:"submitted_at"`
 
-	Fee             float64 `json:"fee"`
-	CompletedAmount float64 `json:"completed_amount"`
-	Status          string  `json:"status"`
-	Accepted        int64   `json:"accepted_at"`
-	Completed       int64   `json:"completed_at"`
+	Amount decimal.Decimal `json:"amount"`
+	Price  decimal.Decimal `json:"price"`
+
+	Fee             decimal.Decimal `json:"fee"`
+	CompletedAmount decimal.Decimal `json:"completed_amount"`
+
+	Status    string `json:"status"`
+	Accepted  int64  `json:"accepted_at"`
+	Completed int64  `json:"completed_at"`
 }
 
 // MarshalJSON implements json.Marshaler interface

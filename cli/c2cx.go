@@ -3,18 +3,21 @@ package cli
 import (
 	"fmt"
 
+	"github.com/shopspring/decimal"
 	"github.com/urfave/cli"
 
 	c2cx "github.com/skycoin/exchange-api/exchange/c2cx.com"
 )
 
 func sumbitTradeCMD() cli.Command {
-	name := "submittrade"
-	pricetype := ""
-	ordertype := ""
-	takeprofit := 0.0
-	stoploss := 0.0
-	triggerprice := 0.0
+	var name = "submittrade"
+	var (
+		pricetype       string
+		ordertype       string
+		takeprofitStr   string
+		stoplossStr     string
+		triggerpriceStr string
+	)
 	return cli.Command{
 		Name:      name,
 		Usage:     "Create new order with advanced parameters",
@@ -23,19 +26,31 @@ func sumbitTradeCMD() cli.Command {
 			if c.NArg() != 3 {
 				return errInvalidInput
 			}
-			symbol := ""
-			price := 0.0
-			amount := 0.0
-			params := map[string]interface{}{
-				"price_type_id": &pricetype,
-				"order_type":    &ordertype,
+			var (
+				symbol                             string
+				price, amount                      decimal.Decimal
+				stopLoss, takeProfit, triggerPrice decimal.Decimal
+				err                                error
+			)
+			if stopLoss, err = decimal.NewFromString(stoplossStr); err != nil {
+				return err
+			}
+			if takeProfit, err = decimal.NewFromString(takeprofitStr); err != nil {
+				return err
+			}
+			if triggerPrice, err = decimal.NewFromString(triggerpriceStr); err != nil {
+				return err
+			}
+			var params = map[string]interface{}{
+				"price_type_id": pricetype,
+				"order_type":    ordertype,
 				"symbol":        symbol,
 				"price":         price,
 				"amount":        amount,
 				"advanced": c2cx.AdvancedOrderParams{
-					StopLoss:     stoploss,
-					TakeProfit:   takeprofit,
-					TriggerPrice: triggerprice,
+					StopLoss:     stopLoss,
+					TakeProfit:   takeProfit,
+					TriggerPrice: triggerPrice,
 				},
 			}
 			resp, err := rpcRequest("submit_trade", params)
@@ -55,17 +70,17 @@ func sumbitTradeCMD() cli.Command {
 				Name:        "type",
 				Destination: &ordertype,
 			},
-			cli.Float64Flag{
+			cli.StringFlag{
 				Name:        "takeprofit",
-				Destination: &takeprofit,
+				Destination: &takeprofitStr,
 			},
-			cli.Float64Flag{
+			cli.StringFlag{
 				Name:        "stoploss",
-				Destination: &stoploss,
+				Destination: &stoplossStr,
 			},
-			cli.Float64Flag{
+			cli.StringFlag{
 				Name:        "triggerprice",
-				Destination: &triggerprice,
+				Destination: &triggerpriceStr,
 			},
 		},
 	}
