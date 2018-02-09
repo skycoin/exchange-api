@@ -1,7 +1,9 @@
 package rpc
 
-import "testing"
-import "encoding/json"
+import (
+	"encoding/json"
+	"testing"
+)
 
 func TestClientDo(t *testing.T) {
 	server := Server{

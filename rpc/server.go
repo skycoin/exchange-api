@@ -4,75 +4,98 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
-	"net"
 	"net/http"
 	"strings"
 )
 
-// Server serve all request for all exchanges
+// Server represents an RPC server for exchange-api
 type Server struct {
 	Handlers map[string]Wrapper
-	mux      *http.ServeMux
+	server   http.Server
 }
 
-// Handler implenments http.Handler interface
-func (s *Server) Handler(w http.ResponseWriter, r *http.Request) {
+// Start starts an exchange-api RPC Server on the given address, and runs until the given channel is closed
+func (s *Server) Start(addr string, stop chan struct{}) {
+	var mux = http.NewServeMux()
+
+	for k := range s.Handlers {
+		mux.HandleFunc("/"+k, s.handler)
+	}
+
+	s.server = http.Server{
+		Addr:    addr,
+		Handler: mux,
+	}
+
+	go func() {
+		log.Printf("Starting server %s\n", addr)
+		if err := s.server.ListenAndServe(); err != http.ErrServerClosed {
+			panic(err)
+		}
+	}()
+
+	<-stop
+
+	log.Println("Stopping server...")
+	if err := s.server.Close(); err != nil {
+		panic(err)
+	}
+
+	log.Println("Stopped server.")
+}
+
+func (s *Server) handler(w http.ResponseWriter, r *http.Request) {
+
+	// reading request body
 	reqBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	var req Request
-	err = json.Unmarshal(reqBytes, &req)
-	if err != nil {
-		w.WriteHeader(500)
-	}
-	ep := strings.TrimPrefix(r.URL.Path, "/")
-	if v, ok := s.Handlers[ep]; ok {
-		resp := v.Process(req)
-		if resp == nil {
-			return
-		}
-		if resp.Error != nil {
-			log.Printf("error: %s\n", resp.Error)
-		}
 
-		respData, _ := json.Marshal(resp)
-		if _, err = w.Write(respData); err != nil {
-			return
+	defer func() {
+		if err = r.Body.Close(); err != nil {
+			panic(err)
 		}
-		w.Header().Add("Content-Type", "application/json")
+	}()
+
+	var req Request
+	if err = json.Unmarshal(reqBytes, &req); err != nil {
+		w.WriteHeader(500)
 		return
 	}
-	log.Printf("not found %s\n", ep)
-	w.WriteHeader(404)
-}
 
-// Start starts listener
-func (s *Server) Start(addr string, stop chan struct{}) {
-	s.mux = http.NewServeMux()
-	for k := range s.Handlers {
-		s.mux.HandleFunc("/"+k, s.Handler)
+	endpoint := strings.TrimPrefix(r.URL.Path, "/")
+
+	wrapper, ok := s.Handlers[endpoint]
+	if !ok {
+		log.Printf("not found %s\n", endpoint)
+		w.WriteHeader(404)
+		return
 	}
-	l, err := net.Listen("tcp", addr)
+
+	response := wrapper.Process(req)
+	if response == nil {
+		w.WriteHeader(500)
+		return
+	}
+
+	if response.Error != nil {
+		log.Printf("error: %s\n", response.Error)
+	}
+
+	responseBytes, err := json.Marshal(response)
 	if err != nil {
-		panic(err)
+		log.Printf("Failed to marshal response: %s\n", err)
+		w.WriteHeader(500)
+		return
 	}
-	log.Printf("Starting server %s\n", addr)
-	go func() {
-		if err := http.Serve(l, s); err != nil {
-			panic(err)
-		}
-	}()
-	defer func() {
-		if err := l.Close(); err != nil {
-			panic(err)
-		}
-	}()
-	<-stop
-	log.Println("Server stopped")
 
-}
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.mux.ServeHTTP(w, r)
+	w.Header().Add("Content-Type", "application/json")
+
+	if _, err = w.Write(responseBytes); err != nil {
+		log.Printf("Failed to write responseBytes: %s\n", err)
+		w.WriteHeader(500)
+		return
+	}
 }

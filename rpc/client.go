@@ -21,7 +21,10 @@ func Do(addr, endpoint string, r Request) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	req, _ := http.NewRequest("POST", requestURI.String(), bytes.NewReader(requestData))
+	req, err := http.NewRequest("POST", requestURI.String(), bytes.NewReader(requestData))
+	if err != nil {
+		return nil, err
+	}
 	resp, err := c.Do(req)
 	if err != nil {
 		return nil, err
