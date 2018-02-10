@@ -30,7 +30,7 @@ func (s *Server) Start(addr string, stop chan struct{}) {
 	go func() {
 		log.Printf("Starting server %s\n", addr)
 		if err := s.server.ListenAndServe(); err != http.ErrServerClosed {
-			panic(err)
+			log.Printf("Error while running RPC server: %s\n", err)
 		}
 	}()
 
@@ -38,7 +38,7 @@ func (s *Server) Start(addr string, stop chan struct{}) {
 
 	log.Println("Stopping server...")
 	if err := s.server.Close(); err != nil {
-		panic(err)
+		log.Printf("Error while closing server: %s\n", err)
 	}
 
 	log.Println("Stopped server.")
