@@ -3,6 +3,7 @@ package rpc
 import (
 	"encoding/json"
 	"testing"
+	"time"
 )
 
 func TestClientDo(t *testing.T) {
@@ -18,6 +19,7 @@ func TestClientDo(t *testing.T) {
 	addr := "localhost:12345"
 	stop := make(chan struct{})
 	go server.Start(addr, stop)
+	time.Sleep(1 * time.Second)
 	params, _ := json.Marshal(map[string]interface{}{"currency": "BTC"})
 	resp, err := Do(addr, "test", Request{
 		ID:      new(string),
