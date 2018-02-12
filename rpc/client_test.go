@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 func TestClientDo(t *testing.T) {
@@ -30,8 +32,15 @@ func TestClientDo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(resp.Result) != "\"You has 21 * 10e9 BTC\"" {
-		t.Fatal("want \"You has 21 * 10e9 BTC\", expected", string(resp.Result))
+	var (
+		result decimal.Decimal
+		target = decimal.NewFromFloat(1.234)
+	)
+	if err := json.Unmarshal(resp.Result, &result); err != nil {
+		t.Fatal(err)
+	}
+	if !target.Equal(result) {
+		t.Fatalf("expected: %s; received: %s", target.String(), result.String())
 	}
 	close(stop)
 }

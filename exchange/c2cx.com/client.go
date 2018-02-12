@@ -216,16 +216,18 @@ func (c *Client) Orderbook() exchange.Orderbooks {
 }
 
 // GetBalance gets balance information about given currency
-func (c *Client) GetBalance(currency string) (string, error) {
+func (c *Client) GetBalance(currency string) (decimal.Decimal, error) {
+	var result decimal.Decimal
 	info, err := getBalance(c.Key, c.Secret)
 	if err != nil {
-		return "", err
+		return result, err
 	}
-	if v, ok := info[strings.ToLower(currency)]; ok {
-		return v, nil
+	if result, ok := info[strings.ToLower(currency)]; ok {
+		return result, nil
 	}
-	return "", fmt.Errorf("currency %s does not found", currency)
+	return result, fmt.Errorf("currency %s was not found", currency)
 }
+
 func (c *Client) updateOrderbook() {
 	for _, v := range Markets {
 		orderbook, err := getOrderbook(v)

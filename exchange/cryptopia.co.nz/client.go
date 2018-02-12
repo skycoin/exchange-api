@@ -177,7 +177,7 @@ func (c *Client) OrderDetails(orderID int) (exchange.Order, error) {
 }
 
 // GetBalance returns string representation of balance informaiton for given currency
-func (c *Client) GetBalance(symbol string) (string, error) {
+func (c *Client) GetBalance(symbol string) (decimal.Decimal, error) {
 	return getBalance(c.Key, c.Secret, nonce(), symbol)
 }
 

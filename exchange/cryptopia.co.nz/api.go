@@ -237,24 +237,25 @@ var errNoOrders = errors.New("no orders for updating")
 // Private API functions
 
 //getBalance return a string representation of balance by given currency
-func getBalance(key, secret, nonce, currency string) (string, error) {
+func getBalance(key, secret, nonce, currency string) (decimal.Decimal, error) {
+	var zero = decimal.NewFromFloat(0.0)
 	resp, err := requestPost("getbalance", key, secret, nonce, nil)
 	if err != nil {
-		return "", err
+		return zero, err
 	}
 	if !resp.Success {
-		return "", fmt.Errorf("GetBalance failed: %s, Currency %s Rawdata %s",
+		return zero, fmt.Errorf("GetBalance failed: %s, Currency %s Rawdata %s",
 			resp.Message, currency, string(resp.Data))
 	}
 	var result balance
 	err = json.Unmarshal(resp.Data, &result)
 	if err != nil {
-		return "", err
+		return zero, err
 	}
 	if v, ok := result[normalize(currency)]; ok {
 		return v, nil
 	}
-	return "", errors.New("currency does not found")
+	return zero, errors.New("currency was not found")
 }
 
 // getDepositAddress returns a deposit address of given currency

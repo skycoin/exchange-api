@@ -2,7 +2,6 @@ package cryptopia
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 
@@ -12,7 +11,7 @@ import (
 )
 
 // balance represents balance of all avalible currencies
-type balance map[string]string
+type balance map[string]decimal.Decimal
 
 type currency struct {
 	CurrencyID      int             `json:"CurrencyId"`
@@ -31,7 +30,7 @@ type currency struct {
 // UnmarshalJSON implements json.Unmarshaler interface
 func (r *balance) UnmarshalJSON(b []byte) error {
 	if r == nil {
-		(*r) = make(map[string]string)
+		(*r) = make(map[string]decimal.Decimal)
 	}
 
 	var tmp = make([]currency, 0)
@@ -41,12 +40,7 @@ func (r *balance) UnmarshalJSON(b []byte) error {
 	var result = make(balance)
 
 	for _, v := range tmp {
-		result[strings.ToUpper(v.Symbol)] = fmt.Sprintf("Total: %s Available: %s Unconfirmed: %s Held: %s Pending: %s",
-			v.Total.StringFixed(8),
-			v.Available.StringFixed(8),
-			v.Unconfirmed.StringFixed(8),
-			v.HeldForTrades.StringFixed(8),
-			v.PendingWithdraw.StringFixed(8))
+		result[strings.ToUpper(v.Symbol)] = v.Available
 	}
 	*r = result
 	return nil
