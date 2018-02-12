@@ -174,7 +174,7 @@ func GetMarketHistory(label string, hours *int) ([]MarketHistory, error) {
 }
 
 // GetBalance returns a string representation of balance by given currency
-func GetBalance(key, secret string, currency string) (string, error) {
+func GetBalance(key, secret string, currency string) (decimal.Decimal, error) {
 	return getBalance(key, secret, nonce(), currency)
 }
 

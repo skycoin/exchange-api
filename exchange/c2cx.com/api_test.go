@@ -22,7 +22,7 @@ var key, secret = func() (key string, secret string) {
 	panic("C2CX key not provided")
 }()
 
-const (
+var (
 	// declaring these as globals so client_test can test with the same params
 	orderMarket = "BTC_SKY"
 	orderPrice  = decimal.NewFromFloat(0.5) // 0.5 btc/sky? I like that price!
@@ -42,11 +42,11 @@ func TestGetUserInfo(t *testing.T) {
 }
 
 type balanceJSONEntry struct {
-	Btc float64 `json:"btc"`
-	Etc float64 `json:"etc"`
-	Eth float64 `json:"eth"`
-	Cny float64 `json:"cny"`
-	Sky float64 `json:"sky"`
+	Btc decimal.Decimal `json:"btc"`
+	Etc decimal.Decimal `json:"etc"`
+	Eth decimal.Decimal `json:"eth"`
+	Cny decimal.Decimal `json:"cny"`
+	Sky decimal.Decimal `json:"sky"`
 }
 
 type balanceJSON struct {
@@ -54,14 +54,15 @@ type balanceJSON struct {
 	Frozen  balanceJSONEntry `json:balance`
 }
 
-func availableSKY() (float64, error) {
+func availableSKY() (decimal.Decimal, error) {
+	var zero = decimal.NewFromFloat(0.0)
 	var endpoint = "getbalance"
 	resp, err := requestPost(endpoint, key, secret, nil)
 	if err != nil {
-		return 0.0, err
+		return zero, err
 	}
 	if resp.Code != 200 {
-		return 0.0, apiError(endpoint, resp.Message)
+		return zero, apiError(endpoint, resp.Message)
 	}
 	var balance balanceJSON
 	err = json.Unmarshal(resp.Data, &balance)
@@ -74,7 +75,7 @@ func TestOrderManipulation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if availSky < orderAmount {
+	if availSky.LessThan(orderAmount) {
 		t.Fatal(errors.New("Test wallet doesn't have enough SKY"))
 	}
 

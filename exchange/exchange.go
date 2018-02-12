@@ -38,8 +38,8 @@ type Client interface {
 	CancelMarket(string) ([]Order, error)
 	// CancelAll cancels all orders that executed in exchange
 	CancelAll() ([]Order, error)
-	// GetBalance gets a information about balance in a string format, depends of exchange representation format
-	GetBalance(string) (string, error)
+	// GetBalance returns the balance for a given currency
+	GetBalance(string) (decimal.Decimal, error)
 	// Buy places buy order
 	Buy(string, decimal.Decimal, decimal.Decimal) (int, error)
 	// Sell places sell order

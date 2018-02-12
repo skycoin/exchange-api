@@ -2,7 +2,6 @@ package c2cx
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/shopspring/decimal"
 )
@@ -14,7 +13,7 @@ type newOrder struct {
 
 // Balance is a map with strings of balances
 // all keys must be lowercase
-type Balance map[string]string
+type Balance map[string]decimal.Decimal
 
 type balanceResponseEntry struct {
 	Btc decimal.Decimal `json:"btc"`
@@ -41,18 +40,11 @@ func (br balanceResponse) Balances() map[string]decimal.Decimal {
 
 // UnmarshalJSON implements json.Unmarshaler
 func (r *Balance) UnmarshalJSON(b []byte) error {
-	if *r == nil {
-		(*r) = make(map[string]string)
-	}
 	var v balanceResponse
 	err := json.Unmarshal(b, &v)
 	if err != nil {
 		return err
 	}
-	(*r)["btc"] = fmt.Sprintf("Available %s, frozen %s", v.Balance.Btc.StringFixed(8), v.Frozen.Btc.StringFixed(8))
-	(*r)["etc"] = fmt.Sprintf("Available %s, frozen %s", v.Balance.Etc.StringFixed(8), v.Frozen.Etc.StringFixed(8))
-	(*r)["eth"] = fmt.Sprintf("Available %s, frozen %s", v.Balance.Eth.StringFixed(8), v.Frozen.Eth.StringFixed(8))
-	(*r)["sky"] = fmt.Sprintf("Available %s, frozen %s", v.Balance.Sky.StringFixed(8), v.Frozen.Sky.StringFixed(8))
-	(*r)["cny"] = fmt.Sprintf("Available %s, frozen %s", v.Balance.Cny.StringFixed(8), v.Frozen.Cny.StringFixed(8))
+	(*r) = v.Balances()
 	return nil
 }

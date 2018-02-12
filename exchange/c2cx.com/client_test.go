@@ -33,7 +33,7 @@ func TestClientOperations(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if availSky < orderAmount {
+	if availSky.LessThan(orderAmount) {
 		t.Fatal(errors.New("Test wallet doesn't have enough SKY"))
 	}
 

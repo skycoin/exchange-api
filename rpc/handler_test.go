@@ -24,10 +24,18 @@ func Test_defaultHandler_GetBalance(t *testing.T) {
 	if resp.Error != nil {
 		t.Error(resp.Error)
 	}
-	if string(resp.Result) != "\"You has 21 * 10e9 BTC\"" {
-		t.Fatalf("want: %s, expected: %s", "\"You has 21 * 10e9 BTC\"", resp.Result)
+	var (
+		result decimal.Decimal
+		target = decimal.NewFromFloat(1.234)
+	)
+	if err := json.Unmarshal(resp.Result, &result); err != nil {
+		t.Fatal(err)
+	}
+	if !target.Equal(result) {
+		t.Fatalf("expected: %s; received: %s", target.String(), result.String())
 	}
 }
+
 func Test_defaulthandler_Cancel(t *testing.T) {
 	req := Request{
 		Params:  json.RawMessage("{\"orderid\":1}"),
@@ -211,7 +219,7 @@ func (ex) CancelMarket(string) ([]exchange.Order, error)              { return [
 func (ex) CancelAll() ([]exchange.Order, error)                       { return []exchange.Order{}, nil }
 func (ex) Executed() []int                                            { return []int{} }
 func (ex) Completed() []int                                           { return []int{} }
-func (ex) GetBalance(string) (string, error)                          { return "You has 21 * 10e9 BTC", nil }
+func (ex) GetBalance(string) (decimal.Decimal, error)                 { return decimal.NewFromFloat(1.234), nil }
 func (ex) OrderDetails(int) (exchange.Order, error)                   { return exchange.Order{}, nil }
 func (ex) OrderStatus(int) (string, error)                            { return exchange.Completed, nil }
 func (ex) Orderbook() exchange.Orderbooks                             { return nil }
