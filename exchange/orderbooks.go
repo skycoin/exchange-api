@@ -3,6 +3,7 @@ package exchange
 import (
 	"encoding/json"
 	"time"
+	"errors"
 
 	"github.com/shopspring/decimal"
 )
@@ -86,4 +87,15 @@ func (r *MarketRecord) UnmarshalJSON(b []byte) error {
 	r.Timestamp = time.Unix(tmp.Time/10e2, (tmp.Time%10e2)*10e5)
 	r.Symbol = tmp.Symbol
 	return nil
+}
+
+var (
+	ErrNegativeAmount = errors.New("can't spend negative quantities of currency")
+	ErrOrdersRanOut = errors.New(
+		"ran out of orders before we ran out of currency")
+)
+
+func (r *MarketRecord) SpendItAll(amount decimal.Decimal) ([]MarketOrder, decimal.Decimal, error) {
+	var debugfinish decimal.Decimal
+	return nil, debugfinish, errors.New("debug finish")
 }
