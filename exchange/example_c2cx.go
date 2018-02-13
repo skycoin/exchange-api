@@ -1,4 +1,4 @@
-package exchange_test
+package exchange
 
 import (
 	"log"
