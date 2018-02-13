@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/urfave/cli"
-
 	"github.com/skycoin/exchange-api/exchange"
+	"github.com/urfave/cli"
 )
 
 func orderbookCMD() cli.Command {

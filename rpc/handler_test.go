@@ -6,9 +6,9 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	"reflect"
+	exchange "github.com/skycoin/exchange-api/exchange"
 
-	"github.com/skycoin/exchange-api/exchange"
+	"reflect"
 )
 
 var client = ex{}

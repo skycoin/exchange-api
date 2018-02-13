@@ -6,7 +6,6 @@ import (
 	"errors"
 
 	"github.com/shopspring/decimal"
-
 	"github.com/skycoin/exchange-api/exchange"
 )
 
