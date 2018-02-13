@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
+	"github.com/stretchr/testify/require"
 )
 
 func testMarketRecord() MarketRecord {
@@ -50,59 +51,42 @@ func TestSpendItAll_Success(t *testing.T) {
 	marketRecord := testMarketRecord()
 	bankroll := decimal.NewFromFloat(40.0)
 
-	orders, remaining, err := marketRecord.SpendItAll(bankroll)
+	orders, err := marketRecord.SpendItAll(bankroll)
 
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if !remaining.Equal(decimal.NewFromFloat(0.0)) {
-		t.Fatalf("Failed to spend all of the bankroll")
-	}
-
-	totalSpent := decimal.NewFromFloat(0.0)
-	totalPurchased := decimal.NewFromFloat(0.0)
+	totalSpent := decimal.Zero
 
 	for _, order := range orders {
 		totalSpent = totalSpent.Add(order.Price.Mul(order.Volume))
-		totalPurchased = totalPurchased.Add(order.Volume)
 	}
 
-	if !totalSpent.Equal(bankroll) {
-		t.Fatalf("Returned orders don't equal bankroll")
-	}
+	require.True(t, totalSpent.Equal(bankroll), "Returned orders don't equal bankroll")
 
-	if !totalPurchased.Equal(decimal.NewFromFloat(9.6)) {
+	totalPurchased := orders.Volume()
+
+	require.True(t, totalPurchased.Equal(decimal.NewFromFloat(9.6)),
 		// that's 8.0 skycoins at 4 btc per sky = 32 btc
 		// plus   1.6 skycoins at 5 btc per sky =  8 btc
-		// ===========================================
+		// =============================================
 		//        9.6                             40 btc (our original bankroll)
-		t.Fatalf("Failed to get cheapest price")
-	}
+		"Failed to get cheapest price")
 }
 
 func TestSpendItAll_ErrNegativeAmount(t *testing.T) {
 	marketRecord := testMarketRecord()
 	bankroll := decimal.NewFromFloat(-5.0)
 
-	_, _, err := marketRecord.SpendItAll(bankroll)
+	_, err := marketRecord.SpendItAll(bankroll)
 
-	if err != ErrNegativeAmount {
-		t.Fatalf("Shouldn't be able to spend negative currency")
-	}
+	require.Equal(t, ErrNegativeAmount, err)
 }
 
 func TestSpendItAll_ErrOrdersRanOut(t *testing.T) {
 	marketRecord := testMarketRecord()
 	bankroll := decimal.NewFromFloat(78.0)
 
-	_, remaining, err := marketRecord.SpendItAll(bankroll)
+	_, err := marketRecord.SpendItAll(bankroll)
 
-	if err != ErrOrdersRanOut {
-		t.Fatalf("Orders were supposed to run out, but didn't")
-	}
-
-	if remaining.LessThanOrEqual(decimal.NewFromFloat(0.0)) {
-		t.Fatal("Remaining should be positive if orders ran out")
-	}
+	require.Equal(t, ErrOrdersRanOut, err)
 }
