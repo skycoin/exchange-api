@@ -11,7 +11,6 @@ import (
 	"github.com/shopspring/decimal"
 
 	"github.com/skycoin/exchange-api/db"
-	"github.com/skycoin/exchange-api/exchange"
 	"github.com/skycoin/exchange-api/exchange/c2cx.com"
 
 	"github.com/skycoin/exchange-api/exchange/cryptopia.co.nz"

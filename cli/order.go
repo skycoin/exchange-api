@@ -6,9 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/urfave/cli"
-
 	"github.com/skycoin/exchange-api/exchange"
+	"github.com/urfave/cli"
 )
 
 const (

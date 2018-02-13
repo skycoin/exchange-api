@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/shopspring/decimal"
-
 	"github.com/skycoin/exchange-api/exchange"
 )
 
