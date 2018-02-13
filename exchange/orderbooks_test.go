@@ -2,27 +2,28 @@ package exchange
 
 import (
 	"testing"
-	"github.com/shopspring/decimal"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 func testMarketRecord() MarketRecord {
 	return MarketRecord{
 		Timestamp: time.Now(),
-		Symbol: "SKY/BTC",
+		Symbol:    "SKY/BTC",
 		Asks: []MarketOrder{
 			// this person is trying to sell 9 skycoins at a price of 5
 			// bitcoins per skycoin
 			// if their order is fulfilled, they lose 9 SKY and gain 45 BTC
 			{
-				Price: decimal.NewFromFloat(5.0),
+				Price:  decimal.NewFromFloat(5.0),
 				Volume: decimal.NewFromFloat(9.0),
 			},
 			// this person is trying to sell 8 skycoins at a price of 4
 			// bitcoins per skycoin
 			// if their order is fulfilled, they lose 8 SKY and gain 32 BTC
 			{
-				Price: decimal.NewFromFloat(4.0),
+				Price:  decimal.NewFromFloat(4.0),
 				Volume: decimal.NewFromFloat(8.0),
 			},
 		},
@@ -31,14 +32,14 @@ func testMarketRecord() MarketRecord {
 			// bitcoins per skycoin
 			// if their order is fulfilled, they gain 7 SKY and lose 21 BTC
 			{
-				Price: decimal.NewFromFloat(3.0),
+				Price:  decimal.NewFromFloat(3.0),
 				Volume: decimal.NewFromFloat(7.0),
 			},
 			// this person is trying to buy 6 skycoins at a price of 2
 			// bitcoins per skycoin
 			// if their order is fulfilled, they gain 6 SKY and lose 12 BTC
 			{
-				Price: decimal.NewFromFloat(2.0),
+				Price:  decimal.NewFromFloat(2.0),
 				Volume: decimal.NewFromFloat(6.0),
 			},
 		},
@@ -93,7 +94,7 @@ func TestSpendItAll_ErrNegativeAmount(t *testing.T) {
 
 func TestSpendItAll_ErrOrdersRanOut(t *testing.T) {
 	marketRecord := testMarketRecord()
-	bankroll := decimal.NewFromFloat(5.0)
+	bankroll := decimal.NewFromFloat(78.0)
 
 	_, remaining, err := marketRecord.SpendItAll(bankroll)
 

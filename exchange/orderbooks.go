@@ -2,8 +2,10 @@ package exchange
 
 import (
 	"encoding/json"
-	"time"
 	"errors"
+	"time"
+
+	"sort"
 
 	"github.com/shopspring/decimal"
 )
@@ -90,12 +92,58 @@ func (r *MarketRecord) UnmarshalJSON(b []byte) error {
 }
 
 var (
+	// ErrNegativeAmount SpendItAll error for when called with <0 currency
 	ErrNegativeAmount = errors.New("can't spend negative quantities of currency")
+	// ErrOrdersRanOut SpendItAll error for when the caller tries to purchase
+	// more coins than are available in the orderbook
 	ErrOrdersRanOut = errors.New(
 		"ran out of orders before we ran out of currency")
 )
 
+// SpendItAll determines the cheapest series of purchases necessary to spend the
+// specified quantity of coins. It can fail if there aren't enough standing
+// orders available to cover the purchase or if the user specifies a
+// negative quantity of coins.
 func (r *MarketRecord) SpendItAll(amount decimal.Decimal) ([]MarketOrder, decimal.Decimal, error) {
-	var debugfinish decimal.Decimal
-	return nil, debugfinish, errors.New("debug finish")
+	zero := decimal.NewFromFloat(0.0)
+	if amount.LessThan(zero) {
+		return nil, zero, ErrNegativeAmount
+	}
+
+	if amount.Equal(zero) {
+		return []MarketOrder{}, zero, nil
+	}
+
+	var sortOrders = func(first, second int) bool {
+		return r.Asks[first].Price.LessThan(r.Asks[second].Price)
+	}
+
+	sort.Slice(r.Asks, sortOrders)
+
+	var orders = []MarketOrder{}
+
+	for _, order := range r.Asks {
+		maxSpend := order.Price.Mul(order.Volume)
+		actualSpend := decimal.Min(maxSpend, amount)
+		volume := actualSpend.Div(order.Price)
+
+		var newOrder = MarketOrder{
+			Price:  order.Price,
+			Volume: volume,
+		}
+
+		orders = append(orders, newOrder)
+
+		amount = amount.Sub(newOrder.Price.Mul(newOrder.Volume))
+
+		if amount.Equal(zero) {
+			break
+		}
+	}
+
+	if amount.GreaterThan(zero) {
+		return orders, amount, ErrOrdersRanOut
+	}
+
+	return orders, amount, nil
 }
