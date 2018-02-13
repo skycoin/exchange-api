@@ -91,6 +91,7 @@ func (r *MarketRecord) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// MarketOrders alias for []MarketOrder
 type MarketOrders []MarketOrder
 
 // Volume returns the sum of a set of MarketOrders' volumes
