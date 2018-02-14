@@ -20,12 +20,19 @@ func testMarketRecord() MarketRecord {
 				Price:  decimal.NewFromFloat(5.0),
 				Volume: decimal.NewFromFloat(9.0),
 			},
-			// this person is trying to sell 8 skycoins at a price of 4
+			// this person is trying to sell 5 skycoins at a price of 4
 			// bitcoins per skycoin
-			// if their order is fulfilled, they lose 8 SKY and gain 32 BTC
+			// if their order is fulfilled, they lose 5 SKY and gain 20 BTC
 			{
 				Price:  decimal.NewFromFloat(4.0),
-				Volume: decimal.NewFromFloat(8.0),
+				Volume: decimal.NewFromFloat(5.0),
+			},
+			// this person is trying to sell 3 skycoins at a price of 4
+			// bitcoins per skycoin
+			// if their order is fulfilled, they lose 3 SKY and gain 12 BTC
+			{
+				Price:  decimal.NewFromFloat(4.0),
+				Volume: decimal.NewFromFloat(3.0),
 			},
 		},
 		Bids: []MarketOrder{
@@ -89,4 +96,25 @@ func TestSpendItAll_ErrOrdersRanOut(t *testing.T) {
 	_, err := marketRecord.SpendItAll(bankroll)
 
 	require.Equal(t, ErrOrdersRanOut, err)
+}
+
+func TestCheapestAsk_Success(t *testing.T) {
+	marketRecord := testMarketRecord()
+
+	order := marketRecord.CheapestAsk()
+
+	require.NotNil(t, order)
+
+	// CheapestAsk() should give us 20btc in this case because of the two lowest prices, one was selling 5 sky and the other 3 sky
+	require.True(t, order.TotalCost().Equal(decimal.NewFromFloat(20.0)))
+}
+
+func TestCheapestAsk_NoAsks(t *testing.T) {
+	marketRecord := testMarketRecord()
+
+	marketRecord.Asks = []MarketOrder{}
+
+	order := marketRecord.CheapestAsk()
+
+	require.Nil(t, order)
 }
