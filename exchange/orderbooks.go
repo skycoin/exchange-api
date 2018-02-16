@@ -162,21 +162,20 @@ func (r *MarketRecord) SpendItAll(amount decimal.Decimal) (MarketOrders, error) 
 
 // CheapestAsk returns the cheapest Ask order. If there are two ask orders with the same price, it returns the one with the larger volume.
 func (r *MarketRecord) CheapestAsk() *MarketOrder {
-	var result *MarketOrder
-	for _, order := range r.Asks {
-		if result != nil {
-			switch {
-			case order.Price.LessThan(result.Price):
-				*result = order
-			case order.Price.Equal(result.Price) && order.Volume.GreaterThan(result.Volume):
-				*result = order
-			default:
-			}
-		} else {
-			result = new(MarketOrder)
-			*result = order
+	if len(r.Asks) == 0 {
+		return nil
+	}
+
+	result := r.Asks[0]
+	for _, order := range r.Asks[1:] {
+		switch {
+		case order.Price.LessThan(result.Price):
+			result = order
+		case order.Price.Equal(result.Price) && order.Volume.GreaterThan(result.Volume):
+			result = order
+		default:
 		}
 	}
 
-	return result
+	return &result
 }
