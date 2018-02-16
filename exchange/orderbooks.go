@@ -24,6 +24,11 @@ type MarketOrder struct {
 	Volume decimal.Decimal `json:"volume"`
 }
 
+// TotalCost returns the total cost of executing the given order
+func (marketOrder MarketOrder) TotalCost() decimal.Decimal {
+	return marketOrder.Price.Mul(marketOrder.Volume)
+}
+
 // MarketRecord represents orderbook for one market
 type MarketRecord struct {
 	Timestamp time.Time     `json:"timestamp"`
@@ -153,4 +158,24 @@ func (r *MarketRecord) SpendItAll(amount decimal.Decimal) (MarketOrders, error) 
 	}
 
 	return orders, nil
+}
+
+// CheapestAsk returns the cheapest Ask order. If there are two ask orders with the same price, it returns the one with the larger volume.
+func (r *MarketRecord) CheapestAsk() *MarketOrder {
+	if len(r.Asks) == 0 {
+		return nil
+	}
+
+	result := r.Asks[0]
+	for _, order := range r.Asks[1:] {
+		switch {
+		case order.Price.LessThan(result.Price):
+			result = order
+		case order.Price.Equal(result.Price) && order.Volume.GreaterThan(result.Volume):
+			result = order
+		default:
+		}
+	}
+
+	return &result
 }
