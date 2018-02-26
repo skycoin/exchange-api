@@ -43,8 +43,6 @@ var (
 
 func main() {
 	var (
-		dbType       = flag.String("dbType", "memory", "Type of database memory or redis")
-		dbAddr       = flag.String("db", "localhost:6379", "Redis address")
 		srvaddr      = flag.String("srv", "localhost:12345", "RPC listener address")
 		cryptopiaKey = flag.String("cryptopia", "", "key and secret joined \":\"")
 		c2cxKey      = flag.String("c2cx", "", "c2cx key and secret joined \":\"")
@@ -66,7 +64,7 @@ func main() {
 	keys.c2cx.key = vals[0]
 	keys.c2cx.secret = vals[1]
 
-	cryptopiaOrderBook, err := db.NewOrderbookTracker(*dbType, *dbAddr, "cryptopia")
+	cryptopiaOrderBook, err := db.NewOrderbookTracker()
 
 	if err != nil {
 		log.Fatal(err)
@@ -81,7 +79,7 @@ func main() {
 		OrdersRefreshInterval:    time.Second * 5,
 	}
 
-	c2xcOrderBook, err := db.NewOrderbookTracker(*dbType, *dbAddr, "c2cx")
+	c2xcOrderBook, err := db.NewOrderbookTracker()
 
 	if err != nil {
 		log.Fatal(err)

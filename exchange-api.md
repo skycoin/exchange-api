@@ -76,10 +76,6 @@ type Client interface {
 
 #### Orderbooks
 
-The [`exchange.Orderbooks` interface](https://github.com/skycoin/exchange-api/blob/0b17f1aaf8967d3423495918ab350e290eaeafa8/exchange/orderbooks.go#L9) provides access to an exchange's orderbooks, logically enough.
-
-A [redis-backed implementation of Orderbooks](https://github.com/skycoin/exchange-api/blob/0b17f1aaf8967d3423495918ab350e290eaeafa8/db/orderbooktracker.go) is provided.
-
 ```golang
 type Orderbooks interface {
 	// Update updates orderbook for given market

@@ -111,9 +111,7 @@ func TestClientOrderDetails(t *testing.T) {
 */
 
 func TestClientUpdateOrderbook(t *testing.T) {
-	orderBook, err := db.NewOrderbookTracker(db.MemoryDatabase,
-		"",
-		"cryptopia")
+	orderBook, err := db.NewOrderbookTracker()
 
 	if err != nil {
 		t.Fatal(err)

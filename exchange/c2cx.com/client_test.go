@@ -13,7 +13,7 @@ import (
 )
 
 func TestClientOperations(t *testing.T) {
-	orderBookDatabase, err := db.NewOrderbookTracker("memory", "c2cx", "")
+	orderBookDatabase, err := db.NewOrderbookTracker()
 	if err != nil {
 		t.Fatal(err)
 	}
