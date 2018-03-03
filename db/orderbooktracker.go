@@ -22,8 +22,8 @@ func (t *orderbooktracker) Get(sym string) (*exchange.MarketRecord, error) {
 // NewOrderbookTracker returns exchange.OrderbookTracker
 // that wraps either redis connection or sync.Map
 // For in-memory tracker dbURL and hash are optional parameters
-func NewOrderbookTracker(dbType, dbURL, hash string) (exchange.Orderbooks, error) {
-	db, err := NewDatabase(dbType, dbURL, hash)
+func NewOrderbookTracker() (exchange.Orderbooks, error) {
+	db, err := NewDatabase()
 
 	if err != nil {
 		return nil, err
