@@ -2,7 +2,6 @@ package c2cx
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"strings"
@@ -19,7 +18,8 @@ import (
 type Client struct {
 	// Key and Secret needs for creating and accessing orders, update them
 	// You may use Client without it for tracking OrderBook
-	Key, Secret              string
+	Key                      string
+	Secret                   string
 	OrdersRefreshInterval    time.Duration
 	OrderbookRefreshInterval time.Duration
 
@@ -52,57 +52,54 @@ func (c *Client) Cancel(orderID int) (exchange.Order, error) {
 	if err != nil {
 		return exchange.Order{}, err
 	}
-	if len(orders) != 1 {
+	if len(orders) == 0 {
 		return exchange.Order{}, errors.New("order was not found")
 	}
+
 	var completedTime time.Time
-	log.Println(orders[0].CompleteDate)
 	if orders[0].CompleteDate != 0 {
 		completedTime = unix(orders[0].CompleteDate)
 	} else {
 		completedTime = time.Now()
 	}
-	err = c.Orders.UpdateOrder(
-		exchange.Order{
-			OrderID:         orderID,
-			Price:           orders[0].Price,
-			Amount:          orders[0].Amount,
-			Status:          exchange.Cancelled,
-			Completed:       completedTime,
-			Accepted:        unix(orders[0].CreateDate),
-			Fee:             orders[0].Fee,
-			CompletedAmount: orders[0].CompletedAmount,
-		})
-	if err != nil {
+
+	if err := c.Orders.UpdateOrder(exchange.Order{
+		OrderID:         orderID,
+		Price:           orders[0].Price,
+		Amount:          orders[0].Amount,
+		Status:          exchange.Cancelled,
+		Completed:       completedTime,
+		Accepted:        unix(orders[0].CreateDate),
+		Fee:             orders[0].Fee,
+		CompletedAmount: orders[0].CompletedAmount,
+	}); err != nil {
 		return exchange.Order{}, err
 	}
-	return c.Orders.GetOrderInfo(orderID)
 
+	return c.Orders.GetOrderInfo(orderID)
 }
 
-// CancelAll cancels all executed orders, that was created using this client
-func (c *Client) CancelAll() ([]exchange.Order, error) {
-	var (
-		orderids = c.Orders.GetOpened()
-		orders   = make([]exchange.Order, 0, len(orderids))
-	)
-	for _, v := range orderids {
-		order, err := c.Cancel(v)
-		if err != nil {
-			return orders, err
-		}
-		orders = append(orders, order)
-	}
-	return orders, nil
+// CancelMultiError is returned when an error was encountered while cancelling multiple orders
+type CancelMultiError struct {
+	OrderIDs []int
+	Errors   []error
+}
 
+func (e CancelMultiError) Error() string {
+	return fmt.Sprintf("these orders failed to cancel: %v", e.OrderIDs)
+}
+
+// CancelAll cancels all executed orders, that was created using this client.
+// If it encounters an error, it aborts and returns the orders that had been cancelled to that point.
+func (c *Client) CancelAll() ([]exchange.Order, error) {
+	orderIDs := c.Orders.GetOpened()
+	return c.CancelMultiple(orderIDs)
 }
 
 // CancelMarket cancels all order with given symbol that was created using this client
 func (c *Client) CancelMarket(symbol string) ([]exchange.Order, error) {
-	var (
-		orderids []int
-		orders   []exchange.Order
-	)
+	var orderIDs []int
+	// TODO -- symbol transformation should be a utility method
 	symbol = strings.ToUpper(strings.Replace(symbol, "_", "/", -1))
 	for _, v := range c.Orders.GetOpened() {
 		order, err := c.Orders.GetOrderInfo(v)
@@ -110,29 +107,40 @@ func (c *Client) CancelMarket(symbol string) ([]exchange.Order, error) {
 			continue
 		}
 		if order.Market == symbol {
-			orderids = append(orderids, order.OrderID)
+			orderIDs = append(orderIDs, order.OrderID)
 		}
 	}
-	orders = make([]exchange.Order, 0, len(orderids))
-	var rejected []int
-	for _, v := range orderids {
+
+	return c.CancelMultiple(orderIDs)
+}
+
+// CancelMultiple cancels multiple orders.  It will try to cancel all of them, not
+// stopping for any individual error. If any orders failed to cancel, a CancelMultiError is returned
+// along with the array of orders which successfully cancelled.
+func (c *Client) CancelMultiple(orderIDs []int) ([]exchange.Order, error) {
+	var orders []exchange.Order
+	var cancelErr CancelMultiError
+
+	for _, v := range orderIDs {
 		order, err := c.Cancel(v)
 		if err != nil {
-			rejected = append(rejected, v)
+			cancelErr.OrderIDs = append(cancelErr.OrderIDs, v)
+			cancelErr.Errors = append(cancelErr.Errors, err)
 			continue
 		}
 		orders = append(orders, order)
 	}
-	if rejected != nil {
-		return orders, fmt.Errorf("this orders does not cancelled: %v", rejected)
-	}
-	return orders, nil
 
+	if len(cancelErr.OrderIDs) != 0 {
+		return orders, &cancelErr
+	}
+
+	return orders, nil
 }
 
 // Buy place buy order
-func (c *Client) Buy(symbol string, price, amount decimal.Decimal) (orderID int, err error) {
-	var order = exchange.Order{
+func (c *Client) Buy(symbol string, price, amount decimal.Decimal) (int, error) {
+	order := exchange.Order{
 		Submitted: time.Now(),
 		Market:    symbol,
 		Price:     price,
@@ -140,27 +148,32 @@ func (c *Client) Buy(symbol string, price, amount decimal.Decimal) (orderID int,
 		Type:      exchange.Buy,
 		Status:    exchange.Submitted,
 	}
-	orderID, err = c.createOrder(symbol, price, amount, "buy")
+	orderID, err := c.createOrder(symbol, price, amount, "buy")
 	if err != nil {
-		return
+		return 0, err
 	}
 
 	orders, err := getOrderinfo(c.Key, c.Secret, symbol, orderID, nil)
 	if err != nil {
-		return
+		return 0, err
 	}
-	if len(orders) != 1 {
-		return /// error update info
+	if len(orders) == 0 {
+		return 0, errors.New("order not found")
 	}
+
 	order.Accepted = convert(orders[0]).Accepted
 	order.OrderID = orderID
-	err = c.Orders.Push(order)
-	return orderID, err
+
+	if err := c.Orders.Push(order); err != nil {
+		return 0, err
+	}
+
+	return orderID, nil
 }
 
 // Sell place sell order
-func (c *Client) Sell(symbol string, price, amount decimal.Decimal) (orderID int, err error) {
-	var order = exchange.Order{
+func (c *Client) Sell(symbol string, price, amount decimal.Decimal) (int, error) {
+	order := exchange.Order{
 		Submitted: time.Now(),
 		Market:    symbol,
 		Price:     price,
@@ -168,19 +181,23 @@ func (c *Client) Sell(symbol string, price, amount decimal.Decimal) (orderID int
 		Type:      exchange.Sell,
 		Status:    exchange.Submitted,
 	}
-	orderID, err = c.createOrder(symbol, price, amount, "sell")
-	if err != nil {
-		return
-	}
-	order.OrderID = orderID
-	err = c.Orders.Push(order)
 
-	return orderID, err
+	orderID, err := c.createOrder(symbol, price, amount, "sell")
+	if err != nil {
+		return 0, err
+	}
+
+	order.OrderID = orderID
+	if err := c.Orders.Push(order); err != nil {
+		return 0, err
+	}
+
+	return orderID, nil
 }
 
 func (c *Client) createOrder(symbol string, price, quantity decimal.Decimal, Type string) (int, error) {
-	var err error
-	if symbol, err = normalize(symbol); err != nil {
+	symbol, err := normalize(symbol)
+	if err != nil {
 		return 0, err
 	}
 	return createOrder(c.Key, c.Secret, symbol, price, quantity, Type, PriceTypeLimit, nil)
@@ -197,7 +214,6 @@ func (c *Client) OrderStatus(orderID int) (string, error) {
 // Handles only orders that was created using this client
 func (c *Client) OrderDetails(orderID int) (exchange.Order, error) {
 	return c.Orders.GetOrderInfo(orderID)
-
 }
 
 // Executed wraps Tracker.Executed()
@@ -217,21 +233,23 @@ func (c *Client) Orderbook() exchange.Orderbooks {
 
 // GetBalance gets balance information about given currency
 func (c *Client) GetBalance(currency string) (decimal.Decimal, error) {
-	var result decimal.Decimal
 	info, err := getBalance(c.Key, c.Secret)
 	if err != nil {
-		return result, err
+		return decimal.Decimal{}, err
 	}
+
 	if result, ok := info[strings.ToLower(currency)]; ok {
 		return result, nil
 	}
-	return result, fmt.Errorf("currency %s was not found", currency)
+
+	return decimal.Decimal{}, fmt.Errorf("currency %s was not found", currency)
 }
 
 func (c *Client) updateOrderbook() {
 	for _, v := range Markets {
 		orderbook, err := getOrderbook(v)
 		if err != nil {
+			// TODO -- log or return error?
 			continue
 		}
 		c.Orderbooks.Update(v, orderbook.Bids, orderbook.Asks)

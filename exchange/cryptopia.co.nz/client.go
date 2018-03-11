@@ -33,7 +33,7 @@ func (c *Client) Cancel(orderID int) (exchange.Order, error) {
 	if err != nil {
 		return exchange.Order{}, err
 	}
-	if len(cancelled) != 1 {
+	if len(cancelled) == 0 {
 		return exchange.Order{}, errors.New("no orders cancelled")
 	}
 
@@ -44,9 +44,10 @@ func (c *Client) Cancel(orderID int) (exchange.Order, error) {
 	order := convert(v)
 	order.Status = exchange.Cancelled
 	order.Completed = time.Now()
-	if err = c.Orders.UpdateOrder(order); err != nil {
-		return order, err
+	if err := c.Orders.UpdateOrder(order); err != nil {
+		return exchange.Order{}, err
 	}
+
 	return c.Orders.GetOrderInfo(order.OrderID)
 }
 
