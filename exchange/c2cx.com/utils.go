@@ -2,24 +2,24 @@ package c2cx
 
 import (
 	"bytes"
-
-	// the following is nolinted because it's part of c2cx' authentication scheme
-	"crypto/md5" // nolint: gas
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 
-	"errors"
+	// the following is nolinted because it's part of c2cx' authentication scheme
+	"crypto/md5" // nolint: gas
 
 	"github.com/skycoin/exchange-api/exchange"
 )
 
 func sign(secret string, params url.Values) string {
-	var paramString = abcdsort(params)
+	var paramString = encodeParamsSorted(params)
 	if len(paramString) > 0 {
 		paramString += "&secretKey=" + secret
 	} else {
@@ -31,51 +31,30 @@ func sign(secret string, params url.Values) string {
 }
 
 // returns sorted string for signing
-func abcdsort(params url.Values) string {
+func encodeParamsSorted(params url.Values) string {
 	if params == nil {
 		return ""
 	}
-	var sortedKeys = make([]string, 0, len(params))
+
+	var keys []string
 	for k := range params {
-		sortedKeys = append(sortedKeys, k)
+		keys = append(keys, k)
 	}
 
-	for i := 0; i < len(sortedKeys); i++ {
-		for j := 0; j < i; j++ {
-			var wordLen int
-			if len(sortedKeys[i]) < len(sortedKeys[j]) {
-				wordLen = len(sortedKeys[i])
-			} else {
-				wordLen = len(sortedKeys[j])
-			}
-			for let := 0; let < wordLen; let++ {
-				switch {
-				case sortedKeys[i][let] < sortedKeys[j][let]:
-					sortedKeys[i], sortedKeys[j] = sortedKeys[j], sortedKeys[i]
-					goto next
-				case sortedKeys[i][let] == sortedKeys[j][let]:
-					continue
-				case sortedKeys[i][let] > sortedKeys[j][let]:
-					goto next
-				}
-			}
-			if len(sortedKeys[i]) < len(sortedKeys[j]) {
-				sortedKeys[i], sortedKeys[j] = sortedKeys[j], sortedKeys[i]
-			}
-		next:
+	sort.Strings(keys)
+
+	result := bytes.Buffer{}
+	for i, k := range keys {
+		result.WriteString(url.QueryEscape(k))
+		result.WriteString("=")
+		result.WriteString(url.QueryEscape(params.Get(k)))
+
+		if i != len(keys)-1 {
+			result.WriteString("&")
 		}
 	}
 
-	var result = bytes.NewBuffer(nil)
-	for i := 0; i < len(sortedKeys); i++ {
-		result.WriteString(sortedKeys[i])
-		result.WriteString("=")
-		result.WriteString(params.Get(sortedKeys[i]))
-		result.WriteString("&")
-	}
-	// delete last &
-	return result.String()[:result.Len()-1]
-
+	return result.String()
 }
 
 // normalize tradepair symbol
@@ -89,48 +68,44 @@ func normalize(sym string) (string, error) {
 	return "", fmt.Errorf("Market pair %s does not exists", sym)
 }
 
-func unix(unix int64) time.Time {
-	var secs = unix / 10e2
-	var nanos = (unix % 10e2) * 10e5
-	return time.Unix(secs, nanos)
-}
-
 func readResponse(r io.ReadCloser) (*response, error) {
-	var (
-		tmp struct {
-			Fail    json.RawMessage `json:"fail,omitempty"`
-			Success json.RawMessage `json:"success,omitempty"`
-		}
-		resp response
-	)
+	var tmp struct {
+		Fail    []json.RawMessage `json:"fail,omitempty"`
+		Success json.RawMessage   `json:"success,omitempty"`
+	}
+
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
+
 	defer func() {
 		if err := r.Close(); err != nil {
 			panic(err)
 		}
 	}()
-	if tmp.Fail != nil {
-		return nil, errors.New(string(tmp.Fail))
+
+	if err := json.Unmarshal(b, &tmp); err != nil {
+		return nil, err
 	}
-	if tmp.Success != nil {
-		err := json.Unmarshal(tmp.Success, &resp)
-		return &resp, err
+
+	if len(tmp.Fail) != 0 {
+		return nil, errors.New(string(tmp.Fail[0]))
 	}
-	return &resp, json.Unmarshal(b, &resp)
+
+	var resp response
+	if err := json.Unmarshal(tmp.Success, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
 }
 
 func convert(order Order) exchange.Order {
-	var (
-		status    = lookupStatus(order.Status)
-		accepted  time.Time
-		completed time.Time
-	)
-	accepted = unix(order.CreateDate)
+	status := lookupStatus(order.Status)
+	var completed time.Time
+	accepted := time.Unix(order.CreateDate, 0)
 	if order.CompleteDate != 0 {
-		completed = unix(order.CompleteDate)
+		completed = time.Unix(order.CompleteDate, 0)
 	}
 
 	return exchange.Order{
