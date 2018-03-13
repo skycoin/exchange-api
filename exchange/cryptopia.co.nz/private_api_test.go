@@ -27,13 +27,13 @@ func TestSubmitTrade(t *testing.T) {
 		Secret: secret,
 	}
 
-	order, err := submitTrade(key, secret, nonce(), "SKY/BTC", exchange.Buy, 0.0005, 10)
+	order, err := c.SubmitTrade(key, secret, nonce(), "SKY/BTC", exchange.Buy, 0.0005, 10)
 	t.Log(order, err)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = cancelTrade(key, secret, nonce(), ByOrderID, nil, &order)
+	_, err = s.CancelTrade(key, secret, nonce(), ByOrderID, nil, &order)
 	if err != nil {
 		t.Fatal(err)
 	}

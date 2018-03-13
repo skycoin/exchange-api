@@ -23,7 +23,6 @@ lint: ## Run linters. Use make install-linters first.
 		-E gofmt \
 		-E golint \
 		-E ineffassign \
-		-E interfacer \
 		-E maligned \
 		-E megacheck \
 		-E misspell \
