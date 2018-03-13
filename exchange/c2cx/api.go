@@ -277,7 +277,7 @@ func (c *Client) CancelOrder(orderID OrderID) error {
 	return nil
 }
 
-// NOTE: different from c2cx API docs, see note in c2cx.go
+// NOTE: different from c2cx API docs, see note in api_notes.go
 type getOrderByStatusResponse struct {
 	status
 	Data struct {
@@ -348,7 +348,9 @@ func (c *Client) CancelAll(symbol TradePair) ([]OrderID, error) {
 
 	var orderIDs []OrderID
 	for _, o := range orders {
-		orderIDs = append(orderIDs, o.OrderID)
+		if o.Status != StatusCancelled {
+			orderIDs = append(orderIDs, o.OrderID)
+		}
 	}
 
 	return c.CancelMultiple(orderIDs)
