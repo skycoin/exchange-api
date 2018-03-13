@@ -402,7 +402,7 @@ func (c *Client) LimitSell(symbol TradePair, price, amount decimal.Decimal) (Ord
 // MarketBuy place market buy order. A market buy order will spend the entire amount to buy
 // the symbol's second coin
 func (c *Client) MarketBuy(symbol TradePair, amount decimal.Decimal) (OrderID, error) {
-	// For "market" orders, the amount to spend is placed in the "price" field
+	// For "market buy" orders, the amount to spend is placed in the "price" field
 	orderID, err := c.CreateOrder(symbol, amount, decimal.Zero, OrderTypeBuy, PriceTypeMarket, nil)
 	if err != nil {
 		return 0, err
@@ -414,8 +414,13 @@ func (c *Client) MarketBuy(symbol TradePair, amount decimal.Decimal) (OrderID, e
 // MarketSell place market sell order. A market sell order will sell the entire amount
 // of the symbol's first coin
 func (c *Client) MarketSell(symbol TradePair, amount decimal.Decimal) (OrderID, error) {
-	// For "market" orders, the amount to sell is placed in the "price" field
-	orderID, err := c.CreateOrder(symbol, amount, decimal.Zero, OrderTypeSell, PriceTypeMarket, nil)
+	// For "market sell" orders, the amount to sell is placed in the "volume" field
+	// TODO -- clarify this with c2cx:
+	// Notes:
+	// Under [priceTypeId] => "Market" condition:
+	// If [orderType] => Buy: Not passing the quantity parameter or passing the quantity value as 0.
+	// If [orderType] => Sell:Not passing the price parameter or passing the price value as 0.
+	orderID, err := c.CreateOrder(symbol, decimal.Zero, amount, OrderTypeSell, PriceTypeMarket, nil)
 	if err != nil {
 		return 0, err
 	}
