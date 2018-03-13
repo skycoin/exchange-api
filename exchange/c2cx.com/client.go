@@ -19,8 +19,8 @@ import (
 type Client struct {
 	// Key and Secret needs for creating and accessing orders, update them
 	// You may use Client without it for tracking OrderBook
-	Key, Secret              string
-	OrdersRefreshInterval    time.Duration
+	Key, Secret           string
+	OrdersRefreshInterval time.Duration
 
 	// Tracker provides provides functionality for tracking orders
 	// if Tracker == nil then orders does not tracked and Client will be update only Orderbook
@@ -244,4 +244,19 @@ func (c *Client) Update() {
 			return
 		}
 	}
+}
+
+// GetMarketRecord gets the orderbook for a given tradepair symbol
+func (c *Client) GetMarketRecord(tradepair string) (*exchange.MarketRecord, error) {
+	orderbook, err := getOrderbook(tradepair)
+	if err != nil {
+		return nil, err
+	}
+
+	return &exchange.MarketRecord{
+		Timestamp: time.Unix(int64(orderbook.Timestamp), 0),
+		Symbol:    tradepair,
+		Bids:      orderbook.Bids,
+		Asks:      orderbook.Asks,
+	}, nil
 }

@@ -12,12 +12,10 @@ import (
 
 // Client impletments an exchange.Client interface
 type Client struct {
-	Key, Secret              string
-	OrdersRefreshInterval    time.Duration
-	OrderbookRefreshInterval time.Duration
+	Key, Secret           string
+	OrdersRefreshInterval time.Duration
 
-	Orders     exchange.Orders
-	Orderbooks exchange.Orderbooks
+	Orders exchange.Orders
 
 	// Cause cryptopia.co.nz supported greater than 1000 curencies, you need to select markets, thats will be tracked
 	TrackedBooks []string
@@ -191,36 +189,6 @@ func (c *Client) Executed() []int {
 	return c.Orders.GetOpened()
 }
 
-// Orderbook returns interface for managing Orderbook
-func (c *Client) Orderbook() exchange.Orderbooks {
-	return c.Orderbooks
-}
-
-func (c *Client) updateOrderbook() {
-	ordergroups, err := getMarketOrderGroups(100, c.TrackedBooks...)
-	if err != nil {
-		return
-	}
-	for _, v := range ordergroups {
-		var (
-			bids = make([]exchange.MarketOrder, len(v.Buy))
-			asks = make([]exchange.MarketOrder, len(v.Sell))
-		)
-		for i, k := range v.Buy {
-			bids[i] = exchange.MarketOrder{
-				Price:  k.Price,
-				Volume: k.Volume,
-			}
-		}
-		for i, k := range v.Sell {
-			asks[i] = exchange.MarketOrder{
-				Price:  k.Price,
-				Volume: k.Volume,
-			}
-		}
-		c.Orderbooks.Update(v.Label, bids, asks)
-	}
-}
 func (c *Client) updateOrders() {
 	var count = len(c.Orders.GetOpened())
 	orders, err := getOpenOrders(c.Key, c.Secret, nonce(), nil, &count)
@@ -258,16 +226,12 @@ func (c *Client) updateOrders() {
 // Update starts update cycle
 func (c *Client) Update() {
 	var t = time.NewTicker(c.OrdersRefreshInterval)
-	var bookt = time.NewTicker(c.OrderbookRefreshInterval)
 	for {
 		select {
 		case <-t.C:
 			c.updateOrders()
-		case <-bookt.C:
-			c.updateOrderbook()
 		case <-c.Stop:
 			t.Stop()
-			bookt.Stop()
 			return
 		}
 	}
@@ -321,3 +285,8 @@ var ErrNoOrderbooks = errors.New("orderbooks not tracked")
 
 // ErrOrderbookNotFound returns by Client.RemoveOrderbookTracking() if this market isnt tracked by Client
 var ErrOrderbookNotFound = errors.New("this orderbook isnt tracked")
+
+// GetMarketRecord fetches the MarketRecord for a given tradepair
+func (c *Client) GetMarketRecord(tradepair string) (*exchange.MarketRecord, error) {
+	return nil, errors.New("TODO: This needs to be implemented")
+}

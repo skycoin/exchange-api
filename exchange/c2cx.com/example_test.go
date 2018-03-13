@@ -12,11 +12,11 @@ import (
 // ExampleClient shows how to initialize a C2CX exchange client and then use it to place orders, check order status and cancel orders.
 func ExampleClient() {
 	client := &Client{
-		Key:        "ABABABAB-ABAB-ABAB-ABAB-ABABABABABAB",
-		Secret:     "CDCDCDCD-CDCD-CDCD-CDCD-CDCDCDCDCDCD",
-		Orders:     exchange.NewTracker(),
+		Key:    "ABABABAB-ABAB-ABAB-ABAB-ABABABABABAB",
+		Secret: "CDCDCDCD-CDCD-CDCD-CDCD-CDCDCDCDCDCD",
+		Orders: exchange.NewTracker(),
 
-		OrdersRefreshInterval:    time.Second * 5,
+		OrdersRefreshInterval: time.Second * 5,
 	}
 
 	// exchange clients must periodically update their orderbooks and other data, so we'll run that in a separate goroutine

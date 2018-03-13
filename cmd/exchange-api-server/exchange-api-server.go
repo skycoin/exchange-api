@@ -64,18 +64,17 @@ func main() {
 	keys.c2cx.secret = vals[1]
 
 	cryptopiaClient = &cryptopia.Client{
-		Key:                      keys.cryptopia.key,
-		Secret:                   keys.cryptopia.secret,
-		Orders:                   exchange.NewTracker(),
-		OrderbookRefreshInterval: time.Second * 5,
-		OrdersRefreshInterval:    time.Second * 5,
+		Key:                   keys.cryptopia.key,
+		Secret:                keys.cryptopia.secret,
+		Orders:                exchange.NewTracker(),
+		OrdersRefreshInterval: time.Second * 5,
 	}
 
 	c2cxClient = &c2cx.Client{
-		Key:                      keys.c2cx.key,
-		Secret:                   keys.c2cx.secret,
-		Orders:                   exchange.NewTracker(),
-		OrdersRefreshInterval:    time.Second * 5,
+		Key:                   keys.c2cx.key,
+		Secret:                keys.c2cx.secret,
+		Orders:                exchange.NewTracker(),
+		OrdersRefreshInterval: time.Second * 5,
 	}
 
 	go c2cxClient.Update()

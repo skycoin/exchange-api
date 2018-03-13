@@ -10,14 +10,6 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// Orderbooks provides functionality for managing OrderBook
-type Orderbooks interface {
-	// Update updates orderbook for given market
-	Update(string, []MarketOrder, []MarketOrder)
-	//Get gets orderbook for given tradepair symbol
-	Get(string) (*MarketRecord, error)
-}
-
 // MarketOrder is a one order in stock
 type MarketOrder struct {
 	Price  decimal.Decimal `json:"price"`

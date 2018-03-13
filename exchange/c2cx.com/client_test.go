@@ -12,10 +12,10 @@ import (
 
 func TestClientOperations(t *testing.T) {
 	cl := Client{
-		Key:                      key,
-		Secret:                   secret,
-		OrdersRefreshInterval:    time.Second * 5,
-		Orders:     exchange.NewTracker(),
+		Key:                   key,
+		Secret:                secret,
+		OrdersRefreshInterval: time.Second * 5,
+		Orders:                exchange.NewTracker(),
 	}
 
 	// verifying we've got enough SKY to play with

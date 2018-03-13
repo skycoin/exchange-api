@@ -60,19 +60,16 @@ format:  # Formats the code. Must have goimports installed (use make install-lin
 
 	goimports -w -local github.com/skycoin/exchange-api ./cli
 	goimports -w -local github.com/skycoin/exchange-api ./cmd
-	goimports -w -local github.com/skycoin/exchange-api ./db
 	goimports -w -local github.com/skycoin/exchange-api ./exchange
 	goimports -w -local github.com/skycoin/exchange-api ./rpc
 
 	goimports -w -local github.com/skycoin/skycoin ./cli
 	goimports -w -local github.com/skycoin/skycoin ./cmd
-	goimports -w -local github.com/skycoin/skycoin ./db
 	goimports -w -local github.com/skycoin/skycoin ./exchange
 	goimports -w -local github.com/skycoin/skycoin ./rpc
 
 	gofmt -s -w ./cli
 	gofmt -s -w ./cmd
-	gofmt -s -w ./db
 	gofmt -s -w ./exchange
 	gofmt -s -w ./rpc
 
