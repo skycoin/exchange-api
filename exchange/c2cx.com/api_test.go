@@ -5,6 +5,8 @@ package c2cx
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"net/url"
 	"os"
 	"testing"
 
@@ -30,6 +32,32 @@ var (
 	orderType   = "Sell"
 	priceTypeId = PriceTypeLimit
 )
+
+func ExampleMarketBuy(t *testing.T) {
+	c := Client{
+		Key:    "your-key-here",
+		Secret: "your-secret-here",
+	}
+
+	amount := decimal.NewFromString("2.12345")
+	orderID, err := c.MarketBuy(BtcSky, amount)
+	if err != nil {
+		fmt.Println("ERROR:", err)
+		return
+	}
+
+	fmt.Println("Placed market buy order:", orderID)
+}
+
+func Test_sign(t *testing.T) {
+	var params = url.Values{}
+	params.Add("apiKey", "C821DB84-6FBD-11E4-A9E3-C86000D26D7C")
+	want := "BC0DE7EBA50C730BDFC575FE2CD54082"
+	expected := sign("12D857DE-7A92-F555-10AC-7566A0D84D1B", params)
+	if want != expected {
+		t.Fatalf("Incorrect sign!\nwant %s, expected %s", want, expected)
+	}
+}
 
 func TestGetUserInfo(t *testing.T) {
 	b, err := GetBalance(key, secret)
