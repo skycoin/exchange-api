@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # every source file ending in .go
-find ./cli ./cmd ./db ./exchange ./rpc -path '.*\.go' | \
+find ./exchange -path '.*\.go' | \
 
 while read src_path
 do

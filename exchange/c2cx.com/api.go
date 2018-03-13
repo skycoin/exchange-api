@@ -2,21 +2,16 @@ package c2cx
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/shopspring/decimal"
-
-	"github.com/skycoin/exchange-api/exchange"
 )
 
-// Allowed priceTypeID for CreateOrder
 const (
-	PriceTypeLimit  = "limit"
-	PriceTypeMarket = "market"
-
 	getOrderBookEndpoint     = "getorderbook"
 	getBalanceEndpoint       = "getbalance"
 	createOrderEndpoint      = "createorder"
@@ -25,100 +20,92 @@ const (
 	getOrderByStatusEndpoint = "getorderbystatus"
 )
 
-type response struct {
-	Code    int             `json:"code"`
-	Message string          `json:"message"`
-	Data    json.RawMessage `json:"data"`
-}
-
 var (
-	httpclient = &http.Client{}
-	apiroot    = url.URL{
+	apiroot = url.URL{
 		Scheme: "https",
 		Host:   "api.c2cx.com",
 		Path:   "/v1/",
 	}
 )
 
-func requestGet(method string, params url.Values) (*response, error) { // nolint: unparam
-	reqURL := apiroot
-	reqURL.Path += method
-	reqURL.RawQuery = params.Encode()
-	resp, err := httpclient.Get(reqURL.String())
-	if err != nil {
-		return nil, err
-	}
-	return readResponse(resp.Body)
-
-}
-func requestPost(method, key, secret string, params url.Values) (*response, error) {
-	reqURL := apiroot
-	reqURL.Path += method
-	if params == nil {
-		params = url.Values{}
-	}
-	params.Add("apiKey", key)
-	req, _ := http.NewRequest("POST", reqURL.String(), strings.NewReader(params.Encode()+"&"+"sign="+sign(secret, params)))
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	resp, err := httpclient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	return readResponse(resp.Body)
+type response struct {
+	Code    int             `json:"code"`
+	Message string          `json:"message"`
+	Data    json.RawMessage `json:"data"`
 }
 
-// getOrderbook gets all open orders by given symbol
+// Client implements a wrapper around the C2CX API interface
+type Client struct {
+	Key    string
+	Secret string
+}
+
+// GetOrderbook gets all open orders by given symbol
 // This method does not required API key and signing
-func getOrderbook(symbol string) (*Orderbook, error) {
-	var (
-		params = url.Values{}
-		err    error
-	)
-	if symbol, err = normalize(symbol); err != nil {
-		return nil, err
-	}
-	params.Add("symbol", symbol)
-	resp, err := requestGet(getOrderBookEndpoint, params)
+func (c *Client) GetOrderbook(symbol string) (*Orderbook, error) {
+	symbol, err := normalize(symbol)
 	if err != nil {
 		return nil, err
 	}
+
+	params := url.Values{}
+	params.Add("symbol", symbol)
+
+	resp, err := c.get(getOrderBookEndpoint, params)
+	if err != nil {
+		return nil, err
+	}
+
 	if resp.Code != http.StatusOK {
 		return nil, apiError(getOrderBookEndpoint, resp.Message)
 	}
-	var result Orderbook
-	return &result, json.Unmarshal(resp.Data, &result)
 
+	var result Orderbook
+	if err := json.Unmarshal(resp.Data, &result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }
 
-// getBalance returns user balance for all avalible currencies
+// GetBalance returns user balance for all avalible currencies
 // return value is a map[string]string
 // all keys should be a lowercase
-func getBalance(key, secret string) (userInfo Balance, err error) {
-
-	resp, err := requestPost(getBalanceEndpoint, key, secret, nil)
+func (c *Client) GetBalance() (*Balance, error) {
+	resp, err := c.post(getBalanceEndpoint, nil)
 	if err != nil {
 		return nil, err
 	}
+
 	if resp.Code != http.StatusOK {
 		return nil, apiError(getBalanceEndpoint, resp.Message)
 	}
-	err = json.Unmarshal(resp.Data, &userInfo)
-	return userInfo, err
+
+	var balance Balance
+	if err := json.Unmarshal(resp.Data, &balance); err != nil {
+		return nil, err
+	}
+
+	return &balance, nil
 }
 
-// createOrder creates order with given orderType and parameters
+// CreateOrder creates order with given orderType and parameters
 // advanced is a advanced options for order creation
 // if advanced is nil, isAdvancedOrder sets to zero, else advanced will be used as advanced options
-func createOrder(key, secret string, market string, price, quantity decimal.Decimal, orderType string, priceTypeID string, advanced *AdvancedOrderParams) (int, error) {
-	var (
-		params = url.Values{
-			"symbol":      []string{market},
-			"price":       []string{price.String()},
-			"quantity":    []string{quantity.String()},
-			"orderType":   []string{orderType},
-			"priceTypeId": []string{priceTypeID},
-		}
-	)
+func (c *Client) CreateOrder(symbol string, price, quantity decimal.Decimal, orderType OrderType, priceType PriceType, advanced *AdvancedOrderParams) (OrderID, error) {
+	symbol, err := normalize(symbol)
+	if err != nil {
+		return 0, err
+	}
+
+	params := url.Values{
+		"symbol":      []string{symbol},
+		"price":       []string{price.String()},
+		"quantity":    []string{quantity.String()},
+		"orderType":   []string{string(orderType)},
+		"priceTypeId": []string{string(priceType)},
+	}
+
 	if advanced != nil {
 		params.Add("isAdvancedOrder", "1")
 		if !advanced.StopLoss.Equal(decimal.Zero) {
@@ -133,97 +120,251 @@ func createOrder(key, secret string, market string, price, quantity decimal.Deci
 	} else {
 		params.Add("isAdvancedOrder", "0")
 	}
-	resp, err := requestPost(createOrderEndpoint, key, secret, params)
+
+	resp, err := c.post(createOrderEndpoint, params)
 	if err != nil {
 		return 0, err
 	}
+
 	if resp.Code != http.StatusOK {
 		return 0, apiError(createOrderEndpoint, resp.Message)
 	}
+
 	var orderid newOrder
-	err = json.Unmarshal(resp.Data, &orderid)
-	return orderid.OrderID, err
+	if err := json.Unmarshal(resp.Data, &orderid); err != nil {
+		return 0, err
+	}
+
+	return orderid.OrderID, nil
 }
 
-// getOrderinfo returns extended information about given order
+// GetOrderInfo returns extended information about given order
 // if orderID is -1, then GetOrderInfo returns array of all unfilled orders
-func getOrderinfo(key, secret string, symbol string, orderID int, page *int) (orders []Order, err error) {
-	if symbol, err = normalize(symbol); err != nil {
+func (c *Client) GetOrderInfo(symbol string, orderID OrderID, page *int) ([]Order, error) {
+	symbol, err := normalize(symbol)
+	if err != nil {
 		return nil, err
 	}
-	var (
-		params = url.Values{
-			"orderId": []string{strconv.Itoa(orderID)},
-			"symbol":  []string{symbol},
-		}
-	)
+
+	params := url.Values{
+		"orderId": []string{fmt.Sprint(orderID)},
+		"symbol":  []string{symbol},
+	}
+
 	if page != nil {
 		params.Add("page", strconv.Itoa(*page))
 	}
-	resp, err := requestPost(getOrderInfoEndpoint, key, secret, params)
+
+	resp, err := c.post(getOrderInfoEndpoint, params)
 	if err != nil {
 		return nil, err
 	}
+
 	if resp.Code != http.StatusOK {
 		return nil, apiError(getOrderInfoEndpoint, resp.Message)
 	}
+
 	// if we're requesting a specific order, c2cx returns a single object, not an array
-	if orderID != -1 {
-		orders = make([]Order, 1)
-		return orders, json.Unmarshal(resp.Data, &(orders[0]))
+	if orderID != AllOrders {
+		var order Order
+		if err := json.Unmarshal(resp.Data, &order); err != nil {
+			return nil, err
+		}
+
+		return []Order{order}, nil
 	}
-	return orders, json.Unmarshal(resp.Data, &orders)
+
+	var orders []Order
+	if err := json.Unmarshal(resp.Data, &orders); err != nil {
+		return nil, err
+	}
+
+	return orders, nil
 }
 
-// cancelOrder cancel order with given orderID and returns error
-// error == nil if cancelOrder was finished successfully
-func cancelOrder(key, secret string, orderID int) (err error) {
-	var (
-		params = url.Values{
-			"orderId": []string{strconv.Itoa(orderID)},
-		}
-	)
-	resp, err := requestPost(cancelOrderEndpoint, key, secret, params)
+// CancelOrder cancel order with given orderID
+func (c *Client) CancelOrder(orderID OrderID) error {
+	params := url.Values{
+		"orderId": []string{fmt.Sprint(orderID)},
+	}
+
+	resp, err := c.post(cancelOrderEndpoint, params)
 	if err != nil {
 		return err
 	}
+
 	if resp.Code != http.StatusOK {
 		return apiError(cancelOrderEndpoint, resp.Message)
 	}
+
 	return nil
 }
 
-// statuses is a possible statuses of order
-var statuses = map[string]int{
-	exchange.Opened:    2,
-	exchange.Partial:   3,
-	exchange.Completed: 4,
-	exchange.Cancelled: 5,
-	exchange.Submitted: 7,
-}
-
-// getOrderByStatus get all orders with given status
-// interval is time in seconds between now and start time, if interval == -1, then returns all orders
-// statuses defined below
-func getOrderByStatus(key, secret, symbol, status string, interval int) (orders []Order, err error) {
-	if symbol, err = normalize(symbol); err != nil {
-		return nil, err
-	}
-	var (
-		params = url.Values{
-			"symbol": []string{symbol},
-			"status": []string{strconv.Itoa(statuses[status])},
-		}
-	)
-	if interval > 0 {
-		params.Add("interval", strconv.Itoa(interval))
-	}
-	resp, err := requestPost(getOrderByStatusEndpoint, key, secret, params)
+// GetOrderByStatus get all orders with given status
+func (c *Client) GetOrderByStatus(symbol string, status OrderStatus) ([]Order, error) {
+	// TODO -- this endpoint is paginated -- automatically follow pages to extract all orders
+	symbol, err := normalize(symbol)
 	if err != nil {
 		return nil, err
 	}
+
+	if _, ok := OrderStatuses[status]; !ok {
+		return nil, ErrUnknownStatus
+	}
+
+	params := url.Values{
+		"symbol": []string{symbol},
+		"status": []string{strconv.Itoa(OrderStatuses[status])},
+	}
+
+	resp, err := c.post(getOrderByStatusEndpoint, params)
+	if err != nil {
+		return nil, err
+	}
+
 	if resp.Code != http.StatusOK {
 		return nil, apiError(getOrderByStatusEndpoint, resp.Message)
 	}
-	return orders, json.Unmarshal(resp.Data, &orders)
+
+	var orders []Order
+	if err := json.Unmarshal(resp.Data, &orders); err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
+
+func (c *Client) get(method string, params url.Values) (*response, error) { // nolint: unparam
+	reqURL := apiroot
+	reqURL.Path += method
+	reqURL.RawQuery = params.Encode()
+
+	resp, err := http.DefaultClient.Get(reqURL.String())
+	if err != nil {
+		return nil, err
+	}
+
+	return readResponse(resp.Body)
+}
+
+func (c *Client) post(method string, params url.Values) (*response, error) {
+	reqURL := apiroot
+	reqURL.Path += method
+
+	if params == nil {
+		params = url.Values{}
+	}
+	params.Add("apiKey", c.Key)
+
+	req, _ := http.NewRequest("POST", reqURL.String(), strings.NewReader(params.Encode()+"&"+"sign="+sign(c.Secret, params)))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return readResponse(resp.Body)
+}
+
+// CancelMultiError is returned when an error was encountered while cancelling multiple orders
+type CancelMultiError struct {
+	OrderIDs []OrderID
+	Errors   []error
+}
+
+func (e CancelMultiError) Error() string {
+	return fmt.Sprintf("these orders failed to cancel: %v", e.OrderIDs)
+}
+
+// CancelAll cancels all executed orders for an orderbook.
+// If it encounters an error, it aborts and returns the order IDs that had been cancelled to that point.
+func (c *Client) CancelAll(symbol string) ([]OrderID, error) {
+	symbol, err := normalize(symbol)
+	if err != nil {
+		return nil, err
+	}
+
+	orders, err := c.GetOrderInfo(symbol, AllOrders, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var orderIDs []OrderID
+	for _, o := range orders {
+		orderIDs = append(orderIDs, o.OrderID)
+	}
+
+	return c.CancelMultiple(orderIDs)
+}
+
+// CancelMultiple cancels multiple orders.  It will try to cancel all of them, not
+// stopping for any individual error. If any orders failed to cancel, a CancelMultiError is returned
+// along with the array of order IDs which were successfully cancelled.
+func (c *Client) CancelMultiple(orderIDs []OrderID) ([]OrderID, error) {
+	var cancelledOrderIDs []OrderID
+	var cancelErr CancelMultiError
+
+	for _, v := range orderIDs {
+		if err := c.CancelOrder(v); err != nil {
+			cancelErr.OrderIDs = append(cancelErr.OrderIDs, v)
+			cancelErr.Errors = append(cancelErr.Errors, err)
+			continue
+		}
+		cancelledOrderIDs = append(cancelledOrderIDs, v)
+	}
+
+	if len(cancelErr.OrderIDs) != 0 {
+		return cancelledOrderIDs, &cancelErr
+	}
+
+	return cancelledOrderIDs, nil
+}
+
+// LimitBuy place limit buy order
+func (c *Client) LimitBuy(symbol string, price, amount decimal.Decimal) (OrderID, error) {
+	orderID, err := c.CreateOrder(symbol, price, amount, OrderTypeBuy, PriceTypeLimit, nil)
+	if err != nil {
+		return 0, err
+	}
+
+	return orderID, nil
+}
+
+// LimitSell place limit sell order
+func (c *Client) LimitSell(symbol string, price, amount decimal.Decimal) (OrderID, error) {
+	orderID, err := c.CreateOrder(symbol, price, amount, OrderTypeSell, PriceTypeLimit, nil)
+	if err != nil {
+		return 0, err
+	}
+
+	return orderID, nil
+}
+
+// MarketBuy place market buy order. A market buy order will spend the entire amount to buy
+// the symbol's second coin
+func (c *Client) MarketBuy(symbol string, amount decimal.Decimal) (OrderID, error) {
+	// For "market" orders, the amount to spend is placed in the "price" field
+	orderID, err := c.CreateOrder(symbol, amount, decimal.Zero, OrderTypeBuy, PriceTypeMarket, nil)
+	if err != nil {
+		return 0, err
+	}
+
+	return orderID, nil
+}
+
+// MarketSell place market sell order. A market sell order will sell the entire amount
+// of the symbol's first coin
+func (c *Client) MarketSell(symbol string, amount decimal.Decimal) (OrderID, error) {
+	// For "market" orders, the amount to sell is placed in the "price" field
+	orderID, err := c.CreateOrder(symbol, amount, decimal.Zero, OrderTypeSell, PriceTypeMarket, nil)
+	if err != nil {
+		return 0, err
+	}
+
+	return orderID, nil
+}
+
+func apiError(endpoint, message string) error {
+	return fmt.Errorf("c2cx: %s falied, %s", endpoint, message)
 }

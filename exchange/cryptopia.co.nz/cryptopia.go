@@ -7,6 +7,13 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+const (
+	// OfferTypeBuy a buy order
+	OfferTypeBuy = "Buy"
+	// OfferTypeSell a sell order
+	OfferTypeSell = "Sell"
+)
+
 // Order types, buy or sell
 const (
 	OrderTypeBuy  = "Buy"
@@ -26,11 +33,6 @@ const (
 	CancelTypeOrder  = "Trade"
 )
 
-var (
-	currencyCache map[string]CurrencyInfo
-	marketCache   map[string]int
-)
-
 //CurrencyInfo represents currency info
 type CurrencyInfo struct {
 	ID                   int             `json:"Id"`
@@ -46,11 +48,6 @@ type CurrencyInfo struct {
 	Status               string          `json:"Status"`
 	StatusMessage        string          `json:"StatusMessage"`
 	ListingStatus        string          `json:"ListingStatus"`
-}
-
-// GetCurrencies gets all available currencies from exchange
-func GetCurrencies() ([]CurrencyInfo, error) {
-	return getCurrencies()
 }
 
 // TradepairInfo represents tradepair info
@@ -70,11 +67,6 @@ type TradepairInfo struct {
 	MaximumBaseTrade decimal.Decimal `json:"MaximumBaseTrade"`
 	MinimumPrice     decimal.Decimal `json:"MinimumPrice"`
 	MaximumPrice     decimal.Decimal `json:"MaximumPrice"`
-}
-
-// GetTradepairs gets all available tradepairs from exchange
-func GetTradepairs() ([]TradepairInfo, error) {
-	return getTradePairs()
 }
 
 // MarketInfo represents market info
@@ -97,25 +89,6 @@ type MarketInfo struct {
 	BaseSellVolume decimal.Decimal `json:"BaseSellVolume"`
 }
 
-// GetMarkets gets all market by specifying baseMarket
-// if hours == nil, default value(24) is used
-func GetMarkets(baseMarket string, hours *int) ([]MarketInfo, error) {
-	if hours != nil {
-		return getMarkets(baseMarket, *hours)
-	}
-	return getMarkets(baseMarket, 24)
-}
-
-// GetMarket returns informaiton abot market with given label
-// if market not found, it returns error
-// if hours = nil, default value(24) is used
-func GetMarket(label string, hours *int) (MarketInfo, error) {
-	if hours != nil {
-		return getMarket(label, *hours)
-	}
-	return getMarket(label, 24)
-}
-
 // MarketOrders is a orderbook for market
 type MarketOrders struct {
 	Buy  []MarketOrder `json:"Buy"`
@@ -131,26 +104,12 @@ type MarketOrder struct {
 	Total       decimal.Decimal `json:"Total"`
 }
 
-// GetMarketOrders returns orderbook for given market
-// if count == nil, default value(100) is used
-func GetMarketOrders(label string, count *int) (MarketOrders, error) {
-	if count != nil {
-		return getMarketOrders(label, *count)
-	}
-	return getMarketOrders(label, 100)
-}
-
 // MarketOrdersWithLabel is a response that was received from GetMarketOrderGroups function
 type MarketOrdersWithLabel struct {
 	TradePairID int           `json:"TradePairId"`
 	Label       string        `json:"Market"`
 	Buy         []MarketOrder `json:"Buy"`
 	Sell        []MarketOrder `json:"Sell"`
-}
-
-// GetMarketOrderGroups returns MarketOrders for given markets
-func GetMarketOrderGroups(count int, markets ...string) ([]MarketOrdersWithLabel, error) {
-	return getMarketOrderGroups(count, markets...)
 }
 
 // MarketHistory represents market history
@@ -164,42 +123,11 @@ type MarketHistory struct {
 	Timestamp   int             `json:"Timestamp"`
 }
 
-// GetMarketHistory returns completed orders in given market for given time
-// if hours == nil, default value(24) is used
-func GetMarketHistory(label string, hours *int) ([]MarketHistory, error) {
-	if hours != nil {
-		return getMarketHistory(label, *hours)
-	}
-	return getMarketHistory(label, 24)
-}
-
-// GetBalance returns a string representation of balance by given currency
-func GetBalance(key, secret string, currency string) (decimal.Decimal, error) {
-	return getBalance(key, secret, nonce(), currency)
-}
-
 // DepositAddress is a representation of deposit address for single currency
 type DepositAddress struct {
 	Currency    string `json:"Currency"`
 	Address     string `json:"Address"`
 	BaseAddress string `json:"BaseAddress"`
-}
-
-// GetDepositAddress gets new deposit address for currency
-func GetDepositAddress(key, secret string, currency string) (DepositAddress, error) {
-	return getDepositAddress(key, secret, nonce(), currency)
-}
-
-// GetOpenOrders gets count opened orders from given market
-// if market == nil, then gets from all markets
-// if count == nil, default value(100) is used
-func GetOpenOrders(key, secret string, market *string, count *int) ([]Order, error) {
-	return getOpenOrders(key, secret, nonce(), market, count)
-}
-
-// GetTradeHistory same as GetOpenOrders
-func GetTradeHistory(key, secret string, market *string, count *int) ([]Order, error) {
-	return getTradeHistory(key, secret, nonce(), market, count)
 }
 
 // Transaction types
@@ -220,16 +148,6 @@ type Transaction struct {
 	Confirmations int             `json:"Confirmations"`
 	Timestamp     string          `json:"TimeStamp"`
 	Address       *string         `json:"Address,omitempty"`
-}
-
-// GetTransactions gets count transactions with given type
-// if count == nil, default value(?) is used
-// Transaction types defined below
-func GetTransactions(key, secret string, Type string, count *int) ([]Transaction, error) {
-	if count != nil {
-		return getTransactions(key, secret, nonce(), Type, *count)
-	}
-	return getTransactions(key, secret, nonce(), Type, 0)
 }
 
 // Order types
@@ -255,42 +173,9 @@ type Order struct {
 	Timestamp time.Time
 }
 
-// SubmitTrade creates new trade offer, if order instantly executed, it returns ErrInstant
-// Trade types defined below
-func SubmitTrade(key, secret string, market, Type string, rate, amount decimal.Decimal) (int, error) {
-	return submitTrade(key, secret, nonce(), market, Type, rate, amount)
-}
-
 // Types of cancellation
 const (
 	All       = "All"
 	ByMarket  = "TradePair"
 	ByOrderID = "Trade"
 )
-
-// CancelTrade cancel all trades, trades in given market, or trade with given orderID
-// Cancellation types defined below
-// if Type == ByMarket, then tradepair should not be nil
-// if Type == ByOrderID, then orderID should be not nil
-func CancelTrade(key, secret string, Type string, tradepair *string, orderID *int) ([]int, error) {
-	return cancelTrade(key, secret, nonce(), Type, tradepair, orderID)
-}
-
-// SubmitTip is useless
-func SubmitTip(key, secret string, currency string, activeUsers int, amount decimal.Decimal) (string, error) {
-	return submitTip(key, secret, nonce(), currency, activeUsers, amount)
-}
-
-// SubmitWithdraw creates withdraw request
-// paymentid needs only for currencies, based on CryptoNight
-func SubmitWithdraw(key, secret string, currency, address string, paymentid *string, amount decimal.Decimal) (int, error) {
-	if paymentid != nil {
-		return submitWithdraw(key, secret, nonce(), currency, address, *paymentid, amount)
-	}
-	return submitWithdraw(key, secret, nonce(), currency, address, "", amount)
-}
-
-// SubmitTransfer transfer funds to another user
-func SubmitTransfer(key, secret string, currency, username string, amount decimal.Decimal) (string, error) {
-	return submitTransfer(key, secret, nonce(), currency, username, amount)
-}

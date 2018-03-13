@@ -4,22 +4,37 @@ import (
 	"testing"
 )
 
+func TestRequestSignature(t *testing.T) {
+	key := "abababababababababababababababab"
+	secret := "YWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWI="
+	nonce := "3"
+	requrl := apiroot
+
+	requrl.Path += "getbalance"
+	var want = "amx abababababababababababababababab:QRB4yf+QkSxxzPg6JLDeNFdAsTu24wpiDozHNQZ3Jkc=:3"
+	if expected := header(key, secret, nonce, requrl, []byte("{}")); want != expected {
+		t.Fatal("invalid request signature")
+	}
+}
+
 func Test_getCurrencyID(t *testing.T) {
-	btcID, err := getCurrencyID("btc")
+	c := &Client{}
+
+	btcID, err := c.GetCurrencyID("btc")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if btcID != 1 {
 		t.Errorf("Incorrect BTC id %d, want %d", btcID, 1)
 	}
-	ltcID, err := getCurrencyID("ltc")
+	ltcID, err := c.GetCurrencyID("ltc")
 	if ltcID != 3 {
 		t.Errorf("Incorrect BTC id %d, want %d", ltcID, 3)
 	}
 	if err != nil {
 		t.Fatal(err)
 	}
-	skyID, err := getCurrencyID("sky")
+	skyID, err := c.GetCurrencyID("sky")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,27 +44,36 @@ func Test_getCurrencyID(t *testing.T) {
 }
 
 func Test_getMarketID(t *testing.T) {
-	btcltc, err := getMarketID("ltc_btc")
+	c := &Client{}
+
+	btcltc, err := c.GetMarketID("ltc_btc")
 	if err != nil || btcltc != 101 {
 		t.Fatal(err, btcltc)
 	}
 }
 
 func TestGetCurrencies(t *testing.T) {
-	_, err := getCurrencies()
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := &Client{}
 
-}
-func TestGetTradePairs(t *testing.T) {
-	_, err := getTradePairs()
+	_, err := c.GetCurrencies()
 	if err != nil {
 		t.Fatal(err)
 	}
 }
+
+func TestGetTradePairs(t *testing.T) {
+	c := &Client{}
+
+	_, err := c.GetTradePairs()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestGetMarkets(t *testing.T) {
-	mkts, err := getMarkets("ALL", -1)
+	c := &Client{}
+
+	mkts, err := c.GetMarkets("ALL", -1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,8 +81,11 @@ func TestGetMarkets(t *testing.T) {
 		t.Fatal("empty")
 	}
 }
+
 func TestGetMarket(t *testing.T) {
-	mkt, err := getMarket("LTC/BTC", -1)
+	c := &Client{}
+
+	mkt, err := c.GetMarket("LTC/BTC", -1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,8 +93,11 @@ func TestGetMarket(t *testing.T) {
 		t.Fatal("API error", "want 101 TradePairID")
 	}
 }
+
 func TestGetMarketHistory(t *testing.T) {
-	hst, err := getMarketHistory("LTC/BTC", -1)
+	c := &Client{}
+
+	hst, err := c.GetMarketHistory("LTC/BTC", -1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,8 +105,11 @@ func TestGetMarketHistory(t *testing.T) {
 		t.Fatal("empty")
 	}
 }
+
 func TestGetMarketOrders(t *testing.T) {
-	orders, err := getMarketOrders("LTC/BTC", -1)
+	c := &Client{}
+
+	orders, err := c.GetMarketOrders("LTC/BTC", -1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,8 +117,11 @@ func TestGetMarketOrders(t *testing.T) {
 		t.Fatal("empty")
 	}
 }
+
 func TestGetMarketOrderGroups(t *testing.T) {
-	groups, err := getMarketOrderGroups(-1, "LTC/BTC", "SKY/BTC")
+	c := &Client{}
+
+	groups, err := c.GetMarketOrderGroups(-1, []string{"LTC/BTC", "SKY/BTC"})
 	if err != nil {
 		t.Fatal(err)
 	}
