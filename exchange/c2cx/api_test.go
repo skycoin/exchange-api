@@ -8,8 +8,8 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func ExampleMarketBuy(t *testing.T) {
-	c := Client{
+func ExampleMarketBuy() { // nolint: vet
+	c := &Client{
 		Key:    "your-key-here",
 		Secret: "your-secret-here",
 	}
