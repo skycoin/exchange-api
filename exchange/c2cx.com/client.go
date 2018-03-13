@@ -19,19 +19,13 @@ import (
 type Client struct {
 	// Key and Secret needs for creating and accessing orders, update them
 	// You may use Client without it for tracking OrderBook
-	Key, Secret              string
-	OrdersRefreshInterval    time.Duration
-	OrderbookRefreshInterval time.Duration
+	Key, Secret           string
+	OrdersRefreshInterval time.Duration
 
 	// Tracker provides provides functionality for tracking orders
 	// if Tracker == nil then orders does not tracked and Client will be update only Orderbook
 	// For properly work it requires that GetOrderByStatus with given key and secret executes without error
 	Orders exchange.Orders
-
-	// OrderBookTracker provides functionality for tracking OrderBook
-	// It use RefreshRate in milliseconds for updating
-	// OrderBookTracker should be free for concurrent use
-	Orderbooks exchange.Orderbooks
 
 	// Stop stops updating
 	// After sending to this, you need to restart Client.Update()
@@ -210,11 +204,6 @@ func (c *Client) Completed() []int {
 	return c.Orders.GetCompleted()
 }
 
-// Orderbook returns interface for managing Orderbook
-func (c *Client) Orderbook() exchange.Orderbooks {
-	return c.Orderbooks
-}
-
 // GetBalance gets balance information about given currency
 func (c *Client) GetBalance(currency string) (decimal.Decimal, error) {
 	var result decimal.Decimal
@@ -228,15 +217,6 @@ func (c *Client) GetBalance(currency string) (decimal.Decimal, error) {
 	return result, fmt.Errorf("currency %s was not found", currency)
 }
 
-func (c *Client) updateOrderbook() {
-	for _, v := range Markets {
-		orderbook, err := getOrderbook(v)
-		if err != nil {
-			continue
-		}
-		c.Orderbooks.Update(v, orderbook.Bids, orderbook.Asks)
-	}
-}
 func (c *Client) updateOrders() {
 	for _, v := range Markets {
 		orders, err := getOrderinfo(c.Key, c.Secret, v, -1, nil)
@@ -254,18 +234,29 @@ func (c *Client) updateOrders() {
 
 // Update starts update cycle
 func (c *Client) Update() {
-	bookt := time.NewTicker(c.OrderbookRefreshInterval)
 	t := time.NewTicker(c.OrdersRefreshInterval)
 	for {
 		select {
-		case <-bookt.C:
-			c.updateOrderbook()
 		case <-t.C:
 			c.updateOrders()
 		case <-c.Stop:
 			t.Stop()
-			bookt.Stop()
 			return
 		}
 	}
+}
+
+// GetMarketRecord gets the orderbook for a given tradepair symbol
+func (c *Client) GetMarketRecord(tradepair string) (*exchange.MarketRecord, error) {
+	orderbook, err := getOrderbook(tradepair)
+	if err != nil {
+		return nil, err
+	}
+
+	return &exchange.MarketRecord{
+		Timestamp: time.Unix(int64(orderbook.Timestamp), 0),
+		Symbol:    tradepair,
+		Bids:      orderbook.Bids,
+		Asks:      orderbook.Asks,
+	}, nil
 }

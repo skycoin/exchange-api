@@ -7,24 +7,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/skycoin/exchange-api/db"
-
 	exchange "github.com/skycoin/exchange-api/exchange"
 )
 
 func TestClientOperations(t *testing.T) {
-	orderBookDatabase, err := db.NewOrderbookTracker()
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	cl := Client{
-		Key:                      key,
-		Secret:                   secret,
-		OrdersRefreshInterval:    time.Second * 5,
-		OrderbookRefreshInterval: time.Second * 5,
-		Orders:     exchange.NewTracker(),
-		Orderbooks: orderBookDatabase,
+		Key:                   key,
+		Secret:                secret,
+		OrdersRefreshInterval: time.Second * 5,
+		Orders:                exchange.NewTracker(),
 	}
 
 	// verifying we've got enough SKY to play with
@@ -45,7 +36,6 @@ func TestClientOperations(t *testing.T) {
 
 	t.Run("updateOrdersOrderbook", func(t *testing.T) {
 		cl.updateOrders()
-		cl.updateOrderbook()
 	})
 
 	t.Run("GetExecuted", func(t *testing.T) {

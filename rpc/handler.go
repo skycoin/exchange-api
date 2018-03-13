@@ -244,29 +244,6 @@ var defaultHandlers = map[string]func(Request, exchange.Client) Response{
 		resp.setBody(c.Executed())
 		return resp
 	},
-	//orderbook params: {"symbol": string}
-	"orderbook": func(r Request, c exchange.Client) Response {
-		resp, err := validateRequest(r)
-		if err != nil {
-			return resp
-		}
-		params, err := DecodeParams(r)
-		if err != nil {
-			resp.Error = makeError(ParseError, parseErrorMsg, err)
-			return resp
-		}
-		market, err := GetStringParam(params, "symbol")
-		if err != nil {
-			resp.Error = makeError(InvalidParams, invalidParamsMsg, err)
-		}
-		book, err := c.Orderbook().Get(market)
-		if err != nil {
-			resp.Error = makeError(InternalError, internalErrorMsg, err)
-			return resp
-		}
-		resp.setBody(book)
-		return resp
-	},
 }
 
 // PackageFunc adds a PackageFunc for specified method
