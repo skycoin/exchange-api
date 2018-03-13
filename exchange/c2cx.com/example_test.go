@@ -6,27 +6,16 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	"github.com/skycoin/exchange-api/db"
-
 	exchange "github.com/skycoin/exchange-api/exchange"
 )
 
 // ExampleClient shows how to initialize a C2CX exchange client and then use it to place orders, check order status and cancel orders.
 func ExampleClient() {
-	// first we need to create an orderbook tracker
-	orderbook, err := db.NewOrderbookTracker()
-	if err != nil {
-		log.Fatal("Failed to create orderbook: ", err)
-	}
-
-	// now we create the client itself
 	client := &Client{
 		Key:        "ABABABAB-ABAB-ABAB-ABAB-ABABABABABAB",
 		Secret:     "CDCDCDCD-CDCD-CDCD-CDCD-CDCDCDCDCDCD",
 		Orders:     exchange.NewTracker(),
-		Orderbooks: orderbook,
 
-		OrderbookRefreshInterval: time.Second * 5,
 		OrdersRefreshInterval:    time.Second * 5,
 	}
 

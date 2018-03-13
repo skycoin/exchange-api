@@ -10,7 +10,6 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	"github.com/skycoin/exchange-api/db"
 	"github.com/skycoin/exchange-api/exchange"
 	c2cx "github.com/skycoin/exchange-api/exchange/c2cx.com"
 
@@ -64,32 +63,18 @@ func main() {
 	keys.c2cx.key = vals[0]
 	keys.c2cx.secret = vals[1]
 
-	cryptopiaOrderBook, err := db.NewOrderbookTracker()
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	cryptopiaClient = &cryptopia.Client{
 		Key:                      keys.cryptopia.key,
 		Secret:                   keys.cryptopia.secret,
 		Orders:                   exchange.NewTracker(),
-		Orderbooks:               cryptopiaOrderBook,
 		OrderbookRefreshInterval: time.Second * 5,
 		OrdersRefreshInterval:    time.Second * 5,
 	}
 
-	c2xcOrderBook, err := db.NewOrderbookTracker()
-
-	if err != nil {
-		log.Fatal(err)
-	}
 	c2cxClient = &c2cx.Client{
 		Key:                      keys.c2cx.key,
 		Secret:                   keys.c2cx.secret,
 		Orders:                   exchange.NewTracker(),
-		Orderbooks:               c2xcOrderBook,
-		OrderbookRefreshInterval: time.Second * 5,
 		OrdersRefreshInterval:    time.Second * 5,
 	}
 

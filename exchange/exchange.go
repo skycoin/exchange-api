@@ -53,8 +53,6 @@ type Client interface {
 	OrderStatus(int) (string, error)
 	// OrderDetails gets detailed information about order with given order id
 	OrderDetails(int) (Order, error)
-	// Orderbook return Orderbooks interface
-	Orderbook() Orderbooks
 }
 
 // Statuses

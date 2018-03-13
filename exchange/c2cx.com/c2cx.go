@@ -91,5 +91,5 @@ type Orderbook struct {
 }
 
 func apiError(endpoint, message string) error {
-	return fmt.Errorf("c2cx: %s falied, %s", endpoint, message)
+	return fmt.Errorf("c2cx: %s failed, %s", endpoint, message)
 }

@@ -222,4 +222,3 @@ func (ex) Completed() []int                                           { return [
 func (ex) GetBalance(string) (decimal.Decimal, error)                 { return decimal.NewFromFloat(1.234), nil }
 func (ex) OrderDetails(int) (exchange.Order, error)                   { return exchange.Order{}, nil }
 func (ex) OrderStatus(int) (string, error)                            { return exchange.Completed, nil }
-func (ex) Orderbook() exchange.Orderbooks                             { return nil }

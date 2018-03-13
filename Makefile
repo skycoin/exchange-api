@@ -12,7 +12,6 @@ test:
 	go test ./rpc/... -timeout=1m -cover -tags "${AVAILABLE_TAGS}"
 	go test ./cli/... -timeout=1m -cover -tags "${AVAILABLE_TAGS}"
 	go test ./cmd/... -timeout=1m -cover -tags "${AVAILABLE_TAGS}"
-	go test ./db/... -timeout=1m -cover -tags "${AVAILABLE_TAGS}"
 	go test ./exchange/... -timeout=1m -cover -tags "${AVAILABLE_TAGS}"
 
 lint: ## Run linters. Use make install-linters first.
