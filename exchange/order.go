@@ -129,7 +129,7 @@ func (r *MarketRecord) SpendItAll(amount decimal.Decimal) (MarketOrders, error) 
 		actualSpend := decimal.Min(maxSpend, amount)
 		volume := actualSpend.Div(order.Price)
 
-		var newOrder = MarketOrder{
+		newOrder := MarketOrder{
 			Price:  order.Price,
 			Volume: volume,
 		}
