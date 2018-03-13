@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/shopspring/decimal"
+
 	"github.com/skycoin/exchange-api/exchange"
 )
 
@@ -22,6 +23,19 @@ type PriceType string
 
 // OrderID is an order's ID
 type OrderID int
+
+// TradePair is a market trade pair
+type TradePair string
+
+// TradePairRules defines variable configuration per trading pair
+type TradePairRules struct {
+	// PricePrecision is the maximum number of decimals for price
+	PricePrecision int
+	// VolumePrecision is the maximum number of decimals for volume
+	VolumePrecision int
+	// VolumeMinimum is the minimum volume value
+	VolumeMinimum decimal.Decimal
+}
 
 const (
 	// StatusAll all orders
@@ -48,8 +62,6 @@ const (
 	StatusExpired OrderStatus = "expired"
 	// StatusCancelling cancelling orders
 	StatusCancelling OrderStatus = "cancelling"
-	// StatusUnknown placeholder unknown value
-	StatusUnknown OrderStatus = "unknown"
 
 	// OrderTypeBuy is a buy order
 	OrderTypeBuy OrderType = "buy"
@@ -63,6 +75,23 @@ const (
 
 	// AllOrders is used to include all orders when orderID is required
 	AllOrders OrderID = -1
+
+	// CnyBtc trade pair
+	CnyBtc TradePair = "CNY_BTC"
+	// CnyEth trade pair
+	CnyEth TradePair = "CNY_ETH"
+	// CnyEtc trade pair
+	CnyEtc TradePair = "CNY_ETC"
+	// CnySky trade pair
+	CnySky TradePair = "CNY_SKY"
+	// EthSky trade pair
+	EthSky TradePair = "ETH_SKY"
+	// BtcSky trade pair
+	BtcSky TradePair = "BTC_SKY"
+	// CnyShl trade pair
+	CnyShl TradePair = "CNY_SHL"
+	// BtcBcc trade pair
+	BtcBcc TradePair = "BTC_BCC"
 )
 
 var (
@@ -100,6 +129,15 @@ var (
 
 	// ErrUnknownStatus is returned for an unknown status
 	ErrUnknownStatus = errors.New("unknown status")
+
+	// TradePairRulesTable maps TradePairs to their TradePairRules
+	TradePairRulesTable = map[TradePair]TradePairRules{
+		BtcSky: {
+			PricePrecision:  5,
+			VolumePrecision: 2,
+			VolumeMinimum:   decimal.New(1, 0),
+		},
+	}
 )
 
 func init() {
@@ -108,10 +146,6 @@ func init() {
 		ReverseOrderStatuses[v] = k
 	}
 }
-
-// Markets is all supported markets
-// add new markets here
-var Markets = []string{"CNY_BTC", "CNY_ETH", "CNY_ETC", "CNY_SKY", "ETH_SKY", "BTC_SKY", "CNY_SHL", "BTC_BCC"}
 
 // AdvancedOrderParams is extended parameters, that can be used for set stoploss, takeprofit and trigger price
 type AdvancedOrderParams struct {
@@ -131,7 +165,7 @@ type Order struct {
 	OrderID         OrderID
 	Price           decimal.Decimal
 	Status          OrderStatus
-	Type            string
+	Type            OrderType
 }
 
 type orderJSON struct {
@@ -144,7 +178,7 @@ type orderJSON struct {
 	OrderID         OrderID         `json:"orderId"`
 	Price           decimal.Decimal `json:"price"`
 	Status          int             `json:"status"`
-	Type            string          `json:"type"`
+	Type            OrderType       `json:"type"`
 }
 
 // UnmarshalJSON implements json.Unmarshaler
