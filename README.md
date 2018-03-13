@@ -7,9 +7,36 @@ Exchange-API implements an interface to various cryptocurrency exchanges APIs in
 
 <!-- MarkdownTOC autolink="true" bracket="round" depth="5" -->
 
+- [Status](#status)
+    - [C2CX](#c2cx)
+    - [Cryptopia](#cryptopia)
 - [Integration Tests](#integration-tests)
 
 <!-- /MarkdownTOC -->
+
+## Status
+
+Originally this library tried to unify the interfaces between multiple exchanges.
+This goal has been abandoned until at least all of the API wrappers are refined.
+There is a limited amount of common ground across APIs and data structures,
+although a basic buy, sell and cancel could be unified.
+
+### C2CX
+
+API Docs: https://api.c2cx.com
+
+The C2CX API wrapper is nearly complete. A few endpoints are unimplemented.
+Their documentation is not accurate, corrections are noted in [exchange/c2cx/c2cx.go](exchange/c2cx/c2cx.go).
+
+### Cryptopia
+
+API Docs:
+
+* Public https://www.cryptopia.co.nz/Forum/Thread/255
+* Private https://www.cryptopia.co.nz/Forum/Thread/256
+
+The Cryptopia wrapper has not been reviewed or tested since restructuring this library.
+If someone wishes to use it, it would need a full review and cleanup of the data types.
 
 
 ## Integration Tests

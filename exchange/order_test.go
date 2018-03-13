@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testMarketRecord() MarketRecord {
+func newFakeMarketRecord() MarketRecord {
 	return MarketRecord{
 		Timestamp: time.Now(),
 		Symbol:    "SKY/BTC",
@@ -55,7 +55,7 @@ func testMarketRecord() MarketRecord {
 }
 
 func TestSpendItAll_Success(t *testing.T) {
-	marketRecord := testMarketRecord()
+	marketRecord := newFakeMarketRecord()
 	bankroll := decimal.NewFromFloat(40.0)
 
 	orders, err := marketRecord.SpendItAll(bankroll)
@@ -81,7 +81,7 @@ func TestSpendItAll_Success(t *testing.T) {
 }
 
 func TestSpendItAll_ErrNegativeAmount(t *testing.T) {
-	marketRecord := testMarketRecord()
+	marketRecord := newFakeMarketRecord()
 	bankroll := decimal.NewFromFloat(-5.0)
 
 	_, err := marketRecord.SpendItAll(bankroll)
@@ -90,7 +90,7 @@ func TestSpendItAll_ErrNegativeAmount(t *testing.T) {
 }
 
 func TestSpendItAll_ErrOrdersRanOut(t *testing.T) {
-	marketRecord := testMarketRecord()
+	marketRecord := newFakeMarketRecord()
 	bankroll := decimal.NewFromFloat(78.0)
 
 	_, err := marketRecord.SpendItAll(bankroll)
@@ -99,7 +99,7 @@ func TestSpendItAll_ErrOrdersRanOut(t *testing.T) {
 }
 
 func TestCheapestAsk_Success(t *testing.T) {
-	marketRecord := testMarketRecord()
+	marketRecord := newFakeMarketRecord()
 
 	order := marketRecord.CheapestAsk()
 
@@ -110,7 +110,7 @@ func TestCheapestAsk_Success(t *testing.T) {
 }
 
 func TestCheapestAsk_NoAsks(t *testing.T) {
-	marketRecord := testMarketRecord()
+	marketRecord := newFakeMarketRecord()
 
 	marketRecord.Asks = []MarketOrder{}
 
