@@ -10,12 +10,9 @@ import (
 	"net/url"
 	"sort"
 	"strings"
-	"time"
 
 	// the following is nolinted because it's part of c2cx' authentication scheme
 	"crypto/md5" // nolint: gas
-
-	"github.com/skycoin/exchange-api/exchange"
 )
 
 func sign(secret string, params url.Values) string {
@@ -97,38 +94,6 @@ func readResponse(r io.ReadCloser) (*response, error) {
 	if err := json.Unmarshal(tmp.Success, &resp); err != nil {
 		return nil, err
 	}
+
 	return &resp, nil
-}
-
-func convert(order Order) exchange.Order {
-	status := lookupStatus(order.Status)
-	var completed time.Time
-	accepted := time.Unix(order.CreateDate, 0)
-	if order.CompleteDate != 0 {
-		completed = time.Unix(order.CompleteDate, 0)
-	}
-
-	return exchange.Order{
-		OrderID: order.OrderID,
-		Status:  status,
-		Type:    order.Type,
-
-		CompletedAmount: order.CompletedAmount,
-		Fee:             order.Fee,
-
-		Price:  order.Price,
-		Amount: order.Amount,
-
-		Accepted:  accepted,
-		Completed: completed,
-	}
-}
-
-func lookupStatus(statusID int) string {
-	for k, v := range statuses {
-		if v == statusID {
-			return k
-		}
-	}
-	return "unknown"
 }

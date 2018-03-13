@@ -15,51 +15,7 @@ import (
 	"io/ioutil"
 	"net/url"
 	"strings"
-
-	"github.com/skycoin/exchange-api/exchange"
 )
-
-var incr int
-
-func getCurrencyID(currency string) (int, error) {
-	if v, ok := currencyCache[normalize(currency)]; ok {
-		return v.ID, nil
-	}
-	// If not found, try update first
-	err := updateCaches()
-	if err != nil {
-		return 0, err
-	}
-	if v, ok := currencyCache[normalize(currency)]; ok {
-		return v.ID, nil
-	}
-
-	return 0, fmt.Errorf("Currency %s does not found", currency)
-}
-
-func updateCaches() error {
-	if currencyCache == nil {
-		currencyCache = make(map[string]CurrencyInfo)
-	}
-	if marketCache == nil {
-		marketCache = make(map[string]int)
-	}
-	crs, err := getCurrencies()
-	if err != nil {
-		return err
-	}
-	for _, v := range crs {
-		currencyCache[v.Symbol] = v
-	}
-	mrkts, err := getTradePairs()
-	if err != nil {
-		return err
-	}
-	for _, v := range mrkts {
-		marketCache[v.Label] = v.ID
-	}
-	return nil
-}
 
 func normalize(symbol string) string {
 	symbol = strings.ToUpper(symbol)
@@ -67,45 +23,30 @@ func normalize(symbol string) string {
 	return symbol
 }
 
-func getMarketID(market string) (int, error) {
-	if v, ok := marketCache[normalize(market)]; ok {
-		return v, nil
-	}
-	// If not found, try update first
-	err := updateCaches()
-	if err != nil {
-		return 0, err
-	}
-	if v, ok := marketCache[normalize(market)]; ok {
-		return v, nil
-	}
-	return 0, fmt.Errorf("TradePair %s does not found", market)
-}
-
 func readResponse(r io.ReadCloser) (*response, error) {
-	incr++
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
-	//ioutil.WriteFile(fmt.Sprintf("responses/response%d.json", incr), b, os.ModePerm)
 	defer func() {
 		if err = r.Close(); err != nil {
 			panic(err)
 		}
 	}()
+
 	b = bytes.TrimPrefix(b, []byte("\xef\xbb\xbf"))
 	var resp response
-	err = json.Unmarshal(b, &resp)
-	return &resp, err
+	if err := json.Unmarshal(b, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
 }
 
-func encodeValues(vals map[string]interface{}) []byte {
+func encodeValues(vals map[string]interface{}) ([]byte, error) {
 	if vals == nil {
-		return []byte("{}")
+		return []byte("{}"), nil
 	}
-	b, _ := json.Marshal(vals)
-	return b
+	return json.Marshal(vals)
 }
 
 func sign(secret []byte, key, uri, nonce string, params []byte) []byte {
@@ -116,6 +57,7 @@ func sign(secret []byte, key, uri, nonce string, params []byte) []byte {
 	}
 	return signer.Sum(nil)
 }
+
 func prepare(key, uri, nonce string, params []byte) []byte {
 	hash := md5.Sum(params) // nolint: gas
 	encodedParams := base64.StdEncoding.EncodeToString(hash[:])
@@ -127,6 +69,7 @@ func prepare(key, uri, nonce string, params []byte) []byte {
 	signData = append(signData, encodedParams...)
 	return signData[:]
 }
+
 func header(key, secret, nonce string, uri url.URL, params []byte) string {
 	nuri := strings.ToLower(url.QueryEscape(uri.String()))
 	secretBytes, _ := base64.StdEncoding.DecodeString(secret)
@@ -142,16 +85,4 @@ func nonce() string {
 		panic(err)
 	}
 	return fmt.Sprintf("%x", b[:])
-}
-
-func convert(order Order) exchange.Order {
-	return exchange.Order{
-		OrderID:         order.OrderID,
-		Market:          order.Market,
-		Price:           order.Rate,
-		Amount:          order.Amount,
-		Accepted:        order.Timestamp,
-		Fee:             order.Fee,
-		CompletedAmount: order.Total.Sub(order.Remaining),
-	}
 }
