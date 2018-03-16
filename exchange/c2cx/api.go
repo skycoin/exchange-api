@@ -97,18 +97,15 @@ func (c *Client) GetOrderbook(symbol TradePair) (*Orderbook, error) {
 
 	data, err := c.get(getOrderBookEndpoint, params)
 	if err != nil {
-		fmt.Println("c.get orderbook error", err)
 		return nil, err
 	}
 
 	var resp getOrderbookResponse
 	if err := json.Unmarshal(data, &resp); err != nil {
-		fmt.Println("json Unmarshal error", err)
 		return nil, err
 	}
 
 	if resp.status.Code != http.StatusOK {
-		fmt.Println("status code not 200 error")
 		return nil, NewAPIError(getOrderBookEndpoint, resp.status.Code, resp.status.Message)
 	}
 
