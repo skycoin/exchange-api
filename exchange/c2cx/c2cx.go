@@ -32,8 +32,8 @@ func (s OrderStatus) String() string {
 	switch s {
 	case StatusAll:
 		return "all"
-	case StatusSubmitted:
-		return "submitted"
+	case StatusPending:
+		return "pending"
 	case StatusActive:
 		return "opened"
 	case StatusPartial:
@@ -84,8 +84,8 @@ type TradePairRules struct {
 const (
 	// StatusAll all orders
 	StatusAll OrderStatus = 0
-	// StatusSubmitted submitted orders
-	StatusSubmitted OrderStatus = 1
+	// StatusPending pending orders
+	StatusPending OrderStatus = 1
 	// StatusActive open orders
 	StatusActive OrderStatus = 2
 	// StatusPartial partial orders
