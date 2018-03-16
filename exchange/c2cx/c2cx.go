@@ -27,8 +27,8 @@ import (
 // 12. Cancelling
 type OrderStatus int
 
-// Name returns an OrderStatus's human-readable name
-func (s OrderStatus) Name() string {
+// String returns an OrderStatus's human-readable name
+func (s OrderStatus) String() string {
 	switch s {
 	case StatusAll:
 		return "all"
@@ -117,22 +117,74 @@ const (
 	// PriceTypeMarket a market order
 	PriceTypeMarket PriceType = "market"
 
-	// CnyBtc trade pair
-	CnyBtc TradePair = "CNY_BTC"
-	// CnyEth trade pair
-	CnyEth TradePair = "CNY_ETH"
-	// CnyEtc trade pair
-	CnyEtc TradePair = "CNY_ETC"
-	// CnySky trade pair
-	CnySky TradePair = "CNY_SKY"
-	// EthSky trade pair
-	EthSky TradePair = "ETH_SKY"
-	// BtcSky trade pair
-	BtcSky TradePair = "BTC_SKY"
-	// CnyShl trade pair
-	CnyShl TradePair = "CNY_SHL"
 	// BtcBcc trade pair
 	BtcBcc TradePair = "BTC_BCC"
+	// BtcDash trade pair
+	BtcDash TradePair = "BTC_DASH"
+	// BtcEth trade pair
+	BtcEth TradePair = "BTC_ETH"
+	// BtcFun trade pair
+	BtcFun TradePair = "BTC_FUN"
+	// BtcSky trade pair
+	BtcSky TradePair = "BTC_SKY"
+	// BtcTnb trade pair
+	BtcTnb TradePair = "BTC_TNB"
+	// BtcUcash trade pair
+	BtcUcash TradePair = "BTC_UCASH"
+	// BtcZrx trade pair
+	BtcZrx TradePair = "BTC_ZRX"
+	// DrgBcc trade pair
+	DrgBcc TradePair = "DRG_BCC"
+	// DrgBtc trade pair
+	DrgBtc TradePair = "DRG_BTC"
+	// DrgBtg trade pair
+	DrgBtg TradePair = "DRG_BTG"
+	// DrgDash trade pair
+	DrgDash TradePair = "DRG_DASH"
+	// DrgEtc trade pair
+	DrgEtc TradePair = "DRG_ETC"
+	// DrgEth trade pair
+	DrgEth TradePair = "DRG_ETH"
+	// DrgFun trade pair
+	DrgFun TradePair = "DRG_FUN"
+	// DrgLtc trade pair
+	DrgLtc TradePair = "DRG_LTC"
+	// DrgSky trade pair
+	DrgSky TradePair = "DRG_SKY"
+	// DrgTnb trade pair
+	DrgTnb TradePair = "DRG_TNB"
+	// DrgZec trade pair
+	DrgZec TradePair = "DRG_ZEC"
+	// DrgZrx trade pair
+	DrgZrx TradePair = "DRG_ZRX"
+	// UsdtBcc trade pair
+	UsdtBcc TradePair = "USDT_BCC"
+	// UsdtBtc trade pair
+	UsdtBtc TradePair = "USDT_BTC"
+	// UsdtBtg trade pair
+	UsdtBtg TradePair = "USDT_BTG"
+	// UsdtDash trade pair
+	UsdtDash TradePair = "USDT_DASH"
+	// UsdtDrg trade pair
+	UsdtDrg TradePair = "USDT_DRG"
+	// UsdtEtc trade pair
+	UsdtEtc TradePair = "USDT_ETC"
+	// UsdtEth trade pair
+	UsdtEth TradePair = "USDT_ETH"
+	// UsdtFun trade pair
+	UsdtFun TradePair = "USDT_FUN"
+	// UsdtLtc trade pair
+	UsdtLtc TradePair = "USDT_LTC"
+	// UsdtSky trade pair
+	UsdtSky TradePair = "USDT_SKY"
+	// UsdtTnb trade pair
+	UsdtTnb TradePair = "USDT_TNB"
+	// UsdtUcash trade pair
+	UsdtUcash TradePair = "USDT_UCASH"
+	// UsdtZec trade pair
+	UsdtZec TradePair = "USDT_ZEC"
+	// UsdtZrx trade pair
+	UsdtZrx TradePair = "USDT_ZRX"
 
 	// allOrders is used to include all orders when orderID is required
 	allOrders string = "-1"
@@ -153,7 +205,7 @@ var (
 	}
 )
 
-// AdvancedOrderParams is extended parameters, that can be used for set stoploss, takeprofit and trigger price
+// AdvancedOrderParams are extended parameters, that can be used for set stoploss, takeprofit and trigger price
 type AdvancedOrderParams struct {
 	TakeProfit   *decimal.Decimal
 	StopLoss     *decimal.Decimal
@@ -162,19 +214,19 @@ type AdvancedOrderParams struct {
 
 // Order represents all information about order
 type Order struct {
-	Amount          decimal.Decimal
-	AvgPrice        decimal.Decimal
-	CompletedAmount decimal.Decimal
-	Fee             decimal.Decimal
-	CreateDate      time.Time
-	CompleteDate    time.Time
-	OrderID         OrderID
-	Price           decimal.Decimal
-	Status          OrderStatus
-	Type            OrderType
-	Trigger         *decimal.Decimal
-	CID             *int
-	Source          string
+	Amount          decimal.Decimal  `json:"amount"`
+	AvgPrice        decimal.Decimal  `json:"avgPrice"`
+	CompletedAmount decimal.Decimal  `json:"completedAmount"`
+	Fee             decimal.Decimal  `json:"fee"`
+	CreateDate      time.Time        `json:"createDate"`
+	CompleteDate    time.Time        `json:"completeDate"`
+	OrderID         OrderID          `json:"orderId"`
+	Price           decimal.Decimal  `json:"price"`
+	Status          OrderStatus      `json:"status"`
+	Type            OrderType        `json:"type"`
+	Trigger         *decimal.Decimal `json:"trigger"`
+	CID             *string          `json:"cid"`
+	Source          string           `json:"source"`
 }
 
 type orderJSON struct {
@@ -189,7 +241,7 @@ type orderJSON struct {
 	Fee             decimal.Decimal  `json:"fee"`
 	Type            OrderType        `json:"type"`
 	Trigger         *decimal.Decimal `json:"trigger"`
-	CID             *int             `json:"cid"`
+	CID             *string          `json:"cid"`
 	Source          string           `json:"source"`
 }
 
@@ -237,7 +289,7 @@ type Orderbook struct {
 }
 
 type orderbookJSON struct {
-	Timestamp string               `json:"timestamp"`
+	Timestamp *string              `json:"timestamp,omitempty"`
 	Bids      [][2]decimal.Decimal `json:"bids"`
 	Asks      [][2]decimal.Decimal `json:"asks"`
 }
@@ -250,12 +302,14 @@ func (r *Orderbook) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	ts, err := strconv.ParseInt(v.Timestamp, 10, 64)
-	if err != nil {
-		return err
-	}
+	if v.Timestamp != nil {
+		ts, err := strconv.ParseInt(*v.Timestamp, 10, 64)
+		if err != nil {
+			return err
+		}
 
-	r.Timestamp = time.Unix(ts, 0)
+		r.Timestamp = time.Unix(ts, 0)
+	}
 
 	r.Bids = make(exchange.MarketOrders, len(v.Bids))
 	for i := 0; i < len(v.Bids); i++ {
