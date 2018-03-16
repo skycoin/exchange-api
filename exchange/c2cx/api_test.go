@@ -20,7 +20,7 @@ func ExampleMarketBuy() { // nolint: vet
 		return
 	}
 
-	orderID, err := c.MarketBuy(BtcSky, amount)
+	orderID, err := c.MarketBuy(BtcSky, amount, nil)
 	if err != nil {
 		fmt.Println("ERROR:", err)
 		return

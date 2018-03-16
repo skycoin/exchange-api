@@ -15,6 +15,12 @@ Some timestamps are in unix *milliseconds*, others are in regular unix seconds
 
 During pagination, pageindex of 0 and pageindex of 1 are treated the same.
 
+A client-defined ID can be assigned when creating an order. This ID is an arbitrary string.
+The parameter name is "cid".  A cid cannot be reused.
+
+For buy market orders you add in the quantity field the amount of BTC you want to spend on SKY.
+For sell market orders you add in the quantity field the amount of SKY you want to spend on BTC.
+
 Endpoints with responses that differ from the documentation, along with their correct
 responses:
 

@@ -97,15 +97,18 @@ func (c *Client) GetOrderbook(symbol TradePair) (*Orderbook, error) {
 
 	data, err := c.get(getOrderBookEndpoint, params)
 	if err != nil {
+		fmt.Println("c.get orderbook error", err)
 		return nil, err
 	}
 
 	var resp getOrderbookResponse
 	if err := json.Unmarshal(data, &resp); err != nil {
+		fmt.Println("json Unmarshal error", err)
 		return nil, err
 	}
 
 	if resp.status.Code != http.StatusOK {
+		fmt.Println("status code not 200 error")
 		return nil, NewAPIError(getOrderBookEndpoint, resp.status.Code, resp.status.Message)
 	}
 
@@ -146,13 +149,17 @@ type createOrderResponse struct {
 // CreateOrder creates order with given orderType and parameters
 // advanced is a advanced options for order creation
 // if advanced is nil, isAdvancedOrder sets to zero, else advanced will be used as advanced options
-func (c *Client) CreateOrder(symbol TradePair, price, quantity decimal.Decimal, orderType OrderType, priceType PriceType, advanced *AdvancedOrderParams) (OrderID, error) {
+func (c *Client) CreateOrder(symbol TradePair, price, quantity decimal.Decimal, orderType OrderType, priceType PriceType, customerID *string, advanced *AdvancedOrderParams) (OrderID, error) {
 	params := url.Values{}
 	params.Set("symbol", string(symbol))
 	params.Set("price", price.String())
 	params.Set("quantity", quantity.String())
 	params.Set("orderType", string(orderType))
 	params.Set("priceTypeId", string(priceType))
+
+	if customerID != nil {
+		params.Set("cid", *customerID)
+	}
 
 	isAdvanced := false
 	if advanced != nil {
@@ -380,8 +387,8 @@ func (c *Client) CancelMultiple(orderIDs []OrderID) ([]OrderID, error) {
 }
 
 // LimitBuy place limit buy order
-func (c *Client) LimitBuy(symbol TradePair, price, amount decimal.Decimal) (OrderID, error) {
-	orderID, err := c.CreateOrder(symbol, price, amount, OrderTypeBuy, PriceTypeLimit, nil)
+func (c *Client) LimitBuy(symbol TradePair, price, amount decimal.Decimal, customerID *string) (OrderID, error) {
+	orderID, err := c.CreateOrder(symbol, price, amount, OrderTypeBuy, PriceTypeLimit, customerID, nil)
 	if err != nil {
 		return 0, err
 	}
@@ -390,8 +397,8 @@ func (c *Client) LimitBuy(symbol TradePair, price, amount decimal.Decimal) (Orde
 }
 
 // LimitSell place limit sell order
-func (c *Client) LimitSell(symbol TradePair, price, amount decimal.Decimal) (OrderID, error) {
-	orderID, err := c.CreateOrder(symbol, price, amount, OrderTypeSell, PriceTypeLimit, nil)
+func (c *Client) LimitSell(symbol TradePair, price, amount decimal.Decimal, customerID *string) (OrderID, error) {
+	orderID, err := c.CreateOrder(symbol, price, amount, OrderTypeSell, PriceTypeLimit, customerID, nil)
 	if err != nil {
 		return 0, err
 	}
@@ -399,11 +406,11 @@ func (c *Client) LimitSell(symbol TradePair, price, amount decimal.Decimal) (Ord
 	return orderID, nil
 }
 
-// MarketBuy place market buy order. A market buy order will spend the entire amount to buy
-// the symbol's second coin
-func (c *Client) MarketBuy(symbol TradePair, amount decimal.Decimal) (OrderID, error) {
-	// For "market buy" orders, the amount to spend is placed in the "price" field
-	orderID, err := c.CreateOrder(symbol, amount, decimal.Zero, OrderTypeBuy, PriceTypeMarket, nil)
+// MarketBuy place market buy order. A market buy order will sell the entire amount of
+// the trade pair's first coin in exchange for the second coin.
+// e.g. for BTC_SKY, the amount is the amount of BTC you want to spend on SKY.
+func (c *Client) MarketBuy(symbol TradePair, amount decimal.Decimal, customerID *string) (OrderID, error) {
+	orderID, err := c.CreateOrder(symbol, amount, decimal.Zero, OrderTypeBuy, PriceTypeMarket, customerID, nil)
 	if err != nil {
 		return 0, err
 	}
@@ -412,15 +419,10 @@ func (c *Client) MarketBuy(symbol TradePair, amount decimal.Decimal) (OrderID, e
 }
 
 // MarketSell place market sell order. A market sell order will sell the entire amount
-// of the symbol's first coin
-func (c *Client) MarketSell(symbol TradePair, amount decimal.Decimal) (OrderID, error) {
-	// For "market sell" orders, the amount to sell is placed in the "volume" field
-	// TODO -- clarify this with c2cx:
-	// Notes:
-	// Under [priceTypeId] => "Market" condition:
-	// If [orderType] => Buy: Not passing the quantity parameter or passing the quantity value as 0.
-	// If [orderType] => Sell:Not passing the price parameter or passing the price value as 0.
-	orderID, err := c.CreateOrder(symbol, decimal.Zero, amount, OrderTypeSell, PriceTypeMarket, nil)
+// of the trade pair's second coin in exchange for the first coin.
+// e.g. for BTC_SKY, the amount is the amount of SKY you want to sell for BTC.
+func (c *Client) MarketSell(symbol TradePair, amount decimal.Decimal, customerID *string) (OrderID, error) {
+	orderID, err := c.CreateOrder(symbol, amount, decimal.Zero, OrderTypeSell, PriceTypeMarket, customerID, nil)
 	if err != nil {
 		return 0, err
 	}
