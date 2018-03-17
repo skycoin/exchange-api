@@ -158,6 +158,8 @@ func lowMarketBuy(c *c2cx.Client) {
 	// amount=0.0000000001 tradepair=BtcSky c2cx request failed: endpoint=createorder code=400 message=limit value: 0.00159
 	// amount=0.0000000001 tradepair=BtcSky c2cx request failed: endpoint=createorder code=400 message=limit value: 0.00158
 
+	c.Debug = true
+
 	tradePair := c2cx.BtcSky
 
 	amount, err := decimal.NewFromString("0.00001")
