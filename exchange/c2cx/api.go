@@ -488,14 +488,16 @@ func (c *Client) post(method string, params url.Values) ([]byte, error) {
 	reqURL := apiroot
 	reqURL.Path += method
 
-	if params == nil {
-		params = url.Values{}
-	}
+	signature := signParams(c.Key, c.Secret, params)
+
 	params.Set("apiKey", c.Key)
+	body := fmt.Sprintf("%s&sign=%s", params.Encode(), signature)
 
-	body := encodeParamsSorted(params) + "&sign=" + sign(c.Secret, params)
+	req, err := http.NewRequest("POST", reqURL.String(), strings.NewReader(body))
+	if err != nil {
+		return nil, NewOtherError(err)
+	}
 
-	req, _ := http.NewRequest("POST", reqURL.String(), strings.NewReader(body))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := http.DefaultClient.Do(req)
@@ -526,19 +528,25 @@ func (c *Client) post(method string, params url.Values) ([]byte, error) {
 	return b, nil
 }
 
-func sign(secret string, params url.Values) string {
-	var paramString = encodeParamsSorted(params)
-	if len(paramString) > 0 {
-		paramString += "&secretKey=" + secret
+func signParams(key, secret string, params url.Values) string {
+	// From C2CX API docs:
+	// Signature = stringToUppercase( md5(“apiKey=[Public_Key]& param1=value& param2=value&secretKey=[Secret_Key]”) )
+
+	encodedParams := encodeParamsSorted(params)
+	if encodedParams == "" {
+		encodedParams = fmt.Sprintf("apiKey=%s", key)
 	} else {
-		paramString += "secretKey=" + secret
+		encodedParams = fmt.Sprintf("apiKey=%s&%s", key, encodedParams)
 	}
 
-	sum := md5.Sum([]byte(paramString)) // nolint: gas
-	return strings.ToUpper(fmt.Sprintf("%x", sum))
+	toSign := fmt.Sprintf("%s&secretKey=%s", encodedParams, secret)
+	sum := md5.Sum([]byte(toSign)) // nolint: gas
+	sign := strings.ToUpper(fmt.Sprintf("%x", sum))
+
+	return sign
 }
 
-// returns sorted string for signing
+// encodeParamsSorted returns sorted string for signing
 func encodeParamsSorted(params url.Values) string {
 	if params == nil {
 		return ""
@@ -553,9 +561,11 @@ func encodeParamsSorted(params url.Values) string {
 
 	result := bytes.Buffer{}
 	for i, k := range keys {
-		result.WriteString(url.QueryEscape(k))
+		// NOTE: Do not query escape these params, the string used for signing
+		// must not have encoded params
+		result.WriteString(k)
 		result.WriteString("=")
-		result.WriteString(url.QueryEscape(params.Get(k)))
+		result.WriteString(params.Get(k))
 
 		if i != len(keys)-1 {
 			result.WriteString("&")
