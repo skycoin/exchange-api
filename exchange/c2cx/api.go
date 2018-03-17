@@ -10,17 +10,16 @@ import (
 	"sort"
 	"strings"
 
-	// the following is nolinted because it's part of c2cx's authentication scheme
-	// nolint: gas
-	"crypto/md5"
+	// The following is nolinted because it's part of c2cx's authentication scheme
+	"crypto/md5" // nolint: gas
 
 	"github.com/shopspring/decimal"
 )
 
-const debug = false
+const debug = true
 
 const (
-	getOrderBookEndpoint     = "getorderbook"
+	getOrderbookEndpoint     = "getorderbook"
 	getBalanceEndpoint       = "getbalance"
 	createOrderEndpoint      = "createorder"
 	getOrderInfoEndpoint     = "getorderinfo"
@@ -36,7 +35,28 @@ var (
 	}
 )
 
-// APIError is returned when an API request encounters an error
+// Error represents an error in the C2CX API wrapper
+type Error interface {
+	error
+	APIError() bool // Is the error an API error?
+}
+
+// OtherError is returned when an error other than an API error occurs, such as a net.Error or a JSON parsing error
+type OtherError struct {
+	error
+}
+
+// NewOtherError creates an Error
+func NewOtherError(err error) OtherError {
+	return OtherError{err}
+}
+
+// APIError returns false
+func (e OtherError) APIError() bool {
+	return false
+}
+
+// APIError is returned when an API response has an error code
 type APIError struct {
 	Code     int
 	Message  string
@@ -44,16 +64,21 @@ type APIError struct {
 }
 
 // NewAPIError creates an APIError
-func NewAPIError(endpoint string, code int, message string) *APIError {
-	return &APIError{
+func NewAPIError(endpoint string, code int, message string) APIError {
+	return APIError{
 		Code:     code,
 		Message:  message,
 		Endpoint: endpoint,
 	}
 }
 
-func (e *APIError) Error() string {
-	return fmt.Sprintf("c2cx request failed: endpoint=%s code=%d message=%s", e.Endpoint, e.Code, e.Message)
+// APIError returns true
+func (e APIError) APIError() bool {
+	return true
+}
+
+func (e APIError) Error() string {
+	return fmt.Sprintf("C2CX request failed: endpoint=%s code=%d message=%s", e.Endpoint, e.Code, e.Message)
 }
 
 // Client implements a wrapper around the C2CX API interface
@@ -95,18 +120,18 @@ func (c *Client) GetOrderbook(symbol TradePair) (*Orderbook, error) {
 	params := url.Values{}
 	params.Set("symbol", string(symbol))
 
-	data, err := c.get(getOrderBookEndpoint, params)
+	data, err := c.get(getOrderbookEndpoint, params)
 	if err != nil {
 		return nil, err
 	}
 
 	var resp getOrderbookResponse
 	if err := json.Unmarshal(data, &resp); err != nil {
-		return nil, err
+		return nil, NewOtherError(err)
 	}
 
 	if resp.status.Code != http.StatusOK {
-		return nil, NewAPIError(getOrderBookEndpoint, resp.status.Code, resp.status.Message)
+		return nil, NewAPIError(getOrderbookEndpoint, resp.status.Code, resp.status.Message)
 	}
 
 	return &resp.Orderbook, nil
@@ -126,7 +151,7 @@ func (c *Client) GetBalanceSummary() (*BalanceSummary, error) {
 
 	var resp getBalanceResponse
 	if err := json.Unmarshal(data, &resp); err != nil {
-		return nil, err
+		return nil, NewOtherError(err)
 	}
 
 	if resp.status.Code != http.StatusOK {
@@ -187,7 +212,7 @@ func (c *Client) CreateOrder(symbol TradePair, price, quantity decimal.Decimal, 
 
 	var resp createOrderResponse
 	if err := json.Unmarshal(data, &resp); err != nil {
-		return 0, err
+		return 0, NewOtherError(err)
 	}
 
 	if resp.status.Code != http.StatusOK {
@@ -215,7 +240,7 @@ func (c *Client) GetOrderInfo(symbol TradePair, orderID OrderID) (*Order, error)
 
 	var resp getOrderInfoResponse
 	if err := json.Unmarshal(data, &resp); err != nil {
-		return nil, err
+		return nil, NewOtherError(err)
 	}
 
 	if resp.status.Code != http.StatusOK {
@@ -244,7 +269,7 @@ func (c *Client) GetOrderInfoAll(symbol TradePair) ([]Order, error) {
 
 	var resp getOrderInfoAllResponse
 	if err := json.Unmarshal(data, &resp); err != nil {
-		return nil, err
+		return nil, NewOtherError(err)
 	}
 
 	if resp.status.Code != http.StatusOK {
@@ -271,7 +296,7 @@ func (c *Client) CancelOrder(orderID OrderID) error {
 
 	var resp cancelOrderResponse
 	if err := json.Unmarshal(data, &resp); err != nil {
-		return err
+		return NewOtherError(err)
 	}
 
 	if resp.status.Code != http.StatusOK {
@@ -306,7 +331,7 @@ func (c *Client) GetOrderByStatusPaged(symbol TradePair, status OrderStatus, pag
 
 	var resp getOrderByStatusResponse
 	if err := json.Unmarshal(data, &resp); err != nil {
-		return nil, 0, err
+		return nil, 0, NewOtherError(err)
 	}
 
 	if resp.status.Code != http.StatusOK {
@@ -434,14 +459,14 @@ func (c *Client) get(method string, params url.Values) ([]byte, error) { // noli
 
 	resp, err := http.DefaultClient.Get(reqURL.String())
 	if err != nil {
-		return nil, err
+		return nil, NewOtherError(err)
 	}
 
 	defer resp.Body.Close() // nolint: errcheck
 
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, NewOtherError(err)
 	}
 
 	// NOTE:
@@ -449,7 +474,6 @@ func (c *Client) get(method string, params url.Values) ([]byte, error) { // noli
 	// Instead, it places the status code inside of a JSON object per request
 	// The caller must handle the status code, since the structure of the JSON
 	// is different across requests
-
 	if resp.StatusCode == http.StatusInternalServerError {
 		return nil, NewAPIError(method, resp.StatusCode, "Internal Server Error")
 	}
@@ -475,14 +499,23 @@ func (c *Client) post(method string, params url.Values) ([]byte, error) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, NewOtherError(err)
 	}
 
 	defer resp.Body.Close() // nolint: errcheck
 
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, NewOtherError(err)
+	}
+
+	// NOTE:
+	// c2cx's API always returns 200 OK except for 500 errors
+	// Instead, it places the status code inside of a JSON object per request
+	// The caller must handle the status code, since the structure of the JSON
+	// is different across requests
+	if resp.StatusCode == http.StatusInternalServerError {
+		return nil, NewAPIError(method, resp.StatusCode, "Internal Server Error")
 	}
 
 	if debug {

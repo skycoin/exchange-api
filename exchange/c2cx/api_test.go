@@ -1,11 +1,14 @@
 package c2cx
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"testing"
 
 	"github.com/shopspring/decimal"
+	"github.com/stretchr/testify/require"
 )
 
 func ExampleMarketBuy() { // nolint: vet
@@ -37,4 +40,13 @@ func Test_sign(t *testing.T) {
 	if want != expected {
 		t.Fatalf("Incorrect sign!\nwant %s, expected %s", want, expected)
 	}
+}
+
+func TestErrorInterfaces(t *testing.T) {
+	otherErr := NewOtherError(errors.New("foo"))
+	require.Equal(t, "foo", otherErr.Error())
+	require.Implements(t, (*Error)(nil), otherErr)
+
+	apiErr := NewAPIError(getOrderbookEndpoint, http.StatusBadRequest, "failed")
+	require.Implements(t, (*Error)(nil), apiErr)
 }
