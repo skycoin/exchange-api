@@ -4,19 +4,23 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sync"
+	"time"
 
 	"github.com/shopspring/decimal"
 	"github.com/skycoin/exchange-api/exchange/c2cx"
 )
 
-func exitOnError(err error) { // nolint: megacheck
+// nolint
+func exitOnError(err error) {
 	if err != nil {
 		fmt.Println("ERROR:", err)
 		os.Exit(1)
 	}
 }
 
-func runExamples(c *c2cx.Client) { // nolint: deadcode,megacheck
+// nolint
+func runExamples(c *c2cx.Client) {
 	tradePair := c2cx.DrgDash
 
 	fmt.Println("TradePair", tradePair)
@@ -94,6 +98,91 @@ func runExamples(c *c2cx.Client) { // nolint: deadcode,megacheck
 	fmt.Println("Cancelled all orders:", orderIDs)
 }
 
+// nolint
+func triggerRatelimit(c *c2cx.Client) {
+	// Docs state limit of 60 requests per minute per endpoint
+	// This method tries to trigger the ratelimit to determine what error is returned,
+	// since the error response is undocumented
+
+	var wg sync.WaitGroup
+
+	type ReqError struct {
+		err error
+		n   int
+	}
+
+	errs := make(chan ReqError)
+
+	for i := 0; ; i++ {
+		j := i
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			fmt.Println(j)
+			_, err := c.GetBalanceSummary()
+			if err != nil {
+				errs <- ReqError{
+					err: err,
+					n:   j,
+				}
+			}
+		}()
+		time.Sleep(time.Millisecond * 100)
+	}
+
+	var wg2 sync.WaitGroup
+	wg2.Add(1)
+	go func() {
+		k := 0
+		defer wg2.Done()
+		for err := range errs {
+			fmt.Println()
+			fmt.Println(err.n)
+			printError(err.err)
+			k++
+		}
+		fmt.Println("number of errors:", k)
+	}()
+
+	wg.Wait()
+	close(errs)
+	wg2.Wait()
+}
+
+// nolint
+func lowMarketBuy(c *c2cx.Client) {
+	// Make a very low market buy order to discover the error message
+
+	// amount=0 tradepair=DrgBtc c2cx request failed: endpoint=createorder code=400 message=limit value: 13
+	// amount=0.0000000001 tradepair=BtcSky c2cx request failed: endpoint=createorder code=400 message=limit value: 0.00159
+	// amount=0.0000000001 tradepair=BtcSky c2cx request failed: endpoint=createorder code=400 message=limit value: 0.00158
+
+	tradePair := c2cx.BtcSky
+
+	amount, err := decimal.NewFromString("0.0000000001")
+	exitOnError(err)
+
+	fmt.Println("making a market buy from", tradePair, amount)
+
+	_, err = c.MarketBuy(tradePair, amount, nil)
+	printError(err)
+}
+
+// nolint
+func printError(err error) {
+	if err == nil {
+		fmt.Println("no error")
+	} else {
+		fmt.Println("ERROR:", err)
+		apiErr, ok := err.(c2cx.APIError)
+		if ok {
+			fmt.Printf("%+v\n", apiErr)
+		} else {
+			fmt.Println("not an api error")
+		}
+	}
+}
+
 func doNothing(c *c2cx.Client) {}
 
 func main() {
@@ -117,5 +206,7 @@ func main() {
 	}
 
 	doNothing(c)
-	runExamples(c)
+	// runExamples(c)
+	// triggerRatelimit(c)
+	// lowMarketBuy(c)
 }

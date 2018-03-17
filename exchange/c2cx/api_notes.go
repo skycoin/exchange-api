@@ -11,6 +11,13 @@ Clarifications:
 The response status code is always 200 (except in the case of a 500?).
 Instead, a non-200 code is set in a field in the JSON response if an error occurred.
 
+According to the c2cx docs, requests are ratelimited at 60 requests per minute per endpoint.
+This doesn't seem to be the true ratelimit, but the error is
+{"code":400,"message":"Too Many Requests","data":{}}
+
+For market buy orders, if the amount is below some threshold, the error message is "limit value: <minimum>".
+The <minimum> value is VARIABLE and based upon some other (USD?) exchange rate.
+
 Some timestamps are in unix *milliseconds*, others are in regular unix seconds
 
 During pagination, pageindex of 0 and pageindex of 1 are treated the same.
