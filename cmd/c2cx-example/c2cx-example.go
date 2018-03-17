@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
 	"sync"
 	"time"
@@ -159,12 +160,14 @@ func lowMarketBuy(c *c2cx.Client) {
 
 	tradePair := c2cx.BtcSky
 
-	amount, err := decimal.NewFromString("0.0000000001")
+	amount, err := decimal.NewFromString("0.00001")
 	exitOnError(err)
 
-	fmt.Println("making a market buy from", tradePair, amount)
+	cid := fmt.Sprintf("lmb-%d", rand.Uint32())
 
-	_, err = c.MarketBuy(tradePair, amount, nil)
+	fmt.Println("making a market buy from", tradePair, amount, cid)
+
+	_, err = c.MarketBuy(tradePair, amount, &cid)
 	printError(err)
 }
 
@@ -208,5 +211,5 @@ func main() {
 	doNothing(c)
 	// runExamples(c)
 	// triggerRatelimit(c)
-	// lowMarketBuy(c)
+	lowMarketBuy(c)
 }

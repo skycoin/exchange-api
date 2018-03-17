@@ -16,8 +16,6 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-const debug = false
-
 const (
 	getOrderbookEndpoint     = "getorderbook"
 	getBalanceEndpoint       = "getbalance"
@@ -85,6 +83,7 @@ func (e APIError) Error() string {
 type Client struct {
 	Key    string
 	Secret string
+	Debug  bool
 }
 
 // CancelMultiError is returned when an error was encountered while cancelling multiple orders
@@ -478,8 +477,8 @@ func (c *Client) get(method string, params url.Values) ([]byte, error) { // noli
 		return nil, NewAPIError(method, resp.StatusCode, "Internal Server Error")
 	}
 
-	if debug {
-		fmt.Println("response:", string(b))
+	if c.Debug {
+		fmt.Printf("GET endpoint=%s response=%s\n", reqURL.String(), string(b))
 	}
 
 	return b, nil
@@ -494,7 +493,9 @@ func (c *Client) post(method string, params url.Values) ([]byte, error) {
 	}
 	params.Set("apiKey", c.Key)
 
-	req, _ := http.NewRequest("POST", reqURL.String(), strings.NewReader(params.Encode()+"&"+"sign="+sign(c.Secret, params)))
+	body := encodeParamsSorted(params) + "&sign=" + sign(c.Secret, params)
+
+	req, _ := http.NewRequest("POST", reqURL.String(), strings.NewReader(body))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := http.DefaultClient.Do(req)
@@ -518,8 +519,8 @@ func (c *Client) post(method string, params url.Values) ([]byte, error) {
 		return nil, NewAPIError(method, resp.StatusCode, "Internal Server Error")
 	}
 
-	if debug {
-		fmt.Println("response:", string(b))
+	if c.Debug {
+		fmt.Printf("POST endpoint=%s body=%s response=%s\n", reqURL.String(), body, string(b))
 	}
 
 	return b, nil
