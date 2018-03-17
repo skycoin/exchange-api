@@ -16,7 +16,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-const debug = true
+const debug = false
 
 const (
 	getOrderbookEndpoint     = "getorderbook"
