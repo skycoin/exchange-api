@@ -248,7 +248,7 @@ type orderJSON struct {
 func fromUnixMilli(t int64) time.Time {
 	base := t / 1e3
 	nano := (t % 1e3) * 1e6
-	return time.Unix(base, nano)
+	return time.Unix(base, nano).UTC()
 }
 
 // UnmarshalJSON unmarshals binary data to Order
@@ -308,7 +308,7 @@ func (r *Orderbook) UnmarshalJSON(b []byte) error {
 			return err
 		}
 
-		r.Timestamp = time.Unix(ts, 0)
+		r.Timestamp = time.Unix(ts, 0).UTC()
 	}
 
 	r.Bids = make(exchange.MarketOrders, len(v.Bids))
