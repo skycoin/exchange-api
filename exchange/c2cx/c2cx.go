@@ -225,7 +225,7 @@ type Order struct {
 	Status          OrderStatus      `json:"status"`
 	Type            OrderType        `json:"type"`
 	Trigger         *decimal.Decimal `json:"trigger"`
-	CID             *string          `json:"cid"`
+	CustomerID      *string          `json:"cid"`
 	Source          string           `json:"source"`
 }
 
@@ -241,7 +241,7 @@ type orderJSON struct {
 	Fee             decimal.Decimal  `json:"fee"`
 	Type            OrderType        `json:"type"`
 	Trigger         *decimal.Decimal `json:"trigger"`
-	CID             *string          `json:"cid"`
+	CustomerID      *string          `json:"cid"`
 	Source          string           `json:"source"`
 }
 
@@ -249,6 +249,35 @@ func fromUnixMilli(t int64) time.Time {
 	base := t / 1e3
 	nano := (t % 1e3) * 1e6
 	return time.Unix(base, nano).UTC()
+}
+
+func toUnixMilli(t time.Time) int64 {
+	return t.UnixNano() / 1e6
+}
+
+// MarshalJSON marshals Order to binary data
+func (o Order) MarshalJSON() ([]byte, error) {
+	var trigger *string
+	if o.Trigger != nil {
+		t := o.Trigger.String()
+		trigger = &t
+	}
+
+	return json.Marshal(map[string]interface{}{
+		"amount":          o.Amount.String(),
+		"avgPrice":        o.AvgPrice.String(),
+		"completedAmount": o.CompletedAmount.String(),
+		"fee":             o.Fee.String(),
+		"createDate":      toUnixMilli(o.CreateDate),
+		"completeDate":    toUnixMilli(o.CompleteDate),
+		"orderId":         o.OrderID,
+		"price":           o.Price.String(),
+		"status":          o.Status,
+		"type":            o.Type,
+		"trigger":         trigger,
+		"cid":             o.CustomerID,
+		"source":          o.Source,
+	})
 }
 
 // UnmarshalJSON unmarshals binary data to Order
@@ -273,7 +302,7 @@ func (o *Order) UnmarshalJSON(b []byte) error {
 		Status:          v.Status,
 		Type:            v.Type,
 		Trigger:         v.Trigger,
-		CID:             v.CID,
+		CustomerID:      v.CustomerID,
 		Source:          v.Source,
 	}
 
