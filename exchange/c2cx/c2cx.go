@@ -246,12 +246,18 @@ type orderJSON struct {
 }
 
 func fromUnixMilli(t int64) time.Time {
+	if t == 0 {
+		return time.Time{}
+	}
 	base := t / 1e3
 	nano := (t % 1e3) * 1e6
 	return time.Unix(base, nano).UTC()
 }
 
 func toUnixMilli(t time.Time) int64 {
+	if t.IsZero() {
+		return 0
+	}
 	return t.UnixNano() / 1e6
 }
 
