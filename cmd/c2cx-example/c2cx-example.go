@@ -100,6 +100,74 @@ func runExamples(c *c2cx.Client) {
 }
 
 // nolint
+func highMarketSell(c *c2cx.Client) {
+	tradePair := c2cx.BtcSky
+
+	fmt.Println("TradePair", tradePair)
+
+	fmt.Println()
+	fmt.Println("GetBalanceSummary")
+
+	balances, err := c.GetBalanceSummary()
+	exitOnError(err)
+
+	fmt.Printf("Balances:\n%+v\n", balances)
+
+	amount, err := decimal.NewFromString("5")
+	exitOnError(err)
+
+	customerID := "foo-2"
+
+	fmt.Println()
+	fmt.Println("MarketSell customerID", customerID)
+	orderID, err := c.MarketSell(tradePair, amount, &customerID)
+	exitOnError(err)
+
+	fmt.Println("Order ID:", orderID)
+
+	fmt.Println()
+	fmt.Println("GetOrderInfo (one)")
+	order, err := c.GetOrderInfo(tradePair, orderID)
+	exitOnError(err)
+
+	fmt.Printf("Order:\n%+v\n", order)
+}
+
+// nolint
+func highMarketBuy(c *c2cx.Client) {
+	tradePair := c2cx.BtcSky
+
+	fmt.Println("TradePair", tradePair)
+
+	fmt.Println()
+	fmt.Println("GetBalanceSummary")
+
+	balances, err := c.GetBalanceSummary()
+	exitOnError(err)
+
+	fmt.Printf("Balances:\n%+v\n", balances)
+
+	amount, err := decimal.NewFromString("1")
+	exitOnError(err)
+
+	customerID := "foo-3"
+
+	fmt.Println()
+	fmt.Println("MarketBuy amount customerID", amount.String(), customerID)
+	orderID, err := c.MarketBuy(tradePair, amount, &customerID)
+	exitOnError(err)
+
+	fmt.Println("Order ID:", orderID)
+
+	fmt.Println()
+	fmt.Println("GetOrderInfo (one)")
+	order, err := c.GetOrderInfo(tradePair, orderID)
+	exitOnError(err)
+
+	fmt.Printf("Order:\n%+v\n", order)
+}
+
+// nolint
 func triggerRatelimit(c *c2cx.Client) {
 	// Docs state limit of 60 requests per minute per endpoint
 	// This method tries to trigger the ratelimit to determine what error is returned,
@@ -213,5 +281,7 @@ func main() {
 	doNothing(c)
 	// runExamples(c)
 	// triggerRatelimit(c)
-	lowMarketBuy(c)
+	// lowMarketBuy(c)
+	// highMarketSell(c)
+	// highMarketBuy(c)
 }

@@ -443,7 +443,7 @@ func (c *Client) MarketBuy(symbol TradePair, amount decimal.Decimal, customerID 
 // of the trade pair's second coin in exchange for the first coin.
 // e.g. for BTC_SKY, the amount is the amount of SKY you want to sell for BTC.
 func (c *Client) MarketSell(symbol TradePair, amount decimal.Decimal, customerID *string) (OrderID, error) {
-	orderID, err := c.CreateOrder(symbol, amount, decimal.Zero, OrderTypeSell, PriceTypeMarket, customerID, nil)
+	orderID, err := c.CreateOrder(symbol, decimal.Zero, amount, OrderTypeSell, PriceTypeMarket, customerID, nil)
 	if err != nil {
 		return 0, err
 	}
@@ -487,6 +487,10 @@ func (c *Client) get(method string, params url.Values) ([]byte, error) { // noli
 func (c *Client) post(method string, params url.Values) ([]byte, error) {
 	reqURL := apiroot
 	reqURL.Path += method
+
+	if params == nil {
+		params = url.Values{}
+	}
 
 	signature := signParams(c.Key, c.Secret, params)
 
