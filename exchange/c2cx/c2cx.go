@@ -390,3 +390,8 @@ func (br BalanceSummary) Spendable() Balances {
 		Total: br.Balance.Total.Sub(br.Frozen.Total),
 	}
 }
+
+type Orders struct {
+	Orders []Order `json:"orders"`
+	Page   int     `json:"page,omitempty"`
+}
