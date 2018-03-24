@@ -271,7 +271,6 @@ func (c *Client) CancelOrder(orderID OrderID) error {
 	}
 
 	var resp cancelOrderResponse
-	log.Info("cancelOrderResponse: %s", string(data))
 	if err := json.Unmarshal(data, &resp); err != nil {
 		return err
 	}
