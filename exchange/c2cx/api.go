@@ -93,7 +93,7 @@ type Client struct {
 	Key        string
 	Secret     string
 	Debug      bool
-	HttpClient *http.Client
+	HTTPClient *http.Client
 }
 
 // CancelMultiError is returned when an error was encountered while cancelling multiple orders
@@ -123,7 +123,8 @@ type getOrderbookResponse struct {
 	Orderbook Orderbook `json:"data"`
 }
 
-func NewApiClient(key, secret string) *Client {
+// NewAPIClient creates new instance of Client struct and returns it
+func NewAPIClient(key, secret string) *Client {
 	var netTransport = &http.Transport{
 		Dial: (&net.Dialer{
 			Timeout: dialTimeout,
@@ -138,7 +139,7 @@ func NewApiClient(key, secret string) *Client {
 	return &Client{
 		Key:        key,
 		Secret:     secret,
-		HttpClient: httpClient,
+		HTTPClient: httpClient,
 	}
 }
 
@@ -484,7 +485,7 @@ func (c *Client) get(method string, params url.Values) ([]byte, error) { // noli
 	reqURL := apiroot
 	reqURL.Path += method
 	reqURL.RawQuery = params.Encode()
-	resp, err := c.HttpClient.Get(reqURL.String())
+	resp, err := c.HTTPClient.Get(reqURL.String())
 	if err != nil {
 		return nil, NewOtherError(err)
 	}
@@ -525,7 +526,7 @@ func (c *Client) post(method string, params url.Values) ([]byte, error) {
 	params.Set("apiKey", c.Key)
 	body := fmt.Sprintf("%s&sign=%s", params.Encode(), signature)
 
-	resp, err := c.HttpClient.Post(reqURL.String(), "application/x-www-form-urlencoded", strings.NewReader(body))
+	resp, err := c.HTTPClient.Post(reqURL.String(), "application/x-www-form-urlencoded", strings.NewReader(body))
 	if err != nil {
 		return nil, NewOtherError(err)
 	}

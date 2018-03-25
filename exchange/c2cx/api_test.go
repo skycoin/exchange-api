@@ -12,7 +12,7 @@ import (
 )
 
 func ExampleMarketBuy() { // nolint: vet
-	c := NewApiClient("your-key-here", "your-secret-here")
+	c := NewAPIClient("your-key-here", "your-secret-here")
 
 	amount, err := decimal.NewFromString("2.12345")
 	if err != nil {
