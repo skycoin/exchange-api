@@ -15,7 +15,6 @@ import (
 	"crypto/md5"
 
 	"github.com/shopspring/decimal"
-	"github.com/prometheus/common/log"
 )
 
 const debug = false
