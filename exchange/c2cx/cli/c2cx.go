@@ -17,10 +17,11 @@ import (
 )
 
 var (
-	path    string
 	client  c2cx.Client
 	rootCmd *cobra.Command
 )
+
+const null = "null"
 
 func getCommands() map[string]*cobra.Command {
 	return map[string]*cobra.Command{
@@ -153,7 +154,7 @@ for order creation if advanced is nil, isAdvancedOrder sets to zero, else advanc
 
 				advancedParams := &c2cx.AdvancedOrderParams{}
 
-				if args[6] != "null" {
+				if args[6] != null {
 					takeProfit, err := decimal.NewFromString(args[6])
 					if err != nil {
 						printErrorWithExit(err)
@@ -161,7 +162,7 @@ for order creation if advanced is nil, isAdvancedOrder sets to zero, else advanc
 					advancedParams.TakeProfit = &takeProfit
 				}
 
-				if args[7] != "null" {
+				if args[7] != null {
 					stopLoss, err := decimal.NewFromString(args[7])
 					if err != nil {
 						printErrorWithExit(err)
@@ -169,7 +170,7 @@ for order creation if advanced is nil, isAdvancedOrder sets to zero, else advanc
 					advancedParams.StopLoss = &stopLoss
 				}
 
-				if args[8] != "null" {
+				if args[8] != null {
 					triggerPrice, err := decimal.NewFromString(args[8])
 					if err != nil {
 						printErrorWithExit(err)
@@ -240,6 +241,9 @@ GetOrderByStatusPaged get all orders with given status for a given pagination pa
 					printErrorWithExit(err)
 				}
 				page, err := strconv.Atoi(args[2])
+				if err != nil {
+					printErrorWithExit(err)
+				}
 				orders, pageCount, err := client.GetOrderByStatusPaged(c2cx.TradePair(tradePair), c2cx.OrderStatus(orderStatus), page)
 				handleResult(c2cx.Orders{Orders: orders, Page: pageCount}, err)
 			},
