@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
+	"github.com/prometheus/common/log"
 )
 
 // MarketOrder is a one order in stock
@@ -97,7 +98,7 @@ func (marketOrders MarketOrders) Volume() decimal.Decimal {
 	for _, order := range marketOrders {
 		sum = sum.Add(order.Volume)
 	}
-
+	log.Info("sum: " + sum.String())
 	return sum
 }
 
