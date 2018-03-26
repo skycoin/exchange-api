@@ -29,9 +29,9 @@ const (
 )
 
 const (
-	dialTimeout         = 5 * time.Second
-	httpClientTimeout   = 10 * time.Second
-	tlsHandshakeTimeout = 5 * time.Second
+	dialTimeout         = 60 * time.Second
+	httpClientTimeout   = 120 * time.Second
+	tlsHandshakeTimeout = 60 * time.Second
 )
 
 var (
