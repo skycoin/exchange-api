@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	client  c2cx.Client
+	client  *c2cx.Client
 	rootCmd *cobra.Command
 )
 
@@ -371,16 +371,12 @@ the amount is the amount of SKY you want to sell for BTC.
 		},
 		"getTicker": {
 			Use:   "get_ticker",
-			Short: "MarketSell place market sell order",
+			Short: "The public ticker API returns key pricing data for a give currency pair",
 			Long: `
-MarketSell place market sell order. A market sell order will sell the entire amount 
-of the trade pair's second coin in exchange for the first coin. e.g. for BTC_SKY, 
-the amount is the amount of SKY you want to sell for BTC.
+The public ticker API returns key pricing data for a give currency pair.
 	Params:
-		trade_pair - market trade pair
-		amount - amount of selling currency
-		customerID - user submitted id`,
-			Example: "c2cx market_sell <trade_pair>",
+		trade_pair - market trade pair`,
+			Example: "c2cx get_ticker <trade_pair>",
 			Args:    cobra.MinimumNArgs(1),
 			Run: func(cmd *cobra.Command, args []string) {
 				symbol := args[0]
@@ -412,10 +408,7 @@ func init() {
 	if secret == "" {
 		panic("secret param is empty")
 	}
-	client = c2cx.Client{
-		Key:    key,
-		Secret: secret,
-	}
+	client = c2cx.NewAPIClient(key, secret)
 	rootCmd = &cobra.Command{Use: "c2cx"}
 	for _, v := range getCommands() {
 		rootCmd.AddCommand(v)

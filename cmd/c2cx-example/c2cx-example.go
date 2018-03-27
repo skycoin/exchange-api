@@ -273,10 +273,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	c := &c2cx.Client{
-		Key:    *key,
-		Secret: *secret,
-	}
+	c := c2cx.NewAPIClient(*key, *secret)
+
 
 	doNothing(c)
 	// runExamples(c)

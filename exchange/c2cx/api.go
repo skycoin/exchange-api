@@ -26,7 +26,7 @@ const (
 	getOrderInfoEndpoint     = "getorderinfo"
 	cancelOrderEndpoint      = "cancelorder"
 	getOrderByStatusEndpoint = "getorderbystatus"
-	getTicker                   = "ticker"
+	getTicker                = "ticker"
 )
 
 const (
@@ -483,22 +483,17 @@ func (c *Client) MarketSell(symbol TradePair, amount decimal.Decimal, customerID
 }
 
 type GetTickerResponse struct {
-	Fail    []GetTickerItem
-	Success []GetTickerItem
-}
-
-type GetTickerItem struct {
-	Code    int
-	Success string
-	Data struct {
-		Date   string
-		High   int
-		Last   int
-		Low    int
-		Buy    int
-		Sell   int
-		Volume int
-	}
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    struct {
+		Timestamp string  `json:"timestamp,omitempty"`
+		High      float64 `json:"high,omitempty"`
+		Last      float64 `json:"last,omitempty"`
+		Low       float64 `json:"low,omitempty"`
+		Buy       float64 `json:"buy,omitempty"`
+		Sell      float64 `json:"sell,omitempty"`
+		Volume    float64 `json:"volume,omitempty"`
+	} `json:"data"`
 }
 
 func (c *Client) GetTicker(symbol TradePair) (*GetTickerResponse, error) {
@@ -508,11 +503,11 @@ func (c *Client) GetTicker(symbol TradePair) (*GetTickerResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	var getTickerResponse *GetTickerResponse
+	var getTickerResponse GetTickerResponse
 	if err = json.Unmarshal(data, &getTickerResponse); err != nil {
 		return nil, NewOtherError(err)
 	}
-	return getTickerResponse, err
+	return &getTickerResponse, err
 }
 
 func (c *Client) get(method string, params url.Values) ([]byte, error) { // nolint: unparam
