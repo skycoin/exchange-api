@@ -26,7 +26,7 @@ const (
 	getOrderInfoEndpoint     = "getorderinfo"
 	cancelOrderEndpoint      = "cancelorder"
 	getOrderByStatusEndpoint = "getorderbystatus"
-	ticker                   = "ticker"
+	getTicker                   = "ticker"
 )
 
 const (
@@ -501,10 +501,10 @@ type GetTickerItem struct {
 	}
 }
 
-func (c *Client) Ticker(symbol TradePair) (*GetTickerResponse, error) {
+func (c *Client) GetTicker(symbol TradePair) (*GetTickerResponse, error) {
 	params := url.Values{}
 	params.Add("symbol", string(symbol))
-	data, err := c.get(ticker, params)
+	data, err := c.get(getTicker, params)
 	if err != nil {
 		return nil, err
 	}

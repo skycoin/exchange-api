@@ -369,6 +369,26 @@ the amount is the amount of SKY you want to sell for BTC.
 				handleResult(map[string]c2cx.OrderID{"orderID": orderID}, err)
 			},
 		},
+		"getTicker": {
+			Use:   "get_ticker",
+			Short: "MarketSell place market sell order",
+			Long: `
+MarketSell place market sell order. A market sell order will sell the entire amount 
+of the trade pair's second coin in exchange for the first coin. e.g. for BTC_SKY, 
+the amount is the amount of SKY you want to sell for BTC.
+	Params:
+		trade_pair - market trade pair
+		amount - amount of selling currency
+		customerID - user submitted id`,
+			Example: "c2cx market_sell <trade_pair>",
+			Args:    cobra.MinimumNArgs(1),
+			Run: func(cmd *cobra.Command, args []string) {
+				symbol := args[0]
+
+				getTickerResult, err := client.GetTicker(c2cx.TradePair(symbol))
+				handleResult(getTickerResult, err)
+			},
+		},
 	}
 }
 
