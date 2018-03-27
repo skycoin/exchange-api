@@ -1,4 +1,3 @@
-// Package c2cx provides api methods methods for communication with c2cx exchange
 package main
 
 import (
@@ -9,11 +8,13 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"os/user"
+
 	"github.com/shopspring/decimal"
-	"github.com/skycoin/exchange-api/exchange/c2cx"
-	"github.com/skycoin/skycoin/src/util/file"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/skycoin/exchange-api/exchange/c2cx"
 )
 
 var (
@@ -372,11 +373,16 @@ the amount is the amount of SKY you want to sell for BTC.
 }
 
 func init() {
-	var config = filepath.Join(file.UserHome(), ".exchangectl/config.toml")
-	viper.SetConfigFile(config)
-	err := viper.ReadInConfig()
+	user, err := user.Current()
 	if err != nil {
-		log.Panicf("failed read config file: %v", err)
+		log.Panicf("failed to get the current user. err: %v", err)
+	}
+
+	var config = filepath.Join(user.HomeDir, ".exchangectl/config.toml")
+	viper.SetConfigFile(config)
+	err = viper.ReadInConfig()
+	if err != nil {
+		log.Panicf("failed to read the config file %s, err: %v", config, err)
 	}
 	key := viper.GetString("c2cx.key")
 	if key == "" {
