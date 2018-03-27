@@ -13,6 +13,9 @@ import (
 	// The following is nolinted because it's part of c2cx's authentication scheme
 	"crypto/md5" // nolint: gas
 
+	"net"
+	"time"
+
 	"github.com/shopspring/decimal"
 )
 
@@ -23,6 +26,12 @@ const (
 	getOrderInfoEndpoint     = "getorderinfo"
 	cancelOrderEndpoint      = "cancelorder"
 	getOrderByStatusEndpoint = "getorderbystatus"
+)
+
+const (
+	dialTimeout         = 60 * time.Second
+	httpClientTimeout   = 120 * time.Second
+	tlsHandshakeTimeout = 60 * time.Second
 )
 
 var (
@@ -81,9 +90,10 @@ func (e APIError) Error() string {
 
 // Client implements a wrapper around the C2CX API interface
 type Client struct {
-	Key    string
-	Secret string
-	Debug  bool
+	Key        string
+	Secret     string
+	Debug      bool
+	HTTPClient *http.Client
 }
 
 // CancelMultiError is returned when an error was encountered while cancelling multiple orders
@@ -111,6 +121,26 @@ type pagination struct {
 type getOrderbookResponse struct {
 	status
 	Orderbook Orderbook `json:"data"`
+}
+
+// NewAPIClient creates new instance of Client struct and returns it
+func NewAPIClient(key, secret string) *Client {
+	var netTransport = &http.Transport{
+		Dial: (&net.Dialer{
+			Timeout: dialTimeout,
+		}).Dial,
+		TLSHandshakeTimeout: tlsHandshakeTimeout,
+	}
+	httpClient := &http.Client{
+		Timeout:   httpClientTimeout,
+		Transport: netTransport,
+	}
+
+	return &Client{
+		Key:        key,
+		Secret:     secret,
+		HTTPClient: httpClient,
+	}
 }
 
 // GetOrderbook gets all open orders by given symbol
@@ -455,8 +485,7 @@ func (c *Client) get(method string, params url.Values) ([]byte, error) { // noli
 	reqURL := apiroot
 	reqURL.Path += method
 	reqURL.RawQuery = params.Encode()
-
-	resp, err := http.DefaultClient.Get(reqURL.String())
+	resp, err := c.HTTPClient.Get(reqURL.String())
 	if err != nil {
 		return nil, NewOtherError(err)
 	}
@@ -497,14 +526,7 @@ func (c *Client) post(method string, params url.Values) ([]byte, error) {
 	params.Set("apiKey", c.Key)
 	body := fmt.Sprintf("%s&sign=%s", params.Encode(), signature)
 
-	req, err := http.NewRequest("POST", reqURL.String(), strings.NewReader(body))
-	if err != nil {
-		return nil, NewOtherError(err)
-	}
-
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := c.HTTPClient.Post(reqURL.String(), "application/x-www-form-urlencoded", strings.NewReader(body))
 	if err != nil {
 		return nil, NewOtherError(err)
 	}
