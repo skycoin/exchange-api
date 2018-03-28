@@ -486,13 +486,13 @@ type GetTickerResponse struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 	Data    struct {
-		Timestamp string  `json:"timestamp,omitempty"`
-		High      float64 `json:"high,omitempty"`
-		Last      float64 `json:"last,omitempty"`
-		Low       float64 `json:"low,omitempty"`
-		Buy       float64 `json:"buy,omitempty"`
-		Sell      float64 `json:"sell,omitempty"`
-		Volume    float64 `json:"volume,omitempty"`
+		Timestamp string           `json:"timestamp,omitempty"`
+		High      *decimal.Decimal `json:"high,omitempty"`
+		Last      *decimal.Decimal `json:"last,omitempty"`
+		Low       *decimal.Decimal `json:"low,omitempty"`
+		Buy       *decimal.Decimal `json:"buy,omitempty"`
+		Sell      *decimal.Decimal `json:"sell,omitempty"`
+		Volume    *decimal.Decimal `json:"volume,omitempty"`
 	} `json:"data"`
 }
 
