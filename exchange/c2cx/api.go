@@ -26,6 +26,7 @@ const (
 	getOrderInfoEndpoint     = "getorderinfo"
 	cancelOrderEndpoint      = "cancelorder"
 	getOrderByStatusEndpoint = "getorderbystatus"
+	getTicker                = "ticker"
 )
 
 const (
@@ -153,7 +154,7 @@ func (c *Client) GetOrderbook(symbol TradePair) (*Orderbook, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	//fmt.Println("data in GetOrderbook:\n" + string(data) + "\n===============\n\n")
 	var resp getOrderbookResponse
 	if err := json.Unmarshal(data, &resp); err != nil {
 		return nil, NewOtherError(err)
@@ -177,7 +178,7 @@ func (c *Client) GetBalanceSummary() (*BalanceSummary, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	//fmt.Println("data in GetBalanceSummary:\n" + string(data) + "\n===============\n\n")
 	var resp getBalanceResponse
 	if err := json.Unmarshal(data, &resp); err != nil {
 		return nil, NewOtherError(err)
@@ -241,6 +242,7 @@ func (c *Client) CreateOrder(symbol TradePair, price, quantity decimal.Decimal, 
 
 	var resp createOrderResponse
 	if err := json.Unmarshal(data, &resp); err != nil {
+		fmt.Println(string(data))
 		return 0, NewOtherError(err)
 	}
 
@@ -479,6 +481,34 @@ func (c *Client) MarketSell(symbol TradePair, amount decimal.Decimal, customerID
 	}
 
 	return orderID, nil
+}
+
+type GetTickerResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    struct {
+		Timestamp string           `json:"timestamp,omitempty"`
+		High      *decimal.Decimal `json:"high,omitempty"`
+		Last      *decimal.Decimal `json:"last,omitempty"`
+		Low       *decimal.Decimal `json:"low,omitempty"`
+		Buy       *decimal.Decimal `json:"buy,omitempty"`
+		Sell      *decimal.Decimal `json:"sell,omitempty"`
+		Volume    *decimal.Decimal `json:"volume,omitempty"`
+	} `json:"data"`
+}
+
+func (c *Client) GetTicker(symbol TradePair) (*GetTickerResponse, error) {
+	params := url.Values{}
+	params.Add("symbol", string(symbol))
+	data, err := c.get(getTicker, params)
+	if err != nil {
+		return nil, err
+	}
+	var getTickerResponse GetTickerResponse
+	if err = json.Unmarshal(data, &getTickerResponse); err != nil {
+		return nil, NewOtherError(err)
+	}
+	return &getTickerResponse, err
 }
 
 func (c *Client) get(method string, params url.Values) ([]byte, error) { // nolint: unparam

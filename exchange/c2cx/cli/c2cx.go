@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	client  c2cx.Client
+	client  *c2cx.Client
 	rootCmd *cobra.Command
 )
 
@@ -246,7 +246,7 @@ GetOrderByStatusPaged get all orders with given status for a given pagination pa
 					printErrorWithExit(err)
 				}
 				orders, pageCount, err := client.GetOrderByStatusPaged(c2cx.TradePair(tradePair), c2cx.OrderStatus(orderStatus), page)
-				handleResult(c2cx.Orders{Orders: orders, Page: pageCount}, err)
+				handleResult(c2cx.Orders{Orders: orders, PageCount: pageCount}, err)
 			},
 		},
 		"getOrderInfoAll": {
@@ -369,6 +369,22 @@ the amount is the amount of SKY you want to sell for BTC.
 				handleResult(map[string]c2cx.OrderID{"orderID": orderID}, err)
 			},
 		},
+		"getTicker": {
+			Use:   "get_ticker",
+			Short: "The public ticker API returns key pricing data for a give currency pair",
+			Long: `
+The public ticker API returns key pricing data for a give currency pair.
+	Params:
+		trade_pair - market trade pair`,
+			Example: "c2cx get_ticker <trade_pair>",
+			Args:    cobra.MinimumNArgs(1),
+			Run: func(cmd *cobra.Command, args []string) {
+				symbol := args[0]
+
+				getTickerResult, err := client.GetTicker(c2cx.TradePair(symbol))
+				handleResult(getTickerResult, err)
+			},
+		},
 	}
 }
 
@@ -392,10 +408,7 @@ func init() {
 	if secret == "" {
 		panic("secret param is empty")
 	}
-	client = c2cx.Client{
-		Key:    key,
-		Secret: secret,
-	}
+	client = c2cx.NewAPIClient(key, secret)
 	rootCmd = &cobra.Command{Use: "c2cx"}
 	for _, v := range getCommands() {
 		rootCmd.AddCommand(v)

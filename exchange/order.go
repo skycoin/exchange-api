@@ -15,6 +15,12 @@ type MarketOrder struct {
 	Volume decimal.Decimal `json:"volume"`
 }
 
+// MarketOrder is a one order in stock
+type MarketOrderString struct {
+	Price  string `json:"price"`
+	Volume string `json:"volume"`
+}
+
 // TotalCost returns the total cost of executing the given order
 func (marketOrder MarketOrder) TotalCost() decimal.Decimal {
 	return marketOrder.Price.Mul(marketOrder.Volume)
@@ -89,6 +95,9 @@ func (r *MarketRecord) UnmarshalJSON(b []byte) error {
 
 // MarketOrders alias for []MarketOrder
 type MarketOrders []MarketOrder
+
+// MarketOrders alias for []MarketOrderString
+type MarketOrdersString []MarketOrderString
 
 // Volume returns the sum of a set of MarketOrders' volumes
 func (marketOrders MarketOrders) Volume() decimal.Decimal {
