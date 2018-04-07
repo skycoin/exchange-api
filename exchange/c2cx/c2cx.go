@@ -431,3 +431,14 @@ type Orders struct {
 	Orders []Order `json:"orders"`
 	Page   int     `json:"page,omitempty"`
 }
+
+// TickerData includes pricing data for a give currency pair
+type TickerData struct {
+	Timestamp string           `json:"timestamp,omitempty"`
+	High      *decimal.Decimal `json:"high,omitempty"`
+	Last      *decimal.Decimal `json:"last,omitempty"`
+	Low       *decimal.Decimal `json:"low,omitempty"`
+	Buy       *decimal.Decimal `json:"buy,omitempty"`
+	Sell      *decimal.Decimal `json:"sell,omitempty"`
+	Volume    *decimal.Decimal `json:"volume,omitempty"`
+}
