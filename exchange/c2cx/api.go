@@ -502,8 +502,12 @@ func (c *Client) get(method string, params url.Values) ([]byte, error) { // noli
 	// Instead, it places the status code inside of a JSON object per request
 	// The caller must handle the status code, since the structure of the JSON
 	// is different across requests
-	if resp.StatusCode == http.StatusInternalServerError {
-		return nil, NewAPIError(method, resp.StatusCode, "Internal Server Error")
+	if resp.StatusCode >= 500 && resp.StatusCode < 600 {
+		message := http.StatusText(resp.StatusCode)
+		if message == "" {
+			message = "Unexpected server error"
+		}
+		return nil, NewAPIError(method, resp.StatusCode, message)
 	}
 
 	if c.Debug {
@@ -543,8 +547,12 @@ func (c *Client) post(method string, params url.Values) ([]byte, error) {
 	// Instead, it places the status code inside of a JSON object per request
 	// The caller must handle the status code, since the structure of the JSON
 	// is different across requests
-	if resp.StatusCode == http.StatusInternalServerError {
-		return nil, NewAPIError(method, resp.StatusCode, "Internal Server Error")
+	if resp.StatusCode >= 500 && resp.StatusCode < 600 {
+		message := http.StatusText(resp.StatusCode)
+		if message == "" {
+			message = "Unexpected server error"
+		}
+		return nil, NewAPIError(method, resp.StatusCode, message)
 	}
 
 	if c.Debug {

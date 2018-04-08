@@ -49,12 +49,6 @@
   revision = "00c29f56e2386353d58c599509e8dc3801b0d716"
 
 [[projects]]
-  name = "github.com/op/go-logging"
-  packages = ["."]
-  revision = "b2cb9fa56473e98db8caba80237377e83fe44db5"
-  version = "v1"
-
-[[projects]]
   name = "github.com/pelletier/go-toml"
   packages = ["."]
   revision = "acdc4509485b587f5e675510c4f2c63e90ff68a8"
@@ -71,15 +65,6 @@
   packages = ["."]
   revision = "69b3a8ad1f5f2c8bd855cb6506d18593064a346b"
   version = "1.0.1"
-
-[[projects]]
-  name = "github.com/skycoin/skycoin"
-  packages = [
-    "src/util/file",
-    "src/util/logging"
-  ]
-  revision = "84098d9ef5cdfa86d325509cf200dd7e45b4a1b4"
-  version = "v0.22.0"
 
 [[projects]]
   name = "github.com/spf13/afero"
@@ -157,6 +142,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9c13c72301f6d47a2eabe0c733cadfa1fdd4900d6af6242b27d3df666b452b60"
+  inputs-digest = "359616021de876e2d33e68bb8ccb30417581da41bc454e6169af66d30fadac1f"
   solver-name = "gps-cdcl"
   solver-version = 1
