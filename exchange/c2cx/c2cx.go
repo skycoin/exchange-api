@@ -434,11 +434,71 @@ type Orders struct {
 
 // TickerData includes pricing data for a give currency pair
 type TickerData struct {
-	Timestamp string           `json:"timestamp,omitempty"`
-	High      *decimal.Decimal `json:"high,omitempty"`
-	Last      *decimal.Decimal `json:"last,omitempty"`
-	Low       *decimal.Decimal `json:"low,omitempty"`
-	Buy       *decimal.Decimal `json:"buy,omitempty"`
-	Sell      *decimal.Decimal `json:"sell,omitempty"`
-	Volume    *decimal.Decimal `json:"volume,omitempty"`
+	Timestamp time.Time        `json:"timestamp"`
+	High      json.RawMessage `json:"high,omitempty"`
+	Last      json.RawMessage `json:"last,omitempty"`
+	Low       json.RawMessage `json:"low,omitempty"`
+	Buy       json.RawMessage `json:"buy,omitempty"`
+	Sell      json.RawMessage `json:"sell,omitempty"`
+	Volume    json.RawMessage `json:"volume,omitempty"`
+}
+
+// TickerData includes pricing data for a give currency pair
+type tickerDataJSON struct {
+	Timestamp *string          `json:"timestamp,omitempty"`
+	High      json.RawMessage `json:"high,omitempty"`
+	Last      json.RawMessage `json:"last,omitempty"`
+	Low       json.RawMessage `json:"low,omitempty"`
+	Buy       json.RawMessage `json:"buy,omitempty"`
+	Sell      json.RawMessage `json:"sell,omitempty"`
+	Volume    json.RawMessage `json:"volume,omitempty"`
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (t *TickerData) UnmarshalJSON(b []byte) error {
+	var tdj tickerDataJSON
+	err := json.Unmarshal(b, &tdj)
+	if err != nil {
+		return err
+	}
+	t.High = tdj.High
+	t.Last = tdj.Last
+	t.Low = tdj.Low
+	t.Buy = tdj.Buy
+	t.Sell = tdj.Sell
+	t.Volume = tdj.Volume
+
+	if tdj.Timestamp != nil {
+		ts, err := strconv.ParseInt(*tdj.Timestamp, 10, 64)
+		if err != nil {
+			return err
+		}
+
+		t.Timestamp = time.Unix(ts, 0).UTC()
+	}
+	return nil
+}
+
+// MarshalJSON implements json.Marshaler
+func (t *TickerData) MarshalJSON() ([]byte, error) {
+	type rec struct {
+		Timestamp time.Time       `json:"timestamp"`
+		High      json.RawMessage `json:"high,omitempty"`
+		Last      json.RawMessage `json:"last,omitempty"`
+		Low       json.RawMessage `json:"low,omitempty"`
+		Buy       json.RawMessage `json:"buy,omitempty"`
+		Sell      json.RawMessage `json:"sell,omitempty"`
+		Volume    json.RawMessage `json:"volume,omitempty"`
+	}
+
+	var tmp = rec{
+		Timestamp:t.Timestamp,
+		High: t.High,
+		Last:t.Last,
+		Low: t.Low,
+		Buy: t.Buy,
+		Sell:t.Sell,
+		Volume:t.Volume,
+	}
+	return json.Marshal(tmp)
 }
