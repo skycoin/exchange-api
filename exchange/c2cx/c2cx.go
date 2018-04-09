@@ -434,7 +434,7 @@ type Orders struct {
 
 // TickerData includes pricing data for a give currency pair
 type TickerData struct {
-	Timestamp time.Time        `json:"timestamp"`
+	Timestamp time.Time       `json:"timestamp"`
 	High      json.RawMessage `json:"high,omitempty"`
 	Last      json.RawMessage `json:"last,omitempty"`
 	Low       json.RawMessage `json:"low,omitempty"`
@@ -445,7 +445,7 @@ type TickerData struct {
 
 // TickerData includes pricing data for a give currency pair
 type tickerDataJSON struct {
-	Timestamp *string          `json:"timestamp,omitempty"`
+	Timestamp *string         `json:"timestamp,omitempty"`
 	High      json.RawMessage `json:"high,omitempty"`
 	Last      json.RawMessage `json:"last,omitempty"`
 	Low       json.RawMessage `json:"low,omitempty"`
@@ -492,13 +492,13 @@ func (t *TickerData) MarshalJSON() ([]byte, error) {
 	}
 
 	var tmp = rec{
-		Timestamp:t.Timestamp,
-		High: t.High,
-		Last:t.Last,
-		Low: t.Low,
-		Buy: t.Buy,
-		Sell:t.Sell,
-		Volume:t.Volume,
+		Timestamp: t.Timestamp,
+		High:      t.High,
+		Last:      t.Last,
+		Low:       t.Low,
+		Buy:       t.Buy,
+		Sell:      t.Sell,
+		Volume:    t.Volume,
 	}
 	return json.Marshal(tmp)
 }
