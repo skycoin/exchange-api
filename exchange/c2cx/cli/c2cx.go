@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	client  c2cx.Client
+	client  *c2cx.Client
 	rootCmd *cobra.Command
 )
 
@@ -392,10 +392,7 @@ func init() {
 	if secret == "" {
 		panic("secret param is empty")
 	}
-	client = c2cx.Client{
-		Key:    key,
-		Secret: secret,
-	}
+	client = c2cx.NewAPIClient(key, secret)
 	rootCmd = &cobra.Command{Use: "c2cx"}
 	for _, v := range getCommands() {
 		rootCmd.AddCommand(v)
