@@ -431,3 +431,50 @@ type Orders struct {
 	Orders []Order `json:"orders"`
 	Page   int     `json:"page,omitempty"`
 }
+
+// TickerData includes pricing data for a give currency pair
+type TickerData struct {
+	Timestamp time.Time        `json:"timestamp"`
+	High      *decimal.Decimal `json:"high,omitempty"`
+	Last      *decimal.Decimal `json:"last,omitempty"`
+	Low       *decimal.Decimal `json:"low,omitempty"`
+	Buy       *decimal.Decimal `json:"buy,omitempty"`
+	Sell      *decimal.Decimal `json:"sell,omitempty"`
+	Volume    *decimal.Decimal `json:"volume,omitempty"`
+}
+
+// TickerData includes pricing data for a give currency pair
+type tickerDataJSON struct {
+	Timestamp *string          `json:"timestamp,omitempty"`
+	High      *decimal.Decimal `json:"high,omitempty"`
+	Last      *decimal.Decimal `json:"last,omitempty"`
+	Low       *decimal.Decimal `json:"low,omitempty"`
+	Buy       *decimal.Decimal `json:"buy,omitempty"`
+	Sell      *decimal.Decimal `json:"sell,omitempty"`
+	Volume    *decimal.Decimal `json:"volume,omitempty"`
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (t *TickerData) UnmarshalJSON(b []byte) error {
+	var tdj tickerDataJSON
+	err := json.Unmarshal(b, &tdj)
+	if err != nil {
+		return err
+	}
+	t.High = tdj.High
+	t.Last = tdj.Last
+	t.Low = tdj.Low
+	t.Buy = tdj.Buy
+	t.Sell = tdj.Sell
+	t.Volume = tdj.Volume
+
+	if tdj.Timestamp != nil {
+		ts, err := strconv.ParseInt(*tdj.Timestamp, 10, 64)
+		if err != nil {
+			return err
+		}
+
+		t.Timestamp = time.Unix(ts, 0).UTC()
+	}
+	return nil
+}

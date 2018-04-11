@@ -369,6 +369,22 @@ the amount is the amount of SKY you want to sell for BTC.
 				handleResult(map[string]c2cx.OrderID{"orderID": orderID}, err)
 			},
 		},
+		"getTicker": {
+			Use:   "get_ticker",
+			Short: "The public ticker API returns key pricing data for a give currency pair",
+			Long: `
+The public ticker API returns key pricing data for a give currency pair.
+	Params:
+		trade_pair - market trade pair`,
+			Example: "c2cx get_ticker <trade_pair>",
+			Args:    cobra.MinimumNArgs(1),
+			Run: func(cmd *cobra.Command, args []string) {
+				symbol := args[0]
+
+				getTickerResult, err := client.GetTicker(c2cx.TradePair(symbol))
+				handleResult(getTickerResult, err)
+			},
+		},
 	}
 }
 
