@@ -478,13 +478,3 @@ func (t *TickerData) UnmarshalJSON(b []byte) error {
 	}
 	return nil
 }
-
-// MarshalJSON implements json.Marshaler
-func (t *TickerData) MarshalJSON() ([]byte, error) {
-	var actualValue = decimal.MarshalJSONWithoutQuotes
-	decimal.MarshalJSONWithoutQuotes = true
-	defer func() {
-		decimal.MarshalJSONWithoutQuotes = actualValue
-	}()
-	return json.Marshal(*t)
-}
