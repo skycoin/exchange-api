@@ -26,7 +26,7 @@ const (
 	getOrderInfoEndpoint     = "getorderinfo"
 	cancelOrderEndpoint      = "cancelorder"
 	getOrderByStatusEndpoint = "getorderbystatus"
-	getTicker                = "ticker"
+	getTickerEndpoint        = "ticker"
 )
 
 const (
@@ -483,32 +483,27 @@ func (c *Client) MarketSell(symbol TradePair, amount decimal.Decimal, customerID
 	return orderID, nil
 }
 
-type GetTickerResponse struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	Data    struct {
-		Timestamp string           `json:"timestamp,omitempty"`
-		High      *decimal.Decimal `json:"high,omitempty"`
-		Last      *decimal.Decimal `json:"last,omitempty"`
-		Low       *decimal.Decimal `json:"low,omitempty"`
-		Buy       *decimal.Decimal `json:"buy,omitempty"`
-		Sell      *decimal.Decimal `json:"sell,omitempty"`
-		Volume    *decimal.Decimal `json:"volume,omitempty"`
-	} `json:"data"`
+type getTickerResponse struct {
+	Code    int        `json:"code"`
+	Message string     `json:"message"`
+	Data    TickerData `json:"data"`
 }
 
-func (c *Client) GetTicker(symbol TradePair) (*GetTickerResponse, error) {
+func (c *Client) GetTicker(symbol TradePair) (*TickerData, error) {
 	params := url.Values{}
 	params.Add("symbol", string(symbol))
-	data, err := c.get(getTicker, params)
+	data, err := c.get(getTickerEndpoint, params)
 	if err != nil {
 		return nil, err
 	}
-	var getTickerResponse GetTickerResponse
-	if err = json.Unmarshal(data, &getTickerResponse); err != nil {
+	var resp getTickerResponse
+	if err = json.Unmarshal(data, &resp); err != nil {
 		return nil, NewOtherError(err)
 	}
-	return &getTickerResponse, err
+	if resp.Code != http.StatusOK {
+		return nil, NewAPIError(getTickerEndpoint, resp.Code, resp.Message)
+	}
+	return &resp.Data, err
 }
 
 func (c *Client) get(method string, params url.Values) ([]byte, error) { // nolint: unparam
@@ -532,8 +527,12 @@ func (c *Client) get(method string, params url.Values) ([]byte, error) { // noli
 	// Instead, it places the status code inside of a JSON object per request
 	// The caller must handle the status code, since the structure of the JSON
 	// is different across requests
-	if resp.StatusCode == http.StatusInternalServerError {
-		return nil, NewAPIError(method, resp.StatusCode, "Internal Server Error")
+	if resp.StatusCode >= 500 && resp.StatusCode < 600 {
+		message := http.StatusText(resp.StatusCode)
+		if message == "" {
+			message = "Unexpected server error"
+		}
+		return nil, NewAPIError(method, resp.StatusCode, message)
 	}
 
 	if c.Debug {
@@ -573,8 +572,12 @@ func (c *Client) post(method string, params url.Values) ([]byte, error) {
 	// Instead, it places the status code inside of a JSON object per request
 	// The caller must handle the status code, since the structure of the JSON
 	// is different across requests
-	if resp.StatusCode == http.StatusInternalServerError {
-		return nil, NewAPIError(method, resp.StatusCode, "Internal Server Error")
+	if resp.StatusCode >= 500 && resp.StatusCode < 600 {
+		message := http.StatusText(resp.StatusCode)
+		if message == "" {
+			message = "Unexpected server error"
+		}
+		return nil, NewAPIError(method, resp.StatusCode, message)
 	}
 
 	if c.Debug {

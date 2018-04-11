@@ -1,22 +1,24 @@
 package c2cx
 
 import (
-	"os"
-	"path/filepath"
-	"fmt"
-	"testing"
-	"os/exec"
-	"github.com/stretchr/testify/require"
-	"time"
-	"github.com/skycoin/exchange-api/exchange"
-	"encoding/json"
-	"github.com/shopspring/decimal"
 	"crypto/rand"
-	"github.com/stretchr/testify/assert"
 	"encoding/hex"
-	"strconv"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strconv"
 	"strings"
+	"testing"
+	"time"
+
+	"github.com/shopspring/decimal"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/skycoin/exchange-api/exchange"
 )
 
 const (
