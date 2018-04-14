@@ -9,7 +9,7 @@ exchange-api-server:
 	go run cmd/exchange-api-server/exchange-api-server.go ${ARGS}
 
 test:
-	go test ./exchange/... -timeout=1m -cover -tags "${AVAILABLE_TAGS}"
+	go test ./exchange/... -timeout=10m -cover -tags "${AVAILABLE_TAGS}"
 
 lint: ## Run linters. Use make install-linters first.
 	vendorcheck ./...
@@ -50,6 +50,8 @@ install-linters: ## Install linters
 	go get -u github.com/FiloSottile/vendorcheck
 	go get -u github.com/alecthomas/gometalinter
 	gometalinter --vendored-linters --install
+	echo C2CX_API_KEY is $$C2CX_API_KEY
+	echo C2CX_API_SECRET is $$C2CX_API_SECRET
 
 format:  # Formats the code. Must have goimports installed (use make install-linters).
 	# This sorts imports by [stdlib, 3rdpart, skycoin/skycoin, skycoin/exchange-api]

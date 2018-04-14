@@ -154,7 +154,6 @@ func (c *Client) GetOrderbook(symbol TradePair) (*Orderbook, error) {
 	if err != nil {
 		return nil, err
 	}
-	//fmt.Println("data in GetOrderbook:\n" + string(data) + "\n===============\n\n")
 	var resp getOrderbookResponse
 	if err := json.Unmarshal(data, &resp); err != nil {
 		return nil, NewOtherError(err)
@@ -178,7 +177,6 @@ func (c *Client) GetBalanceSummary() (*BalanceSummary, error) {
 	if err != nil {
 		return nil, err
 	}
-	//fmt.Println("data in GetBalanceSummary:\n" + string(data) + "\n===============\n\n")
 	var resp getBalanceResponse
 	if err := json.Unmarshal(data, &resp); err != nil {
 		return nil, NewOtherError(err)
@@ -242,7 +240,6 @@ func (c *Client) CreateOrder(symbol TradePair, price, quantity decimal.Decimal, 
 
 	var resp createOrderResponse
 	if err := json.Unmarshal(data, &resp); err != nil {
-		fmt.Println(string(data))
 		return 0, NewOtherError(err)
 	}
 
@@ -348,7 +345,7 @@ type getOrderByStatusResponse struct {
 
 // GetOrderByStatusPaged get all orders with given status for a given pagination page.
 // NOTE: GetOrderByStatusPaged may returns orders with a different status than specified
-func (c *Client) GetOrderByStatusPaged(symbol TradePair, status OrderStatus, page int) ([]Order, int, error) {
+func (c *Client) GetOrderByStatusPaged(symbol TradePair, status OrderStatus, page int) ([]Order, int, int, error) {
 	params := url.Values{}
 	params.Set("symbol", string(symbol))
 	params.Set("status", fmt.Sprint(status))
@@ -357,19 +354,18 @@ func (c *Client) GetOrderByStatusPaged(symbol TradePair, status OrderStatus, pag
 
 	data, err := c.post(getOrderByStatusEndpoint, params)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
 
 	var resp getOrderByStatusResponse
 	if err := json.Unmarshal(data, &resp); err != nil {
-		return nil, 0, NewOtherError(err)
+		return nil, 0, 0, NewOtherError(err)
 	}
 
 	if resp.status.Code != http.StatusOK {
-		return nil, 0, NewAPIError(getOrderByStatusEndpoint, resp.status.Code, resp.status.Message)
+		return nil, 0, 0, NewAPIError(getOrderByStatusEndpoint, resp.status.Code, resp.status.Message)
 	}
-
-	return resp.Data.Rows, resp.Data.pagination.PageCount, nil
+	return resp.Data.Rows, *resp.Data.PageIndex, resp.Data.pagination.PageCount, nil
 }
 
 // GetOrderByStatus get all orders with given status. Makes multiple calls in the event of pagination.
@@ -377,7 +373,7 @@ func (c *Client) GetOrderByStatusPaged(symbol TradePair, status OrderStatus, pag
 func (c *Client) GetOrderByStatus(symbol TradePair, status OrderStatus) ([]Order, error) {
 	page := 1
 
-	pageOrders, nPages, err := c.GetOrderByStatusPaged(symbol, status, page)
+	pageOrders, _, nPages, err := c.GetOrderByStatusPaged(symbol, status, page)
 	if err != nil {
 		return nil, err
 	}
@@ -386,7 +382,7 @@ func (c *Client) GetOrderByStatus(symbol TradePair, status OrderStatus) ([]Order
 	page++
 
 	for page <= nPages {
-		pageOrders, nPages, err = c.GetOrderByStatusPaged(symbol, status, page)
+		pageOrders, _, nPages, err = c.GetOrderByStatusPaged(symbol, status, page)
 		if err != nil {
 			return nil, err
 		}

@@ -29,17 +29,6 @@ var (
 	binaryPath string
 )
 
-var key, secret = func() (key string, secret string) {
-	var found bool
-	if key, found = os.LookupEnv("C2CX_TEST_KEY"); found {
-		if secret, found = os.LookupEnv("C2CX_TEST_SECRET"); found {
-			return
-		}
-		panic("C2CX secret not provided")
-	}
-	panic("C2CX key not provided")
-}()
-
 func TestMain(m *testing.M) {
 	var err error
 	binaryPath, err = filepath.Abs(binaryName)
@@ -65,14 +54,20 @@ func TestMain(m *testing.M) {
 	os.Exit(ret)
 }
 
-type orderbookJSONToolResponse struct {
+// MarketOrderString is a one order in stock
+type MarketOrderString struct {
+	Price  string `json:"price"`
+	Volume string `json:"volume"`
+}
+
+type orderbookJSONTestResponse struct {
 	Timestamp *string `json:"Timestamp,omitempty"`
-	Bids      exchange.MarketOrdersString
-	Asks      exchange.MarketOrdersString
+	Bids      []MarketOrderString
+	Asks      []MarketOrderString
 }
 
 // Orderbook with timestamp
-type OrderbookTool struct {
+type orderbookTest struct {
 	TradePair TradePair
 	Timestamp time.Time
 	Bids      exchange.MarketOrders
@@ -80,8 +75,8 @@ type OrderbookTool struct {
 }
 
 // UnmarshalJSON implements json.Unmarshaler
-func (r *OrderbookTool) UnmarshalJSON(b []byte) error {
-	var v orderbookJSONToolResponse
+func (r *orderbookTest) UnmarshalJSON(b []byte) error {
+	var v orderbookJSONTestResponse
 	err := json.Unmarshal(b, &v)
 	if err != nil {
 		return err
@@ -139,17 +134,17 @@ func TestGetOrderbook(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
-			var resp OrderbookTool
+			var resp orderbookTest
 			err = resp.UnmarshalJSON(output)
 			require.NoError(t, err)
 			for _, bid := range resp.Bids {
-				require.True(t, bid.Volume.Cmp(decimal.New(0, 10)) > 0)
-				require.True(t, bid.Price.Cmp(decimal.New(0, 10)) > 0)
+				require.True(t, bid.Volume.GreaterThan(decimal.Zero))
+				require.True(t, bid.Price.GreaterThan(decimal.Zero))
 			}
 
 			for _, ask := range resp.Asks {
-				require.True(t, ask.Volume.Cmp(decimal.New(0, 10)) > 0)
-				require.True(t, ask.Price.Cmp(decimal.New(0, 10)) > 0)
+				require.True(t, ask.Volume.GreaterThan(decimal.Zero))
+				require.True(t, ask.Price.GreaterThan(decimal.Zero))
 			}
 
 		})
@@ -184,6 +179,13 @@ func TestClient_GetBalanceSummary(t *testing.T) {
 			require.NoError(t, err)
 			require.True(t, len(resp.Balance) > 0)
 			require.True(t, len(resp.Frozen) > 0)
+			for key := range resp.Balance {
+				balance, err := decimal.NewFromString(resp.Balance[key])
+				require.NoError(t, err)
+				frozen, err := decimal.NewFromString(resp.Frozen[key])
+				require.NoError(t, err)
+				require.True(t, balance.GreaterThanOrEqual(frozen))
+			}
 		})
 
 	}
@@ -222,7 +224,7 @@ func TestCreateOrderCancelOrder(t *testing.T) {
 		},
 		{
 			name:       "create_order - cid already exists",
-			args:       []string{"create_order", "USDT_BTG", "14", "0", "buy", "market", cid, "null", "null", "null"},
+			args:       []string{"create_order", "USDT_BTG", "20", "0", "buy", "market", cid, "null", "null", "null"},
 			message:    "C2CX request failed: endpoint=createorder code=400 message=cid already exists, please change\n",
 			errMessage: errors.New("exit status 1"),
 		},
@@ -245,7 +247,7 @@ func TestCreateOrderCancelOrder(t *testing.T) {
 
 	}
 
-	tt_get_order_info := []struct {
+	ttgoi := []struct {
 		name       string
 		args       []string
 		errMessage string
@@ -256,7 +258,7 @@ func TestCreateOrderCancelOrder(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tt_get_order_info {
+	for _, tc := range ttgoi {
 		t.Run(tc.name, func(t *testing.T) {
 			output, err := exec.Command(binaryPath, tc.args...).CombinedOutput()
 			require.NoError(t, err)
@@ -269,7 +271,7 @@ func TestCreateOrderCancelOrder(t *testing.T) {
 
 	}
 
-	tt_get_orderinfo_all := []struct {
+	ttgoa := []struct {
 		name       string
 		args       []string
 		errMessage string
@@ -280,10 +282,9 @@ func TestCreateOrderCancelOrder(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tt_get_orderinfo_all {
+	for _, tc := range ttgoa {
 		t.Run(tc.name, func(t *testing.T) {
 			output, err := exec.Command(binaryPath, tc.args...).CombinedOutput()
-			fmt.Println(tc.name)
 			require.NoError(t, err)
 			var resp struct {
 				Orders []Order `json:"orders"`
@@ -366,7 +367,7 @@ func TestCreateOrderCancelOrder(t *testing.T) {
 				require.Equal(t, tc.errMessage, string(output))
 				return
 			}
-			require.NoError(t, err)
+			require.NoError(t, err, fmt.Sprintf("stdout: %v", string(output)))
 			var resp []Order
 			err = json.Unmarshal(output, &resp)
 			require.NoError(t, err)
@@ -404,7 +405,7 @@ func TestCreateOrderCancelOrder(t *testing.T) {
 				require.Equal(t, tc.errMessage, string(output))
 				return
 			}
-			require.NoError(t, err)
+			require.NoError(t, err, fmt.Sprintf("stdout: %v", string(output)))
 			var resp Orders
 			err = json.Unmarshal(output, &resp)
 			require.NoError(t, err)
@@ -416,48 +417,6 @@ func TestCreateOrderCancelOrder(t *testing.T) {
 				}
 			}
 			require.True(t, orderExists, "can't find created order")
-		})
-	}
-}
-
-func TestGetOrderByStatusPaged(t *testing.T) {
-	tt := []struct {
-		name       string
-		args       []string
-		errMessage string
-	}{
-		{
-			name:       "get_order_by_status_paged - symbol not exists",
-			args:       []string{"get_order_by_status_paged", "USDT_BT"},
-			errMessage: "C2CX request failed: endpoint=getorderbook code=400 message=symbol not exists\n",
-		},
-		{
-			name: "get_order_by_status_paged - OK",
-			args: []string{"get_order_by_status_paged", "USDT_BTG", "cancelled", "1"},
-		},
-	}
-
-	for _, tc := range tt {
-		t.Run(tc.name, func(t *testing.T) {
-			output, err := exec.Command(binaryPath, tc.args...).CombinedOutput()
-			if tc.errMessage != "" && err != nil {
-				require.Equal(t, tc.errMessage, string(output))
-				return
-			}
-			require.NoError(t, err)
-			var resp OrderbookTool
-			err = resp.UnmarshalJSON(output)
-			require.NoError(t, err)
-			for _, bid := range resp.Bids {
-				require.True(t, bid.Volume.Cmp(decimal.New(0, 10)) > 0)
-				require.True(t, bid.Price.Cmp(decimal.New(0, 10)) > 0)
-			}
-
-			for _, ask := range resp.Asks {
-				require.True(t, ask.Volume.Cmp(decimal.New(0, 10)) > 0)
-				require.True(t, ask.Price.Cmp(decimal.New(0, 10)) > 0)
-			}
-
 		})
 	}
 }
@@ -486,7 +445,7 @@ func TestCreateOrderCancelOrdersMultiple(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			output, err := exec.Command(binaryPath, tc.args...).CombinedOutput()
-			require.NoError(t, err)
+			require.NoError(t, err, fmt.Sprintf("stdout: %v", string(output)))
 			var resp createOrderResponseTest
 			err = json.Unmarshal(output, &resp)
 			require.NoError(t, err)
@@ -521,7 +480,7 @@ func TestCreateOrderCancelOrdersMultiple(t *testing.T) {
 				require.Equal(t, tc.message, string(output))
 				return
 			}
-			require.NoError(t, err)
+			require.NoError(t, err, fmt.Sprintf("stdout: %v", string(output)))
 			var resp []uint64
 			err = json.Unmarshal(output, &resp)
 			require.NoError(t, err)
@@ -557,7 +516,7 @@ func TestCreateOrderCancelOrdersAll(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			output, err := exec.Command(binaryPath, tc.args...).CombinedOutput()
 
-			require.NoError(t, err)
+			require.NoError(t, err, fmt.Sprintf("stdout: %v", string(output)))
 			var resp createOrderResponseTest
 			err = json.Unmarshal(output, &resp)
 			require.NoError(t, err)
@@ -592,7 +551,7 @@ func TestCreateOrderCancelOrdersAll(t *testing.T) {
 				require.Equal(t, tc.message, string(output))
 				return
 			}
-			require.NoError(t, err)
+			require.NoError(t, err, fmt.Sprintf("stdout: %v", string(output)))
 			var resp []uint64
 			err = json.Unmarshal(output, &resp)
 			require.NoError(t, err)
@@ -635,7 +594,7 @@ func TestLimitBuyCancelOrder(t *testing.T) {
 				require.Equal(t, tc.message, string(output))
 				return
 			}
-			require.NoError(t, err)
+			require.NoError(t, err, fmt.Sprintf("stdout: %v", string(output)))
 			var resp createOrderResponseTest
 			err = json.Unmarshal(output, &resp)
 			require.NoError(t, err)
@@ -664,7 +623,7 @@ func TestLimitBuyCancelOrder(t *testing.T) {
 				require.Equal(t, tc.message, string(output))
 				return
 			}
-			require.NoError(t, err)
+			require.NoError(t, err, fmt.Sprintf("stdout: %v", string(output)))
 			var resp struct {
 				Result string
 			}
@@ -767,11 +726,11 @@ func TestLimitSellCancelOrder(t *testing.T) {
 	}{
 		{
 			name: "limit_sell",
-			args: []string{"limit_sell", "DRG_ETC", "14", "1", cid},
+			args: []string{"limit_sell", "DRG_ETC", "14", "100", cid},
 		},
 		{
 			name:       "limit_sell - cid already exists",
-			args:       []string{"limit_sell", "DRG_ETC", "14", "1", cid},
+			args:       []string{"limit_sell", "DRG_ETC", "14", "100", cid},
 			errMessage: errors.New("exit status 1"),
 			message:    "C2CX request failed: endpoint=createorder code=400 message=cid already exists, please change\n",
 		},
@@ -785,7 +744,7 @@ func TestLimitSellCancelOrder(t *testing.T) {
 				require.Equal(t, tc.message, string(output))
 				return
 			}
-			require.NoError(t, err)
+			require.NoError(t, err, fmt.Sprintf("stdout: %v", string(output)))
 			var resp createOrderResponseTest
 			err = json.Unmarshal(output, &resp)
 			require.NoError(t, err)
@@ -821,6 +780,115 @@ func TestLimitSellCancelOrder(t *testing.T) {
 			err = json.Unmarshal(output, &resp)
 			require.NoError(t, err)
 			require.Equal(t, "OK", resp.Result)
+		})
+	}
+}
+
+type tickerDataTest struct {
+	Timestamp time.Time        `json:"timestamp,omitempty"`
+	High      *decimal.Decimal `json:"high,omitempty"`
+	Last      *decimal.Decimal `json:"last,omitempty"`
+	Low       *decimal.Decimal `json:"low,omitempty"`
+	Buy       *decimal.Decimal `json:"buy,omitempty"`
+	Sell      *decimal.Decimal `json:"sell,omitempty"`
+	Volume    *decimal.Decimal `json:"volume,omitempty"`
+}
+
+func (td *tickerDataTest) UnmarshalJSON(b []byte) error {
+	type tickerDataTestString struct {
+		Timestamp *string `json:"timestamp"`
+		High      *string `json:"high,omitempty"`
+		Last      *string `json:"last,omitempty"`
+		Low       *string `json:"low,omitempty"`
+		Buy       *string `json:"buy,omitempty"`
+		Sell      *string `json:"sell,omitempty"`
+		Volume    *string `json:"volume,omitempty"`
+	}
+	var tmp tickerDataTestString
+	err := json.Unmarshal(b, &tmp)
+	if err != nil {
+		return err
+	}
+	t, err := time.Parse(time.RFC3339, *tmp.Timestamp)
+
+	if err != nil {
+		return err
+	}
+
+	high, err := decimal.NewFromString(*tmp.High)
+	if err != nil {
+		return err
+	}
+
+	last, err := decimal.NewFromString(*tmp.Last)
+	if err != nil {
+		return err
+	}
+
+	low, err := decimal.NewFromString(*tmp.Low)
+	if err != nil {
+		return err
+	}
+
+	buy, err := decimal.NewFromString(*tmp.Buy)
+	if err != nil {
+		return err
+	}
+
+	sell, err := decimal.NewFromString(*tmp.Sell)
+	if err != nil {
+		return err
+	}
+
+	volume, err := decimal.NewFromString(*tmp.Volume)
+	if err != nil {
+		return err
+	}
+	td.Timestamp = t
+	td.High = &high
+	td.Low = &low
+	td.Buy = &buy
+	td.Sell = &sell
+	td.Last = &last
+	td.Volume = &volume
+	return nil
+}
+
+func TestGetTicker(t *testing.T) {
+	tc := []struct {
+		name       string
+		args       []string
+		message    string
+		errMessage error
+	}{
+		{
+			name: "get_ticker - OK",
+			args: []string{"get_ticker", "DRG_ETC"},
+		},
+		{
+			name:       "get_ticker - unknown pair",
+			args:       []string{"get_ticker", "DRG_UNKNOWN"},
+			message:    "C2CX request failed: endpoint=ticker code=400 message=symbol does not exist\n",
+			errMessage: errors.New("exit status 1"),
+		},
+	}
+	now := time.Now()
+	time.Sleep(5 * time.Second)
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			output, err := exec.Command(binaryPath, tc.args...).CombinedOutput()
+			if tc.errMessage != nil && err != nil {
+				require.Equal(t, tc.errMessage.Error(), err.Error())
+				require.Equal(t, tc.message, string(output))
+				return
+			}
+			require.NoError(t, err, fmt.Sprintf("stdout: %v", string(output)))
+			var resp tickerDataTest
+			err = json.Unmarshal(output, &resp)
+			require.NoError(t, err, fmt.Sprintf("stdout: %v", string(output)))
+			require.True(t, resp.Timestamp.After(now))
+			require.True(t, resp.High.GreaterThan(*resp.Low))
+			require.True(t, resp.Sell.GreaterThan(*resp.Buy))
 		})
 	}
 }
