@@ -12,11 +12,19 @@ import (
 	"errors"
 
 	"github.com/shopspring/decimal"
+	"time"
+	"net"
 )
 
 const (
 	// InstantOrderID is returned if an order executed instantly and was not assigned an OrderID
 	InstantOrderID = -1
+)
+
+const (
+	dialTimeout         = 60 * time.Second
+	httpClientTimeout   = 120 * time.Second
+	tlsHandshakeTimeout = 60 * time.Second
 )
 
 var (
@@ -43,9 +51,27 @@ type response struct {
 type Client struct {
 	Key    string
 	Secret string
-
+	httpClient *http.Client
 	currencyCache map[string]CurrencyInfo
 	marketCache   map[string]int
+}
+
+func NewAPIClient(key string, secret string) *Client {
+	var netTransport = http.Transport{
+		Dial: (&net.Dialer{
+			Timeout: dialTimeout,
+		}).Dial,
+		TLSHandshakeTimeout: tlsHandshakeTimeout,
+	}
+	var client = &http.Client{
+		Transport: &netTransport,
+		Timeout:   httpClientTimeout,
+	}
+	return &Client{
+		Key:key,
+		Secret:secret,
+		httpClient:client,
+	}
 }
 
 //Public API functions
@@ -464,7 +490,7 @@ func (c *Client) CancelTrade(tradeType string, TradePair *string, orderID *int) 
 			return nil, errors.New("invalid tradepair")
 		}
 	case All:
-	// all ok
+		// all ok
 	default:
 		return nil, errors.New("invalid cancel type")
 	}
