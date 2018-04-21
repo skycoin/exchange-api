@@ -49,9 +49,9 @@ type response struct {
 
 // Client implements a wrapper around the Cryptopia API interface
 type Client struct {
-	Key    string
-	Secret string
-	httpClient *http.Client
+	Key           string
+	Secret        string
+	httpClient    *http.Client
 	currencyCache map[string]CurrencyInfo
 	marketCache   map[string]int
 }
@@ -68,9 +68,9 @@ func NewAPIClient(key string, secret string) *Client {
 		Timeout:   httpClientTimeout,
 	}
 	return &Client{
-		Key:key,
-		Secret:secret,
-		httpClient:client,
+		Key:        key,
+		Secret:     secret,
+		httpClient: client,
 	}
 }
 
@@ -285,7 +285,13 @@ func (c *Client) GetMarketOrderGroups(count int, markets []string) ([]MarketOrde
 
 // GetBalance return a string representation of balance by given currency
 func (c *Client) GetBalance(currency string) (decimal.Decimal, error) {
-	resp, err := c.post("getbalance", nil)
+	cID, err := c.GetCurrencyID(currency)
+	if err != nil {
+		return decimal.Zero, fmt.Errorf("Currency %s does not found", currency)
+	}
+	params := make(map[string]interface{})
+	params["CurrencyId"] = cID
+	resp, err := c.post("getbalance", params)
 	if err != nil {
 		return decimal.Zero, err
 	}
@@ -324,7 +330,6 @@ func (c *Client) GetDepositAddress(currency string) (*DepositAddress, error) {
 	if !resp.Success {
 		return nil, fmt.Errorf("GetDepositAddress failed: %s, Currency %s", resp.Message, currency)
 	}
-
 	var result DepositAddress
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
 		return nil, err
