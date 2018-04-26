@@ -11,9 +11,10 @@ import (
 
 	"errors"
 
-	"github.com/shopspring/decimal"
-	"time"
 	"net"
+	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 const (
@@ -353,7 +354,6 @@ func (c *Client) GetOpenOrders(market *string, count *int) ([]Order, error) {
 	if count != nil {
 		params["Count"] = *count
 	}
-
 	resp, err := c.post("getopenorders", params)
 	if err != nil {
 		return nil, err
@@ -362,7 +362,6 @@ func (c *Client) GetOpenOrders(market *string, count *int) ([]Order, error) {
 	if !resp.Success {
 		return nil, fmt.Errorf("GetOpenOrders failed: %s Market %#v Count %#v", resp.Message, market, count)
 	}
-
 	var result []Order
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
 		return nil, err
@@ -437,7 +436,7 @@ func (c *Client) GetTransactions(txType string, count int) ([]Transaction, error
 // SubmitTrade submits a new trade offer
 func (c *Client) SubmitTrade(market, offerType string, rate, amount decimal.Decimal) (int, error) {
 	if offerType = strings.Title(offerType); offerType != OfferTypeBuy && offerType != OfferTypeSell {
-		return 0, fmt.Errorf("Incorrect offer type %s; avalible types: %s %s", offerType, OfferTypeBuy, OfferTypeSell)
+		return 0, fmt.Errorf("incorrect offer type %s; avalible types: %s %s", offerType, OfferTypeBuy, OfferTypeSell)
 	}
 
 	mID, err := c.GetMarketID(market)
@@ -472,7 +471,7 @@ func (c *Client) SubmitTrade(market, offerType string, rate, amount decimal.Deci
 	return InstantOrderID, nil
 }
 
-// CancelTrade cancel trades by given orderid, market or add active
+// CancelTrade cancel trades by given orderID, market or add active
 // depends of type argument
 func (c *Client) CancelTrade(tradeType string, TradePair *string, orderID *int) ([]int, error) {
 	params := map[string]interface{}{

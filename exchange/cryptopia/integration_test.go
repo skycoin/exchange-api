@@ -1,14 +1,15 @@
 package cryptopia
 
 import (
-	"testing"
-	"path/filepath"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
-	"github.com/stretchr/testify/require"
+	"path/filepath"
+	"testing"
+
 	"github.com/shopspring/decimal"
-	"encoding/json"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -102,6 +103,12 @@ func TestGetMarketOrdersIntegration(t *testing.T) {
 		errMessage string
 	}{
 		{
+			name:       "get_market_orders - trade pair not found",
+			label:      "LTC/BTC",
+			errMessage: "Trade pair not found\n",
+			args:       []string{"get_market_orders", "LTC/DUMMY", "-1"},
+		},
+		{
 			name:  "get_market_orders - OK",
 			label: "LTC/BTC",
 			args:  []string{"get_market_orders", "LTC/BTC", "-1"},
@@ -112,12 +119,6 @@ func TestGetMarketOrdersIntegration(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 
 			output, err := exec.Command(binaryPath, tc.args...).CombinedOutput()
-			if err != nil {
-				fmt.Printf("stderr: %v\n", err.Error())
-			} else {
-				fmt.Println("stderr: nil")
-			}
-			fmt.Printf("stdout: %v\n", string(output))
 			if tc.errMessage != "" && err != nil {
 				require.Equal(t, tc.errMessage, string(output))
 				return
@@ -158,6 +159,15 @@ func TestGetMarketOrderGroupsIntegration(t *testing.T) {
 		errMessage string
 	}{
 		{
+			name: "get_market_order_groups - trade pair not found",
+			labels: map[string]bool{
+				"LTC_BTC": true,
+				"SKY_BTC": true,
+			},
+			errMessage: "Trade pair not found\n",
+			args:       []string{"get_market_order_groups", "1", "LTC/DUMMY", "SKY/BTC"},
+		},
+		{
 			name: "get_market_order_groups - OK",
 			labels: map[string]bool{
 				"LTC_BTC": true,
@@ -171,12 +181,6 @@ func TestGetMarketOrderGroupsIntegration(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 
 			output, err := exec.Command(binaryPath, tc.args...).CombinedOutput()
-			if err != nil {
-				fmt.Printf("stderr: %v\n", err.Error())
-			} else {
-				fmt.Println("stderr: nil")
-			}
-			fmt.Printf("stdout: %v\n", string(output))
 			if tc.errMessage != "" && err != nil {
 				require.Equal(t, tc.errMessage, string(output))
 				return
@@ -212,8 +216,9 @@ func TestGetBalanceIntegration(t *testing.T) {
 		errMessage string
 	}{
 		{
-			name: "get_balance - OK",
-			args: []string{"get_balance", "SKY"},
+			name:       "get_balance - OK",
+			args:       []string{"get_balance", "BTC"},
+			errMessage: "GetBalance failed: No balance found, Currency BTC Rawdata null\n",
 		},
 	}
 
@@ -221,12 +226,6 @@ func TestGetBalanceIntegration(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 
 			output, err := exec.Command(binaryPath, tc.args...).CombinedOutput()
-			if err != nil {
-				fmt.Printf("stderr: %v\n", err.Error())
-			} else {
-				fmt.Println("stderr: nil")
-			}
-			fmt.Printf("stdout: %v\n", string(output))
 			if tc.errMessage != "" && err != nil {
 				require.Equal(t, tc.errMessage, string(output))
 				return
@@ -269,6 +268,142 @@ func TestGetDepositAddressIntegration(t *testing.T) {
 			err = json.Unmarshal(output, &res)
 			require.NoError(t, err, "stdout: %v", string(output))
 			require.NotEmpty(t, res.Address)
+		})
+	}
+}
+
+func TestGetOpenOrdersIntegration(t *testing.T) {
+	tt := []struct {
+		name        string
+		args        []string
+		ordersCount int
+		errMessage  string
+	}{
+		{
+			name:        "get_open_orders - OK",
+			args:        []string{"get_open_orders", "SKY/BTC", "10"},
+			ordersCount: 0,
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+
+			output, err := exec.Command(binaryPath, tc.args...).CombinedOutput()
+			if err != nil {
+				fmt.Printf("stderr: %v\n", err.Error())
+			}
+
+			if tc.errMessage != "" && err != nil {
+				require.Equal(t, tc.errMessage, string(output))
+				return
+			}
+			require.NoError(t, err, fmt.Sprintf("stdout: %v", string(output)))
+			var res []Order
+			err = json.Unmarshal(output, &res)
+			require.NoError(t, err, "stdout: %v", string(output))
+			require.Equal(t, len(res), tc.ordersCount)
+		})
+	}
+}
+
+func TestGetTradeHistoryIntegration(t *testing.T) {
+	tt := []struct {
+		name        string
+		args        []string
+		ordersCount int
+		errMessage  string
+	}{
+		{
+			name:        "get_trade_history - OK",
+			args:        []string{"get_trade_history", "SKY/BTC", "10"},
+			ordersCount: 0,
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+
+			output, err := exec.Command(binaryPath, tc.args...).CombinedOutput()
+			if err != nil {
+				fmt.Printf("stderr: %v\n", err.Error())
+			}
+
+			if tc.errMessage != "" && err != nil {
+				require.Equal(t, tc.errMessage, string(output))
+				return
+			}
+			require.NoError(t, err, fmt.Sprintf("stdout: %v", string(output)))
+			var res []Order
+			err = json.Unmarshal(output, &res)
+			require.NoError(t, err, "stdout: %v", string(output))
+			fmt.Println(string(output))
+			require.Equal(t, len(res), tc.ordersCount)
+		})
+	}
+}
+
+func TestSubmitTradeIntegration(t *testing.T) {
+	tt := []struct {
+		name       string
+		args       []string
+		errMessage string
+	}{
+		{
+			name:       "submit_trade - insufficient Funds",
+			args:       []string{"submit_trade", "SKY/BTC", OfferTypeBuy, "0.00050000", "123.00000000"},
+			errMessage: "SubmitTrade failed: Insufficient Funds., Type Buy Market SKY/BTC Rate 0.0005 Amount 123\n",
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+
+			output, err := exec.Command(binaryPath, tc.args...).CombinedOutput()
+			if err != nil {
+				fmt.Printf("stderr: %v\n", err.Error())
+			}
+
+			if tc.errMessage != "" && err != nil {
+				require.Equal(t, tc.errMessage, string(output))
+				return
+			}
+			require.NoError(t, err, fmt.Sprintf("stdout: %v", string(output)))
+			var res []Order
+			err = json.Unmarshal(output, &res)
+			require.NoError(t, err, "stdout: %v", string(output))
+		})
+	}
+}
+
+func TestCancelTradeIntegration(t *testing.T) {
+	tt := []struct {
+		name       string
+		args       []string
+		errMessage string
+	}{
+		{
+			name:       "cancel_trade - no trades found to cancel for tradepair",
+			args:       []string{"cancel_trade", "TradePair", "SKY/BTC", "null"},
+			errMessage: "No trades found to cancel for tradepair.\n",
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			output, err := exec.Command(binaryPath, tc.args...).CombinedOutput()
+			if err != nil {
+				fmt.Printf("stderr: %v\n", err.Error())
+			}
+
+			if tc.errMessage != "" && err != nil {
+				require.Equal(t, tc.errMessage, string(output))
+				return
+			}
+			require.NoError(t, err, fmt.Sprintf("stdout: %v", string(output)))
+			var res []Order
+			err = json.Unmarshal(output, &res)
+			require.NoError(t, err, "stdout: %v", string(output))
 		})
 	}
 }

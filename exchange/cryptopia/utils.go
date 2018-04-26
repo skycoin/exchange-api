@@ -34,9 +34,9 @@ func readResponse(r io.ReadCloser) (*response, error) {
 		}
 	}()
 
-	bb := bytes.TrimPrefix(b, []byte("\xef\xbb\xbf"))
+	b = bytes.TrimPrefix(b, []byte("\xef\xbb\xbf"))
 	var resp response
-	if err := json.Unmarshal(bb, &resp); err != nil {
+	if err := json.Unmarshal(b, &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil
