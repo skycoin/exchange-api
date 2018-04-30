@@ -50,8 +50,6 @@ install-linters: ## Install linters
 	go get -u github.com/FiloSottile/vendorcheck
 	go get -u github.com/alecthomas/gometalinter
 	gometalinter --vendored-linters --install
-	echo C2CX_API_KEY is $$C2CX_API_KEY
-	echo C2CX_API_SECRET is $$C2CX_API_SECRET
 
 format:  # Formats the code. Must have goimports installed (use make install-linters).
 	# This sorts imports by [stdlib, 3rdpart, skycoin/skycoin, skycoin/exchange-api]

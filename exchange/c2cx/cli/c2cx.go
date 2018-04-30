@@ -396,7 +396,6 @@ func init() {
 	}
 
 	if !foundKey {
-		fmt.Println("env vars not found. will use config")
 		var config string
 		var err error
 		usr, err := user.Current()
