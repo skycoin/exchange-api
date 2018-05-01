@@ -1,3 +1,5 @@
+// +build cryptopia_integration_test
+
 package cryptopia
 
 import (
