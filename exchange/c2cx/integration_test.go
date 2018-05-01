@@ -1,3 +1,5 @@
+// +build c2cx_integration_test
+
 package c2cx
 
 import (
