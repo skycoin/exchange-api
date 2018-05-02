@@ -2,7 +2,7 @@
 
 available_tags=""
 
-if test -n "$CRYPTOPIA_TEST_KEY"
+if test -n "$CRYPTOPIA_API_SECRET"
 then
     available_tags="$available_tags cryptopia_integration_test"
 fi

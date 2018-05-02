@@ -11,12 +11,21 @@ import (
 
 	"errors"
 
+	"net"
+	"time"
+
 	"github.com/shopspring/decimal"
 )
 
 const (
 	// InstantOrderID is returned if an order executed instantly and was not assigned an OrderID
 	InstantOrderID = -1
+)
+
+const (
+	dialTimeout         = 60 * time.Second
+	httpClientTimeout   = 120 * time.Second
+	tlsHandshakeTimeout = 60 * time.Second
 )
 
 var (
@@ -41,11 +50,29 @@ type response struct {
 
 // Client implements a wrapper around the Cryptopia API interface
 type Client struct {
-	Key    string
-	Secret string
-
+	Key           string
+	Secret        string
+	httpClient    *http.Client
 	currencyCache map[string]CurrencyInfo
 	marketCache   map[string]int
+}
+
+func NewAPIClient(key string, secret string) *Client {
+	var netTransport = http.Transport{
+		Dial: (&net.Dialer{
+			Timeout: dialTimeout,
+		}).Dial,
+		TLSHandshakeTimeout: tlsHandshakeTimeout,
+	}
+	var client = &http.Client{
+		Transport: &netTransport,
+		Timeout:   httpClientTimeout,
+	}
+	return &Client{
+		Key:        key,
+		Secret:     secret,
+		httpClient: client,
+	}
 }
 
 //Public API functions
@@ -259,7 +286,13 @@ func (c *Client) GetMarketOrderGroups(count int, markets []string) ([]MarketOrde
 
 // GetBalance return a string representation of balance by given currency
 func (c *Client) GetBalance(currency string) (decimal.Decimal, error) {
-	resp, err := c.post("getbalance", nil)
+	cID, err := c.GetCurrencyID(currency)
+	if err != nil {
+		return decimal.Zero, fmt.Errorf("Currency %s does not found", currency)
+	}
+	params := make(map[string]interface{})
+	params["CurrencyId"] = cID
+	resp, err := c.post("getbalance", params)
 	if err != nil {
 		return decimal.Zero, err
 	}
@@ -298,7 +331,6 @@ func (c *Client) GetDepositAddress(currency string) (*DepositAddress, error) {
 	if !resp.Success {
 		return nil, fmt.Errorf("GetDepositAddress failed: %s, Currency %s", resp.Message, currency)
 	}
-
 	var result DepositAddress
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
 		return nil, err
@@ -322,7 +354,6 @@ func (c *Client) GetOpenOrders(market *string, count *int) ([]Order, error) {
 	if count != nil {
 		params["Count"] = *count
 	}
-
 	resp, err := c.post("getopenorders", params)
 	if err != nil {
 		return nil, err
@@ -331,7 +362,6 @@ func (c *Client) GetOpenOrders(market *string, count *int) ([]Order, error) {
 	if !resp.Success {
 		return nil, fmt.Errorf("GetOpenOrders failed: %s Market %#v Count %#v", resp.Message, market, count)
 	}
-
 	var result []Order
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
 		return nil, err
@@ -406,7 +436,7 @@ func (c *Client) GetTransactions(txType string, count int) ([]Transaction, error
 // SubmitTrade submits a new trade offer
 func (c *Client) SubmitTrade(market, offerType string, rate, amount decimal.Decimal) (int, error) {
 	if offerType = strings.Title(offerType); offerType != OfferTypeBuy && offerType != OfferTypeSell {
-		return 0, fmt.Errorf("Incorrect offer type %s; avalible types: %s %s", offerType, OfferTypeBuy, OfferTypeSell)
+		return 0, fmt.Errorf("incorrect offer type %s; avalible types: %s %s", offerType, OfferTypeBuy, OfferTypeSell)
 	}
 
 	mID, err := c.GetMarketID(market)
@@ -441,7 +471,7 @@ func (c *Client) SubmitTrade(market, offerType string, rate, amount decimal.Deci
 	return InstantOrderID, nil
 }
 
-// CancelTrade cancel trades by given orderid, market or add active
+// CancelTrade cancel trades by given orderID, market or add active
 // depends of type argument
 func (c *Client) CancelTrade(tradeType string, TradePair *string, orderID *int) ([]int, error) {
 	params := map[string]interface{}{
@@ -464,7 +494,7 @@ func (c *Client) CancelTrade(tradeType string, TradePair *string, orderID *int) 
 			return nil, errors.New("invalid tradepair")
 		}
 	case All:
-	// all ok
+		// all ok
 	default:
 		return nil, errors.New("invalid cancel type")
 	}
