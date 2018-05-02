@@ -3,12 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
-	"path/filepath"
 	"strconv"
 
+	"log"
 	"os/user"
+	"path/filepath"
 
 	"github.com/shopspring/decimal"
 	"github.com/spf13/cobra"
@@ -245,8 +245,8 @@ GetOrderByStatusPaged get all orders with given status for a given pagination pa
 				if err != nil {
 					printErrorWithExit(err)
 				}
-				orders, pageCount, err := client.GetOrderByStatusPaged(c2cx.TradePair(tradePair), c2cx.OrderStatus(orderStatus), page)
-				handleResult(c2cx.Orders{Orders: orders, Page: pageCount}, err)
+				orders, page, pageCount, err := client.GetOrderByStatusPaged(c2cx.TradePair(tradePair), c2cx.OrderStatus(orderStatus), page)
+				handleResult(c2cx.Orders{Orders: orders, Page: page, PageCount: pageCount}, err)
 			},
 		},
 		"getOrderInfoAll": {
@@ -389,25 +389,36 @@ The public ticker API returns key pricing data for a give currency pair.
 }
 
 func init() {
-	user, err := user.Current()
-	if err != nil {
-		log.Panicf("failed to get the current user. err: %v", err)
+	var key, secret string
+	var foundKey bool
+	if key, foundKey = os.LookupEnv("C2CX_API_KEY"); foundKey {
+		secret, foundKey = os.LookupEnv("C2CX_API_SECRET")
 	}
 
-	var config = filepath.Join(user.HomeDir, ".exchangectl/config.toml")
-	viper.SetConfigFile(config)
-	err = viper.ReadInConfig()
-	if err != nil {
-		log.Panicf("failed to read the config file %s, err: %v", config, err)
+	if !foundKey {
+		var config string
+		var err error
+		usr, err := user.Current()
+		if err != nil {
+			log.Panicf("failed to get the current user. err: %v", err)
+		}
+		config = filepath.Join(usr.HomeDir, ".exchangectl/config.toml")
+
+		viper.SetConfigFile(config)
+		err = viper.ReadInConfig()
+		if err != nil {
+			log.Panicf("failed to read the config file %s, err: %v", config, err)
+		}
+		key = viper.GetString("c2cx.key")
+		if key == "" {
+			panic("key param is empty")
+		}
+		secret = viper.GetString("c2cx.secret")
+		if secret == "" {
+			panic("secret param is empty")
+		}
 	}
-	key := viper.GetString("c2cx.key")
-	if key == "" {
-		panic("key param is empty")
-	}
-	secret := viper.GetString("c2cx.secret")
-	if secret == "" {
-		panic("secret param is empty")
-	}
+
 	client = c2cx.NewAPIClient(key, secret)
 	rootCmd = &cobra.Command{Use: "c2cx"}
 	for _, v := range getCommands() {

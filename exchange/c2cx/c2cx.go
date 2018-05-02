@@ -428,8 +428,9 @@ func (br BalanceSummary) Spendable() Balances {
 
 // Orders includes []Order and page count if not empty
 type Orders struct {
-	Orders []Order `json:"orders"`
-	Page   int     `json:"page,omitempty"`
+	Orders    []Order `json:"orders"`
+	Page      int     `json:"page,omitempty"`
+	PageCount int     `json:"pageCount,omitempty"`
 }
 
 // TickerData includes pricing data for a give currency pair

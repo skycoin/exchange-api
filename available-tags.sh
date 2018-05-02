@@ -12,4 +12,9 @@ then
     available_tags="$available_tags c2cx_integration_test"
 fi
 
+if test -n "$C2CX_API_SECRET"
+then
+    available_tags="$available_tags c2cx_integration_test"
+fi
+
 echo $available_tags

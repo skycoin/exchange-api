@@ -9,7 +9,7 @@ exchange-api-server:
 	go run cmd/exchange-api-server/exchange-api-server.go ${ARGS}
 
 test:
-	go test ./exchange/... -timeout=1m -cover -tags "${AVAILABLE_TAGS}"
+	go test ./exchange/... -timeout=10m -cover -tags "${AVAILABLE_TAGS}"
 
 lint: ## Run linters. Use make install-linters first.
 	vendorcheck ./...
